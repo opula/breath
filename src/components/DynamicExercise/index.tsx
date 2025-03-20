@@ -555,7 +555,7 @@ export const DynamicExercise = memo(
           singleTap
         )}
       >
-        <Animated.View style={tw`absolute inset-0`}>
+        <Animated.View style={tw`absolute inset-0 bg-transparent`}>
           <View style={tw`absolute inset-0 justify-center items-center`}>
             {isBreathing ? (
               <Canvas style={{ height: 240, width: 240 }}>

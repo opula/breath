@@ -55,6 +55,8 @@ export const SpaceGif = () => {
   }, []);
 
   const uniforms = useDerivedValue(() => {
+    console.log("SpaceGif Canvas Size:", width, height);
+    console.log("SpaceGif Breath Value:", breathClock.value);
     return {
       canvas: vec(width, height),
       iTime: clock.value / 1000 + randomSeed.value,
@@ -65,8 +67,8 @@ export const SpaceGif = () => {
   return (
     <>
       <View
-        style={tw`flex-1 justify-center items-center bg-black`}>
-        <Canvas style={{height, width}}>
+        style={tw`flex-1 justify-center items-center bg-blue-900`}>
+        <Canvas style={{height, width, zIndex: 1}}>
           <Fill>
             <Shader source={source} uniforms={uniforms} />
           </Fill>

@@ -5,7 +5,7 @@ export const source = Skia.RuntimeEffect.Make(`
   uniform float iTime;
   uniform float iBreath;
 
-  // Adjusted colors to stay within more standard ranges
+  // Adjusted colors to stay within standard ranges
   const vec3 colorA = vec3(0.247, 0.573, 0.600);
   const vec3 colorB = vec3(0.511, 0.432, 0.359);
   const vec3 colorC = vec3(0.769, 0.569, 0.467);
@@ -21,14 +21,19 @@ export const source = Skia.RuntimeEffect.Make(`
   }
 
   vec4 main(vec2 pos) {
+    // Return immediately with a bright color if canvas sizes are invalid
+    if (canvas.x < 1.0 || canvas.y < 1.0) {
+      return vec4(1.0, 0.0, 0.0, 1.0); // Bright red for debugging
+    }
+    
     // Normalized coordinates with origin at center
     vec2 uv = (pos - 0.5 * canvas.xy) / min(canvas.x, canvas.y);
     
     // Store original uv for vignette effect
     vec2 ov = uv;
     
-    // Initial color
-    vec3 col = vec3(0.0);
+    // Initial color - ensure it has some minimal value
+    vec3 col = vec3(0.05);
     
     // Rotation - simplified and using proper radians
     float angle = iTime * 0.2;
@@ -36,8 +41,8 @@ export const source = Skia.RuntimeEffect.Make(`
     float c = cos(angle);
     uv = uv * mat2(c, -s, s, c);
     
-    // Dynamic zoom based on breathing
-    float zoom = 20.0 + 10.0 * sin(iTime * 0.1) + (1.0 - iBreath) * 15.0;
+    // Dynamic zoom based on breathing - clamped for stability
+    float zoom = 20.0 + 10.0 * sin(iTime * 0.1) + max(0.0, min(1.0, 1.0 - iBreath)) * 15.0;
     uv *= zoom;
     
     // Grid setup
@@ -49,8 +54,8 @@ export const source = Skia.RuntimeEffect.Make(`
     float t = iTime * 0.33;
     
     // Create circular pattern
-    for (float y = -1.0; y <= 1.0; y++) {
-      for (float x = -1.0; x <= 1.0; x++) {
+    for (float y = -1.0; y <= 1.0; y += 1.0) {
+      for (float x = -1.0; x <= 1.0; x += 1.0) {
         vec2 offset = vec2(x, y);
         float d = length(gv - offset);
         
@@ -66,9 +71,12 @@ export const source = Skia.RuntimeEffect.Make(`
     // Apply color using palette
     col += m * palette(t * 0.1 + length(uv) * 0.05);
     
-    // Add center vignette/hole effect - adjusted for better visibility
+    // Ensure minimum brightness
+    col = max(col, vec3(0.05, 0.05, 0.1));
+    
+    // Add center vignette/hole effect - LESS aggressive
     float centerDist = length(ov);
-    float vignette = smoothstep(0.05, 0.5, centerDist - 0.02);
+    float vignette = smoothstep(0.01, 0.7, centerDist - 0.01);
     col *= vignette;
     
     // Add subtle pulsing glow to the entire effect
