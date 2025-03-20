@@ -38,9 +38,10 @@ export const SpaceGif = () => {
   const {width, height} = useWindowDimensions();
   const clock = useClock();
   const randomSeed = useSharedValue(Math.floor(Math.random() * 100000));
-  const breathClock = useSharedValue(0);
+  const breathClock = useSharedValue(0.5); // Initialize to middle value
 
   useEffect(() => {
+    // Initialize breathing animation
     breathClock.value = withRepeat(
       withSequence(
         withTiming(1, {duration: 6000}, () => {
@@ -50,7 +51,7 @@ export const SpaceGif = () => {
           runOnJS(Vibration.vibrate)(500);
         }),
       ),
-      0,
+      -1, // Infinite repeats
     );
   }, []);
 
@@ -67,8 +68,13 @@ export const SpaceGif = () => {
   return (
     <>
       <View
-        style={tw`flex-1 justify-center items-center bg-blue-900`}>
-        <Canvas style={{height, width, zIndex: 1}}>
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'black',
+        }}>
+        <Canvas style={{height, width}}>
           <Fill>
             <Shader source={source} uniforms={uniforms} />
           </Fill>

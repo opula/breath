@@ -26,8 +26,11 @@ export const source = Skia.RuntimeEffect.Make(`
       return vec4(1.0, 0.0, 0.0, 1.0); // Bright red for debugging
     }
     
-    // Normalized coordinates with origin at center
-    vec2 uv = (pos - 0.5 * canvas.xy) / min(canvas.x, canvas.y);
+    // Normalized coordinates with flipped Y (consistent with other shaders)
+    vec2 uv = pos / canvas;
+    uv.y = 1.0 - uv.y; // Flip Y to match other shaders
+    uv = uv - 0.5;
+    uv.x *= canvas.x / canvas.y; // Aspect ratio correction (consistent with other shaders)
     
     // Store original uv for vignette effect
     vec2 ov = uv;
@@ -53,7 +56,7 @@ export const source = Skia.RuntimeEffect.Make(`
     float m = 0.0;
     float t = iTime * 0.33;
     
-    // Create circular pattern
+    // Create circular pattern - using step increment for better performance
     for (float y = -1.0; y <= 1.0; y += 1.0) {
       for (float x = -1.0; x <= 1.0; x += 1.0) {
         vec2 offset = vec2(x, y);
@@ -74,9 +77,9 @@ export const source = Skia.RuntimeEffect.Make(`
     // Ensure minimum brightness
     col = max(col, vec3(0.05, 0.05, 0.1));
     
-    // Add center vignette/hole effect - LESS aggressive
+    // Add center vignette/hole effect - using values similar to Tunnel shader
     float centerDist = length(ov);
-    float vignette = smoothstep(0.01, 0.7, centerDist - 0.01);
+    float vignette = smoothstep(0.01, 0.35, centerDist - 0.02);
     col *= vignette;
     
     // Add subtle pulsing glow to the entire effect
