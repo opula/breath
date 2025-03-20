@@ -1,0 +1,460 @@
+export const exercises = [
+  {
+    name: 'Tummo',
+    seq: [
+      {
+        type: 'breath',
+        value: [2, 0, 1, 0],
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 5,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+      {
+        type: 'inhale',
+        count: 5,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 3,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: '6 & 6',
+    seq: [
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Rebalance',
+    seq: [
+      {
+        type: 'breath',
+        value: [4, 7, 8, 0],
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Extended Rebalance',
+    seq: [
+      {
+        type: 'breath',
+        value: [7, 11, 12, 0],
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Box',
+    seq: [
+      {
+        type: 'breath',
+        value: [4, 4, 4, 4],
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Brown activation',
+    seq: [
+      {
+        type: 'breath',
+        value: [3.5, 0, 1.5, 0],
+        count: 10,
+      },
+      {
+        type: 'inhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 30,
+      },
+      {
+        type: 'exhale',
+        count: 5,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Five Whys',
+    seq: [
+      {
+        type: 'text',
+        text: 'Imagine a problem or a desire you have.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Focus on the driving force behind it.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Could you let that go?',
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 3,
+      },
+
+      {
+        type: 'text',
+        text: 'Identify a reason behind the driving force.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Could you let that go?',
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 3,
+      },
+
+      {
+        type: 'text',
+        text: 'And a reason behind that.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Could you let that go?',
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 3,
+      },
+
+      {
+        type: 'text',
+        text: 'And a reason behind that.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Could you let that go?',
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 3,
+      },
+
+      {
+        type: 'text',
+        text: 'And a reason behind that.',
+        count: 0,
+      },
+      {
+        type: 'text',
+        text: 'Could you let that go?',
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 0, 6, 0],
+        count: 3,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Shamanic',
+    seq: [
+      {
+        type: 'breath',
+        value: [4, 4, 4, 4],
+        count: 12,
+      },
+      {
+        type: 'inhale',
+        count: 4,
+      },
+      {
+        type: 'hold',
+        count: 60,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+      {
+        type: 'breath',
+        value: [5, 5, 5, 5],
+        count: 12,
+      },
+      {
+        type: 'inhale',
+        count: 4,
+      },
+      {
+        type: 'hold',
+        count: 60,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+      {
+        type: 'breath',
+        value: [6, 6, 6, 6],
+        count: 12,
+      },
+      {
+        type: 'inhale',
+        count: 4,
+      },
+      {
+        type: 'hold',
+        count: 60,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+      {
+        type: 'breath',
+        value: [7, 7, 7, 7],
+        count: 12,
+      },
+      {
+        type: 'inhale',
+        count: 4,
+      },
+      {
+        type: 'hold',
+        count: 60,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+      {
+        type: 'breath',
+        value: [8, 8, 8, 8],
+        count: 12,
+      },
+      {
+        type: 'inhale',
+        count: 4,
+      },
+      {
+        type: 'hold',
+        count: 60,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+    ],
+    loopable: false,
+  },
+  {
+    name: 'Altered State',
+    seq: [
+      {
+        type: 'breath',
+        value: [2, 0, 1, 0],
+        count: 40,
+      },
+      {
+        type: 'inhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 120,
+      },
+      {
+        type: 'exhale',
+        count: 4,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Dopamine Light',
+    seq: [
+      {
+        type: 'breath',
+        value: [2.4, 0, 0.6, 0],
+        count: 20,
+      },
+      {
+        type: 'breath',
+        value: [2.0, 0, 0.6, 0],
+        count: 24,
+      },
+      {
+        type: 'breath',
+        value: [1.6, 0, 0.6, 0],
+        count: 28,
+      },
+      {
+        type: 'breath',
+        value: [1.1, 0, 0.6, 0],
+        count: 36,
+      },
+      {
+        type: 'breath',
+        value: [0.6, 0, 0.6, 0],
+        count: 50,
+      },
+      {
+        type: 'breath',
+        value: [3, 0, 3, 0],
+        count: 3,
+      },
+      {
+        type: 'inhale',
+        count: 6,
+      },
+      {
+        type: 'hold',
+        count: 90,
+      },
+      {
+        type: 'exhale',
+        count: 6,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Cup Hands',
+    seq: [
+      {
+        type: 'breath',
+        value: [2, 0, 2, 0],
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [3, 0, 3, 0],
+        count: 3,
+      },
+    ],
+    loopable: true,
+  },
+  {
+    name: 'Holotropic',
+    seq: [
+      {
+        type: 'breath',
+        value: [1, 0, 0.6, 0],
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [3, 0, 3, 0],
+        count: 3,
+      },
+      {
+        type: 'inhale',
+        count: 5,
+      },
+      {
+        type: 'hold',
+        count: 0,
+      },
+      {
+        type: 'exhale',
+        count: 5,
+      },
+    ],
+    loopable: false,
+  },
+  {
+    name: 'Apnea',
+    seq: [
+      {
+        type: 'breath',
+        value: [6, 12, 6, 0],
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 18, 12, 0],
+        count: 0,
+      },
+      {
+        type: 'breath',
+        value: [6, 24, 12, 0],
+        count: 0,
+      },
+    ],
+    loopable: false,
+  },
+  {
+    name: 'Retention',
+    seq: [
+      {
+        type: 'breath',
+        value: [4, 0, 4, 12],
+        count: 0,
+      },
+    ],
+    loopable: false,
+  },
+];

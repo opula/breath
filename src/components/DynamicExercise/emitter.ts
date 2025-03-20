@@ -1,0 +1,13 @@
+import EventEmitter from 'eventemitter3';
+
+export const exerciseEmitter = new EventEmitter();
+
+export const Ops = {
+  NEXT_SEQUENCE_STEP: 'NEXT_SEQUENCE_STEP',
+  PREV_SEQUENCE_STEP: 'PREV_SEQUENCE_STEP',
+  START_BREATHING_PATTERN: 'START_BREATHING_PATTERN',
+  NEXT_BREATHING_PATTERN_STEP: 'NEXT_BREATHING_PATTERN_STEP',
+  START_HIE: 'START_HIE',
+  START_TEXT: 'START_TEXT',
+  GOTO_SEQUENCE: 'GOTO_SEQUENCE',
+} as const;
