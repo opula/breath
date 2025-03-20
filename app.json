@@ -1,28 +1,54 @@
 {
   "expo": {
-    "name": "breath",
-    "slug": "breath",
+    "name": "Midnight Breath",
+    "slug": "midnight-breath",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#131313"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "newArchEnabled": true,
+      "bundleIdentifier": "com.midnight.breathapp"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
+      },
+
+      "newArchEnabled": true,
+      "package": "com.midnight.breathapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "imageResizeMode": "contain",
+          "backgroundColor": "#131313",
+          "image": "./assets/splash.png"
+        }
+      ]
+    ],
+    "fonts": [
+      {
+        "asset": "./assets/fonts/Lusitana-Regular.ttf",
+        "family": "Lusitana"
+      },
+      {
+        "asset": "./assets/fonts/Lusitana-Bold.ttf",
+        "family": "Lusitana-Bold"
+      }
+    ]
   }
 }
