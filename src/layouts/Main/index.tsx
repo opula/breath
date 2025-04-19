@@ -1,48 +1,27 @@
-import {useKeepAwake} from '@sayem314/react-native-keep-awake';
-import {
-  Canvas,
-  ColorMatrix,
-  Fill,
-  Group,
-  Shader,
-  useClock,
-  vec,
-} from '@shopify/react-native-skia';
-import React, {useCallback, useEffect, useState} from 'react';
-import {View, useWindowDimensions} from 'react-native';
-import {useDerivedValue, useSharedValue} from 'react-native-reanimated';
-import {DynamicExercise} from '../../components/DynamicExercise';
+import { useKeepAwake } from "@sayem314/react-native-keep-awake";
+import React, { useCallback } from "react";
+import { View } from "react-native";
+import { DynamicExercise } from "../../components/DynamicExercise";
 
-import {source as SpaceGifSource} from '../SpaceGif/source';
-import {source as StarfieldSource} from '../Starfield/source';
-import {source as BlocksSource} from '../Blocks/source';
-import {source as AuroraSource} from '../Aurora/source';
-import {source as ButterflySource} from '../Butterfly/source';
-import {source as TunnelSource} from '../Tunnel/source';
-
-import {LAST_GRAYSCALE, LAST_SOURCE, storage} from '../../utils/storage';
-import {Icon} from '../../components/Icon';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {AnimatePresence, MotiView} from 'moti';
-import {TouchableOpacity} from 'react-native';
-import tw from '../../utils/tw';
-import TrackPlayer from 'react-native-track-player';
-import {MusicControl} from './MusicControl';
+import { Icon } from "../../components/Icon";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AnimatePresence, MotiView } from "moti";
+import { TouchableOpacity } from "react-native";
+import tw from "../../utils/tw";
 import {
   NavigationProp,
   useIsFocused,
   useNavigation,
-} from '@react-navigation/native';
-import {MainStackParams} from '../../navigation';
-import {Tutorial} from './Tutorial';
-import {Background} from './Background';
-import {useAppDispatch, useAppSelector} from '../../hooks/store';
+} from "@react-navigation/native";
+import { MainStackParams } from "../../navigation";
+import { Tutorial } from "./Tutorial";
+import { Background } from "./Background";
+import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
-  isGrayscaleSelector,
   isPausedSelector,
   isTutorialSelector,
   sourceIndexSelector,
-} from '../../state/configuration.selectors';
+} from "../../state/configuration.selectors";
 import {
   toggleGrayscale as toggleGrayscaleAction,
   togglePaused as togglePausedAction,
@@ -50,24 +29,16 @@ import {
   updateSource as updateSourceAction,
   engagePaused as engagePausedAction,
   engageTutorial as engageTutorialAction,
-} from '../../state/configuration.reducer';
-import {getSelectorSnapshot} from '../../utils/selectors';
-
-const sources = [
-  SpaceGifSource,
-  StarfieldSource,
-  BlocksSource,
-  AuroraSource,
-  ButterflySource,
-  TunnelSource,
-];
+} from "../../state/configuration.reducer";
+import { getSelectorSnapshot } from "../../utils/selectors";
+import { sources } from "./sources";
 
 export const Main = () => {
   useKeepAwake();
-  const navigation = useNavigation<NavigationProp<MainStackParams, 'Main'>>();
+  const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const {top, left} = useSafeAreaInsets();
+  const { top, left } = useSafeAreaInsets();
 
   const isPaused = useAppSelector(isPausedSelector);
   const isTutorial = useAppSelector(isTutorialSelector);
@@ -79,24 +50,24 @@ export const Main = () => {
       const newSourceIndex = nextIndex > -1 ? nextIndex : sources.length - 1;
       dispatch(updateSourceAction(newSourceIndex));
     },
-    [dispatch],
+    [dispatch]
   );
   const togglePaused = useCallback(
     () => dispatch(togglePausedAction()),
-    [dispatch],
+    [dispatch]
   );
   const setPause = useCallback(
     (status: boolean) => dispatch(setPauseAction(status)),
-    [dispatch],
+    [dispatch]
   );
   const toggleGrayscale = useCallback(
     () => dispatch(toggleGrayscaleAction()),
-    [dispatch],
+    [dispatch]
   );
   const engagePaused = useCallback(() => dispatch(engagePausedAction()), []);
   const engageTutorial = useCallback(
     () => dispatch(engageTutorialAction()),
-    [],
+    []
   );
 
   return (
@@ -108,18 +79,17 @@ export const Main = () => {
       <AnimatePresence>
         {isPaused || isTutorial ? (
           <MotiView
-            from={{opacity: 0}}
-            animate={{opacity: isTutorial ? 0.75 : 0.45}}
-            exit={{opacity: 0}}
-            transition={{opacity: {type: 'timing', duration: 300}}}
+            from={{ opacity: 0 }}
+            animate={{ opacity: isTutorial ? 0.75 : 0.45 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { type: "timing", duration: 300 } }}
             style={tw`absolute inset-0 bg-black`}
             pointerEvents="none"
           />
         ) : null}
       </AnimatePresence>
 
-      <View
-        style={[tw`absolute inset-0`, {opacity: isTutorial ? 0 : 1}]}>
+      <View style={[tw`absolute inset-0`, { opacity: isTutorial ? 0 : 1 }]}>
         <DynamicExercise onChangeSource={changeSource} onPause={setPause} />
       </View>
 
@@ -127,26 +97,33 @@ export const Main = () => {
         {isPaused ? (
           <MotiView
             key="left"
-            from={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-            transition={{opacity: {type: 'timing', duration: 300}}}
-            style={[tw`absolute`, {left: Math.max(left, 16), top: Math.max(top, 16)}]}>
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { type: "timing", duration: 300 } }}
+            style={[
+              tw`absolute`,
+              { left: Math.max(left, 16), top: Math.max(top, 16) },
+            ]}
+          >
             <TouchableOpacity
               style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
-              onPress={toggleGrayscale}>
+              onPress={toggleGrayscale}
+            >
               <Icon name="moon" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               style={tw`mt-2 h-10 w-10 items-center justify-center active:opacity-80`}
               onPress={() => {
-                navigation.navigate('MusicControls');
-              }}>
+                navigation.navigate("MusicControls");
+              }}
+            >
               <Icon name="headphones" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
               style={tw`mt-2 h-10 w-10 items-center justify-center active:opacity-80`}
-              onPress={engageTutorial}>
+              onPress={engageTutorial}
+            >
               <Icon name="help" size={24} color="white" />
             </TouchableOpacity>
           </MotiView>
@@ -155,16 +132,21 @@ export const Main = () => {
         {isPaused ? (
           <MotiView
             key="right"
-            from={{opacity: 0}}
-            animate={{opacity: 1}}
-            exit={{opacity: 0}}
-            transition={{opacity: {type: 'timing', duration: 300}}}
-            style={[tw`absolute`, {right: Math.max(left, 16), top: Math.max(top, 16)}]}>
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { type: "timing", duration: 300 } }}
+            style={[
+              tw`absolute`,
+              { right: Math.max(left, 16), top: Math.max(top, 16) },
+            ]}
+          >
             <TouchableOpacity
               style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
               onPress={() => {
-                navigation.navigate('ExercisesList');
-              }}>
+                navigation.navigate("ExercisesList");
+              }}
+            >
               <Icon name="unordered-list" size={24} color="white" />
             </TouchableOpacity>
           </MotiView>
