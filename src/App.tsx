@@ -13,20 +13,17 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MainStack } from "./navigation";
 import { NavigationContainer } from "@react-navigation/native";
-import { useSetupPlayer } from "./hooks/custom/useSetupPlayer";
 import { persistor, store } from "./store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
+import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 const Main = () => {
   const [appIsReady, setAppIsReady] = useState(false);
-  
-  // Initialize the audio player
-  useSetupPlayer();
   
   useEffect(() => {
     async function prepare() {
@@ -75,7 +72,9 @@ const App = () => {
           <PersistGate loading={null} persistor={persistor}>
             <SafeAreaProvider>
               <StatusBar hidden />
-              <Main />
+              <AudioPlayerProvider>
+                <Main />
+              </AudioPlayerProvider>
               {/* <Playground /> */}
             </SafeAreaProvider>
           </PersistGate>

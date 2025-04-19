@@ -1,9 +1,8 @@
 import { registerRootComponent } from "expo";
 import App from "./src/App";
 
-import TrackPlayer from "react-native-track-player";
-import { PlaybackService } from "./src/services/PlaybackService";
+// Removed TrackPlayer and PlaybackService imports
 
 // Register the main component
 registerRootComponent(App);
-TrackPlayer.registerPlaybackService(() => PlaybackService);
+// Removed TrackPlayer.registerPlaybackService line

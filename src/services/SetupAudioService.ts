@@ -1,66 +1,26 @@
-import {isNumber} from 'lodash';
-import TrackPlayer, {
-  AppKilledPlaybackBehavior,
-  Capability,
-  IOSCategory,
-  IOSCategoryOptions,
-  RepeatMode,
-} from 'react-native-track-player';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { Platform } from 'react-native';
 
-export const DefaultRepeatMode = RepeatMode.Track;
-export const DefaultAudioServiceBehaviour =
-  AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification;
-
-const setupPlayer = async (
-  options: Parameters<typeof TrackPlayer.setupPlayer>[0],
-) => {
-  const setup = async () => {
-    try {
-      await TrackPlayer.setupPlayer(options);
-    } catch (error) {
-      return (error as Error & {code?: string}).code;
-    }
-  };
-  while ((await setup()) === 'android_cannot_setup_player_in_background') {
-    // A timeout will mostly only execute when the app is in the foreground,
-    // and even if we were in the background still, it will reject the promise
-    // and we'll try again:
-    await new Promise<void>(resolve => setTimeout(resolve, 1));
-  }
-};
-
+/**
+ * Configures the global audio session using Expo AV.
+ * @param interruptionModeIOS - How the app's audio interacts with other apps.
+ */
 export const SetupAudioService = async (
-  categoryOptions = [] as IOSCategoryOptions[],
-  volume?: number,
+  interruptionModeIOS: InterruptionModeIOS = InterruptionModeIOS.DoNotMix,
 ) => {
-  await setupPlayer({
-    autoHandleInterruptions: true,
-
-    iosCategory: IOSCategory.Playback,
-    iosCategoryOptions: categoryOptions,
-  });
-  await TrackPlayer.updateOptions({
-    android: {
-      appKilledPlaybackBehavior: DefaultAudioServiceBehaviour,
-    },
-    // This flag is now deprecated. Please use the above to define playback mode.
-    // stoppingAppPausesPlayback: true,
-    capabilities: [
-      Capability.Play,
-      Capability.Pause,
-      Capability.SkipToNext,
-      Capability.SkipToPrevious,
-      Capability.SeekTo,
-    ],
-    compactCapabilities: [
-      Capability.Play,
-      Capability.Pause,
-      Capability.SkipToNext,
-    ],
-    progressUpdateEventInterval: 2,
-  });
-  if (isNumber(volume)) {
-    await TrackPlayer.setVolume(volume);
+  try {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: interruptionModeIOS,
+      playsInSilentModeIOS: true, // Equivalent to Playback category
+      staysActiveInBackground: true, // Keep audio active in background
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers, // Or DoNotMix, depending on desired Android behavior
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    });
+    console.log('Audio mode set successfully.');
+  } catch (error) {
+    console.error('Failed to set audio mode:', error);
+    // Handle the error appropriately, maybe re-throw or log
   }
-  await TrackPlayer.setRepeatMode(DefaultRepeatMode);
 };

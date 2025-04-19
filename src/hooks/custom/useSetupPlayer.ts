@@ -1,35 +1,45 @@
-import {useEffect, useState} from 'react';
-import {SetupAudioService} from '../../services/SetupAudioService';
-import TrackPlayer from 'react-native-track-player';
-import {QueueInitialTracksService} from '../../services/QueueInitialTracksService';
-import {MUSIC_BG_VOLUME, MUSIC_MIX_MODE, storage} from '../../utils/storage';
+import { useEffect, useState } from 'react';
+import { SetupAudioService } from '../../services/SetupAudioService';
+import { MUSIC_MIX_MODE, storage } from '../../utils/storage';
 import {
-  DEFAULT_IOS_CATEGORIES,
-  MIX_IOS_CATEGORIES,
+  DEFAULT_INTERRUPTION_MODE,
+  MIX_INTERRUPTION_MODE,
 } from '../../constants/music';
 
+/**
+ * Hook to configure the global audio settings using Expo AV.
+ * Returns true once the initial setup is complete.
+ */
 export const useSetupPlayer = () => {
   const [playerReady, setPlayerReady] = useState<boolean>(false);
 
   useEffect(() => {
-    let unmounted = false;
-    (async () => {
-      const isMix = storage.getBoolean(MUSIC_MIX_MODE) ?? false;
-      const storedVolume = storage.getNumber(MUSIC_BG_VOLUME) ?? 1;
-      await SetupAudioService(
-        isMix ? MIX_IOS_CATEGORIES : DEFAULT_IOS_CATEGORIES,
-        isMix ? storedVolume : undefined,
-      );
-      if (unmounted) return;
-      setPlayerReady(true);
-      const queue = await TrackPlayer.getQueue();
-      if (unmounted) return;
-      if (queue.length <= 0) {
-        await QueueInitialTracksService();
+    let isMounted = true;
+
+    const setup = async () => {
+      try {
+        const isMix = storage.getBoolean(MUSIC_MIX_MODE) ?? false;
+        // Removed volume setting logic - handled per sound in expo-av
+        await SetupAudioService(
+          isMix ? MIX_INTERRUPTION_MODE : DEFAULT_INTERRUPTION_MODE,
+        );
+
+        if (isMounted) {
+          setPlayerReady(true);
+        }
+        // Removed QueueInitialTracksService call - track loading/queueing handled elsewhere
+      } catch (error) {
+        console.error('Error setting up audio player:', error);
+        // Optionally update state to indicate an error
       }
-    })();
+    };
+
+    setup();
+
     return () => {
-      unmounted = true;
+      isMounted = false;
+      // Cleanup audio resources if necessary when the component unmounts
+      // Audio.unloadAsync() might be relevant depending on how sounds are managed
     };
   }, []);
 
