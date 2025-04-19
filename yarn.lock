@@ -17,22 +17,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@5stones/react-native-track-player@npm:^4.0.0-web.10":
-  version: 4.0.0-web.10
-  resolution: "@5stones/react-native-track-player@npm:4.0.0-web.10"
-  dependencies:
-    shaka-player: "npm:^4.3.2"
-  peerDependencies:
-    react: ">=16.8.6"
-    react-native: ">=0.60.0-rc.2"
-    react-native-windows: ">=0.63.0"
-  peerDependenciesMeta:
-    react-native-windows:
-      optional: true
-  checksum: 10c0/03ebcde28337464a07d0345407702a0a3be1c0a3480190fac876657033bda537f24931eda683ea0c2bf6ef0e7641d424544df975cb8f5653913eb17bc9597b2a
-  languageName: node
-  linkType: hard
-
 "@alloc/quick-lru@npm:^5.2.0":
   version: 5.2.0
   resolution: "@alloc/quick-lru@npm:5.2.0"
@@ -2998,7 +2982,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "breath@workspace:."
   dependencies:
-    "@5stones/react-native-track-player": "npm:^4.0.0-web.10"
     "@babel/core": "npm:^7.25.2"
     "@babel/plugin-proposal-nullish-coalescing-operator": "npm:^7.18.6"
     "@babel/plugin-proposal-optional-chaining": "npm:^7.21.0"
@@ -3019,6 +3002,7 @@ __metadata:
     decimal.js: "npm:^10.4.3"
     eventemitter3: "npm:^5.0.1"
     expo: "npm:~52.0.39"
+    expo-av: "npm:15.0.2"
     expo-splash-screen: "npm:^0.29.22"
     expo-status-bar: "npm:~2.0.1"
     its-fine: "npm:^2.0.0"
@@ -3038,7 +3022,7 @@ __metadata:
     react-native-safe-area-context: "npm:^5.3.0"
     react-native-screens: "npm:^4.9.2"
     react-native-swipeable-item: "npm:^2.0.9"
-    react-native-track-player: "npm:^4.0.1"
+    react-native-track-player: "npm:^4.1.1"
     react-native-uuid: "npm:^2.0.1"
     react-redux: "npm:^9.1.0"
     redux: "npm:^5.0.1"
@@ -3834,13 +3818,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eme-encryption-scheme-polyfill@npm:^2.2.1":
-  version: 2.2.1
-  resolution: "eme-encryption-scheme-polyfill@npm:2.2.1"
-  checksum: 10c0/54c8ba5523e02415d0e9a923304dac610720b30cbf0983b03aeddf759ed5460047ce7fc6ec33b1c9cc5a6c00ba624243f046946847ebd4e9428550353fe9d9fb
-  languageName: node
-  linkType: hard
-
 "emoji-regex@npm:^8.0.0":
   version: 8.0.0
   resolution: "emoji-regex@npm:8.0.0"
@@ -4086,6 +4063,21 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/5ccdcdbfb46045d262cf23694cd9732027f6f0787fa4b78975135f39fbfa430ea24dc9c23024c604f32bc5f5a782e3fdcd615b4dc4e6d0a22caebc0537fe83a7
+  languageName: node
+  linkType: hard
+
+"expo-av@npm:15.0.2":
+  version: 15.0.2
+  resolution: "expo-av@npm:15.0.2"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+    react-native-web: "*"
+  peerDependenciesMeta:
+    react-native-web:
+      optional: true
+  checksum: 10c0/dbb1be237a1b200eb62d53cef06f15a6ed6da272ef7d6229a36cdbf84d8990aaf87b80c3f5c53ae126d0e70c7b8a3ca01eb558bca5df1784764b7896c4cd7486
   languageName: node
   linkType: hard
 
@@ -7286,7 +7278,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-track-player@npm:^4.0.1":
+"react-native-track-player@npm:^4.1.1":
   version: 4.1.1
   resolution: "react-native-track-player@npm:4.1.1"
   peerDependencies:
@@ -7892,15 +7884,6 @@ __metadata:
   version: 1.2.0
   resolution: "setprototypeof@npm:1.2.0"
   checksum: 10c0/68733173026766fa0d9ecaeb07f0483f4c2dc70ca376b3b7c40b7cda909f94b0918f6c5ad5ce27a9160bdfb475efaa9d5e705a11d8eaae18f9835d20976028bc
-  languageName: node
-  linkType: hard
-
-"shaka-player@npm:^4.3.2":
-  version: 4.14.2
-  resolution: "shaka-player@npm:4.14.2"
-  dependencies:
-    eme-encryption-scheme-polyfill: "npm:^2.2.1"
-  checksum: 10c0/65067f4a4395b3d162f1a68c06de56efa1e226ad69c10b723f51983813f1fd1b8f7470d4b02a4805c83669c8d96eb32ca25ba79c095c1b640a46fa4ed75c4ec7
   languageName: node
   linkType: hard
 
