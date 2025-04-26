@@ -1,4 +1,15 @@
-import {TransitionPresets, createStackNavigator} from '@react-navigation/stack';
+import {
+  TransitionPresets,
+  createStackNavigator,
+  CardStyleInterpolators,
+  StackNavigationOptions,
+} from '@react-navigation/stack';
+import { Platform } from 'react-native';
+import {
+  crossFadeInterpolator,
+  fadeTransitionSpec,
+  smoothModalInterpolator,
+} from './transitions';
 import {Main} from '../layouts/Main';
 import {Welcome} from '../layouts/Welcome';
 import {HAS_COMPLETED_WELCOME, storage} from '../utils/storage';
@@ -23,13 +34,37 @@ export type MainStackParams = {
 const Stack = createStackNavigator<MainStackParams>();
 const hasCompletedWelcome = storage.getBoolean(HAS_COMPLETED_WELCOME);
 
+// Define cross-platform transition options to ensure smooth transitions on Android
+const defaultScreenOptions: StackNavigationOptions = {
+  headerShown: false,
+  cardStyle: { backgroundColor: 'transparent' },
+  cardOverlayEnabled: true,
+  // Use our custom cross-fade interpolator for smoother transitions
+  cardStyleInterpolator: crossFadeInterpolator,
+  // Use optimized timing configuration
+  transitionSpec: fadeTransitionSpec,
+  // Prevent Android-specific issues
+  detachPreviousScreen: Platform.OS === 'android' ? false : true,
+};
+
+// Modal transition options
+const modalScreenOptions: StackNavigationOptions = {
+  ...defaultScreenOptions,
+  presentation: 'transparentModal',
+  // Use our custom modal interpolator for smoother transitions
+  cardStyleInterpolator: smoothModalInterpolator,
+  // Ensure modals have proper background
+  cardStyle: { backgroundColor: 'transparent' },
+  // Make sure modals can be dismissed with back gesture on iOS
+  gestureEnabled: Platform.OS === 'ios',
+  gestureResponseDistance: 300,
+};
+
 export const MainStack = () => {
   return (
     <Stack.Navigator
       initialRouteName={hasCompletedWelcome ? 'Main' : 'Welcome'}
-      screenOptions={{
-        headerShown: false,
-      }}>
+      screenOptions={defaultScreenOptions}>
       <Stack.Screen name="Welcome" component={Welcome} />
       <Stack.Screen name="Main" component={Main} />
       <Stack.Screen name="ExercisesList" component={ExercisesList} />
@@ -37,15 +72,12 @@ export const MainStack = () => {
       <Stack.Screen
         name="ExerciseInfo"
         component={ExerciseInfo}
-        options={{
-          presentation: 'transparentModal',
-          ...TransitionPresets.ModalPresentationIOS,
-        }}
+        options={modalScreenOptions}
       />
 
       <Stack.Group
         screenOptions={{
-          presentation: 'transparentModal',
+          ...modalScreenOptions,
           gestureEnabled: false,
         }}>
         <Stack.Screen name="MusicControls" component={MusicControls} />

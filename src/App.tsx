@@ -7,12 +7,13 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { FiberProvider } from "its-fine";
-import { StatusBar, Text, View } from "react-native";
+import { StatusBar, Text, View, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // Theme is now handled by twrnc
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MainStack } from "./navigation";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
+import tw from "./utils/tw";
 import { persistor, store } from "./store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -21,6 +22,20 @@ import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+
+// Create a custom dark theme to prevent white flashing during navigation
+const DarkTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: 'black',
+    card: 'black',
+    text: 'white',
+    border: 'transparent',
+    primary: 'blue',
+    notification: 'blue',
+  },
+};
 
 const Main = () => {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -56,8 +71,11 @@ const Main = () => {
   }
 
   return (
-    <NavigationContainer>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <NavigationContainer theme={DarkTheme}>
+      <View 
+        style={tw`flex-1 bg-black`} 
+        onLayout={onLayoutRootView}
+      >
         <MainStack />
       </View>
     </NavigationContainer>
@@ -67,11 +85,15 @@ const Main = () => {
 const App = () => {
   return (
     <FiberProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={tw`flex-1 bg-black`}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <SafeAreaProvider>
-              <StatusBar hidden />
+            <SafeAreaProvider style={tw`bg-black`}>
+              <StatusBar 
+                hidden 
+                backgroundColor="black" 
+                barStyle="light-content" 
+              />
               <AudioPlayerProvider>
                 <Main />
               </AudioPlayerProvider>
