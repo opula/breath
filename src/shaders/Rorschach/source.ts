@@ -7,7 +7,8 @@ export const source = Skia.RuntimeEffect.Make(`
   uniform float iTime;  // Time in seconds
 
   // --- Rorschach Parameters (Adjusted) ---
-  const vec3 backgroundColor = vec3(0.1, 0.12, 0.15); // Darker background (Dark Slate Blue/Grey)
+  // const vec3 backgroundColor = vec3(0.1, 0.12, 0.15); // Darker background (Dark Slate Blue/Grey)
+  const vec3 backgroundColor = vec3(0.0, 0.0, 0.0); // Darker background (Dark Slate Blue/Grey)
   const vec3 inkColor = vec3(0.6, 0.65, 0.7);       // Lighter Ink color for contrast on dark bg (Cool Grey)
                                                      // Alt ink: vec3(0.2, 0.15, 0.25) for dark ink on dark bg
 

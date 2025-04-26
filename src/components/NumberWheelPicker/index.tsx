@@ -11,7 +11,7 @@ import {
   WHEEL_PADDING,
   WHEEL_WIDTH,
 } from "./contants";
-import { useMemo, useRef } from "react";
+import { useMemo, useCallback, useRef, memo } from "react";
 import { AnimatedFlashList, generateNumbers } from "./utils";
 import { ListRenderItem } from "@shopify/flash-list";
 import { Interval } from "./Interval";
@@ -30,7 +30,7 @@ interface NumberWheelPickerProps {
   onChange?: (value: number) => void;
 }
 
-export const NumberWheelPicker = ({
+export const NumberWheelPicker = memo(({
   min,
   max,
   step,
@@ -42,8 +42,10 @@ export const NumberWheelPicker = ({
     () => (defaultValue && Math.round(defaultValue / step)) || INITIAL_INDEX,
     [defaultValue, step]
   );
-  const debouncedOnChangeRef = useRef(
-    debounce((value: number) => onChange?.(value * step), 250)
+  // Properly memoize the debounced function to prevent recreation on each render
+  const debouncedOnChange = useMemo(
+    () => debounce((value: number) => onChange?.(value * step), 250),
+    [onChange, step]
   );
 
   const items = useMemo(
@@ -65,7 +67,7 @@ export const NumberWheelPicker = ({
         const updatedValue = Math.round(minMaxProgress);
         currentIndex.value = updatedValue;
 
-        runOnJS(debouncedOnChangeRef.current)(updatedValue);
+        runOnJS(debouncedOnChange)(updatedValue);
       }
     },
     [onChange]
@@ -86,8 +88,10 @@ export const NumberWheelPicker = ({
     scrollX.value = event.contentOffset.x;
   });
 
-  const renderItem: ListRenderItem<any> = ({ item, index }) => (
-    <Interval {...{ item, step, index, progress }} />
+  // Memoize the renderItem function to prevent recreation on each render
+  const renderItem = useCallback<ListRenderItem<any>>(
+    ({ item, index }) => <Interval item={item} step={step} index={index} progress={progress} />,
+    [step, progress]
   );
 
   return (
@@ -104,7 +108,7 @@ export const NumberWheelPicker = ({
             snapToAlignment="start"
             keyExtractor={(item) => `${item}`}
             onScroll={scrollHandler}
-            scrollEventThrottle={16}
+            scrollEventThrottle={32}
             renderItem={renderItem}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -118,4 +122,4 @@ export const NumberWheelPicker = ({
       </View>
     </>
   );
-};
+});

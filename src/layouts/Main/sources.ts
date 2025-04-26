@@ -9,6 +9,7 @@ import { source as StarfallSource } from "../../shaders/Starfall";
 import { source as WavesSource } from "../../shaders/Waves";
 import { source as CircularSource } from "../../shaders/Circular";
 import { source as TunnelSource } from "../../shaders/Tunnel";
+import { source as RipplesSource } from "../../shaders/Ripples";
 import { source as CircleSource } from "../../shaders/Circle";
 import { source as IntrospectiveSource } from "../../shaders/Introspective";
 import { source as SpaceZoomSource } from "../../shaders/SpaceZoom";
@@ -24,4 +25,5 @@ export const sources = [
   WavesSource,
   CircularSource,
   TunnelSource,
+  RipplesSource,
 ];

@@ -7,7 +7,8 @@ export const source = Skia.RuntimeEffect.Make(`
   uniform float iTime;  // Time in seconds
 
   // --- Define Simple Colors Directly ---
-  const vec3 backgroundColor = vec3(0.05, 0.08, 0.15); // Dark Slate Blue
+  // const vec3 backgroundColor = vec3(0.05, 0.08, 0.15); // Dark Slate Blue
+  const vec3 backgroundColor = vec3(0.00, 0.00, 0.0); 
   const vec3 rippleColor = vec3(0.3, 0.5, 0.7);     // Soft Medium Blue
 
   // --- Constants for Ripples (Adjusted for Subtlety) ---

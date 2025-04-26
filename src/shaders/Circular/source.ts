@@ -7,7 +7,8 @@ export const source = Skia.RuntimeEffect.Make(`
   uniform float iTime;  // Time in seconds
 
   // --- Star Trail Parameters ---
-  const vec3 skyColor = vec3(0.04, 0.08, 0.15);      // Slightly darker sky
+  // const vec3 skyColor = vec3(0.04, 0.08, 0.15);      // Slightly darker sky
+  const vec3 skyColor = vec3(0.0, 0.0, 0.0);      // Slightly darker sky
   const vec3 trailColor = vec3(0.9, 0.92, 0.96);     // Bright trails
   const vec2 poleStarOffset = vec2(0.0, 0.02);     // Further reduced offset due to higher zoom
   const float zoomFactor = 0.3;      // Further zoom IN (0.5 -> 0.3)

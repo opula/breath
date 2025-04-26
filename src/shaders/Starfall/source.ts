@@ -7,7 +7,8 @@ export const source = Skia.RuntimeEffect.Make(`
   uniform float iTime;  // Time in seconds
 
   // --- Rain Parameters (Tune these) ---
-  const vec3 backgroundColor = vec3(0.05, 0.08, 0.12); // Even darker background
+//   const vec3 backgroundColor = vec3(0.05, 0.08, 0.12); // Even darker background
+  const vec3 backgroundColor = vec3(0.0, 0.0, 0.0); // Even darker background
   const vec3 starColor = vec3(0.8, 0.85, 0.95);      // Bright, slightly cool white/blue
 
   // Shape Parameters
