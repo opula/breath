@@ -1,52 +1,58 @@
-import React, {useCallback} from 'react';
-import Carousel from 'react-native-reanimated-carousel';
-import {useWindowDimensions, View, Text, TouchableOpacity} from 'react-native';
-import {range} from 'lodash';
-import {Icon, IconName} from '../../components/Icon';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Pagination} from '../../components/Pagination';
-import {useSharedValue} from 'react-native-reanimated';
-import {HAS_COMPLETED_WELCOME, storage} from '../../utils/storage';
-import {MotiView} from 'moti';
-import tw from '../../utils/tw';
+import React, { useCallback } from "react";
+import Carousel from "react-native-reanimated-carousel";
+import {
+  useWindowDimensions,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import { range } from "lodash";
+import { Icon, IconName } from "../../components/Icon";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pagination } from "../../components/Pagination";
+import { useSharedValue } from "react-native-reanimated";
+import { HAS_COMPLETED_WELCOME, storage } from "../../utils/storage";
+import { MotiView } from "moti";
+import tw from "../../utils/tw";
 
 const SLIDES = [
   {
-    id: 'intro',
+    id: "intro",
   },
   {
-    id: 'start',
-    icon: 'single-tap',
-    title: 'Single Tap',
+    id: "start",
+    icon: "single-tap",
+    title: "Single Tap",
     message:
-      'To start an exercise or progress to the next step in the exercise',
+      "To start an exercise or progress to the next step in the exercise",
   },
   {
-    id: 'pause',
-    icon: 'double-tap',
-    title: 'Double Tap',
-    message: 'To pause an exercise',
+    id: "pause",
+    icon: "double-tap",
+    title: "Double Tap",
+    message: "To pause an exercise",
   },
   {
-    id: 'reset',
-    icon: 'tap-hold',
-    title: 'Tap & Hold',
-    message: 'To reset an exercise',
+    id: "reset",
+    icon: "tap-hold",
+    title: "Tap & Hold",
+    message: "To reset an exercise",
   },
   {
-    id: 'exercise',
-    icon: 'swipe-up-down',
-    title: 'Swipe Up or Down',
-    message: 'To change exercises',
+    id: "exercise",
+    icon: "swipe-up-down",
+    title: "Swipe Up or Down",
+    message: "To change exercises",
   },
   {
-    id: 'background',
-    icon: 'swipe-left-right',
-    title: 'Swipe Left or Right',
-    message: 'To change backgrounds',
+    id: "background",
+    icon: "swipe-left-right",
+    title: "Swipe Left or Right",
+    message: "To change backgrounds",
   },
   {
-    id: 'other',
+    id: "other",
   },
 ];
 
@@ -54,10 +60,12 @@ interface Props {
   onClose: () => void;
 }
 
-export const Tutorial = ({onClose}: Props) => {
-  const {height, width} = useWindowDimensions();
-  const {top, bottom} = useSafeAreaInsets();
+export const Tutorial = ({ onClose }: Props) => {
+  const { height, width } = useWindowDimensions();
+  const { top, bottom } = useSafeAreaInsets();
   const progressValue = useSharedValue(0);
+
+  const osTop = top + (Platform.OS === "android" ? 16 : 0);
 
   const handleClose = useCallback(() => {
     onClose();
@@ -66,11 +74,12 @@ export const Tutorial = ({onClose}: Props) => {
 
   return (
     <MotiView
-      from={{opacity: 0}}
-      animate={{opacity: 1}}
-      exit={{opacity: 0}}
-      transition={{opacity: {type: 'timing', duration: 300}}}
-      style={tw`absolute inset-0`}>
+      from={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ opacity: { type: "timing", duration: 300 } }}
+      style={tw`absolute inset-0`}
+    >
       <Carousel
         loop={false}
         height={height}
@@ -79,8 +88,8 @@ export const Tutorial = ({onClose}: Props) => {
         onProgressChange={(_, absoluteProgress) =>
           (progressValue.value = absoluteProgress)
         }
-        renderItem={({item}) =>
-          item.id === 'intro' ? (
+        renderItem={({ item }) =>
+          item.id === "intro" ? (
             <View style={tw`flex-1 justify-center px-6`}>
               <Text style={tw`text-lg font-lusitana text-white`}>
                 Midnight Satori is the breath work app that empowers you to
@@ -120,9 +129,11 @@ export const Tutorial = ({onClose}: Props) => {
                 work at your fingertips.
               </Text> */}
             </View>
-          ) : item.id === 'other' ? (
+          ) : item.id === "other" ? (
             <View style={tw`flex-1 justify-center items-center`}>
-              <Text style={tw`text-2xl font-lusitana font-bold text-white text-center mb-12`}>
+              <Text
+                style={tw`text-2xl font-lusitana font-bold text-white text-center mb-12`}
+              >
                 Other actions
               </Text>
 
@@ -158,8 +169,14 @@ export const Tutorial = ({onClose}: Props) => {
           ) : (
             <View style={tw`flex-1 justify-center items-center`}>
               <View
-                style={[tw`absolute left-0 right-0 justify-center items-center`, {top: 0, bottom: 360}]}>
-                <Text style={tw`text-2xl font-lusitana font-bold text-white text-center mb-8`}>
+                style={[
+                  tw`absolute left-0 right-0 justify-center items-center`,
+                  { top: 0, bottom: 360 },
+                ]}
+              >
+                <Text
+                  style={tw`text-2xl font-lusitana font-bold text-white text-center mb-8`}
+                >
                   {item.title}
                 </Text>
               </View>
@@ -170,8 +187,14 @@ export const Tutorial = ({onClose}: Props) => {
                 size={120}
               />
               <View
-                style={[tw`absolute left-0 right-0 justify-center items-center px-12`, {top: 360, bottom: 0}]}>
-                <Text style={tw`text-lg font-lusitana text-white text-center mt-8`}>
+                style={[
+                  tw`absolute left-0 right-0 justify-center items-center px-12`,
+                  { top: 360, bottom: 0 },
+                ]}
+              >
+                <Text
+                  style={tw`text-lg font-lusitana text-white text-center mt-8`}
+                >
                   {item.message}
                 </Text>
               </View>
@@ -180,13 +203,17 @@ export const Tutorial = ({onClose}: Props) => {
         }
       />
 
-      <View style={[tw`absolute right-2 left-2 h-10`, {bottom: bottom}]}>
+      <View style={[tw`absolute right-2 left-2 h-10`, { bottom: bottom }]}>
         <Pagination count={SLIDES.length} progressValue={progressValue} />
       </View>
 
       <TouchableOpacity
-        style={[tw`absolute right-2 h-10 w-10 items-center justify-center active:opacity-80`, {top: top}]}
-        onPress={handleClose}>
+        style={[
+          tw`absolute right-2 h-10 w-10 items-center justify-center active:opacity-80`,
+          { top: osTop },
+        ]}
+        onPress={handleClose}
+      >
         <Icon name="close" color="white" size={24} />
       </TouchableOpacity>
     </MotiView>

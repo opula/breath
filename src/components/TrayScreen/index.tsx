@@ -76,16 +76,37 @@ export const TrayScreen = ({
 
   const panGestureEvent = useAnimatedGestureHandler<
     PanGestureHandlerGestureEvent,
-    {offsetY: number}
+    {offsetY: number; startY: number; isVerticalDrag: boolean | null}
   >(
     {
       onStart: (event, context) => {
-        if (!dismissable) return;
-
         context.offsetY = translateY.value;
+        context.startY = event.absoluteY;
+        context.isVerticalDrag = null; // We don't know yet if this is a vertical drag
       },
       onActive: (event, context) => {
         if (!dismissable) return;
+
+        // Only determine direction once, when we have enough movement to be confident
+        if (context.isVerticalDrag === null) {
+          const verticalDistance = Math.abs(event.absoluteY - context.startY);
+          const horizontalDistance = Math.abs(event.translationX);
+
+          // If we've moved at least 10 pixels, determine if this is primarily a vertical gesture
+          if (verticalDistance > 10 || horizontalDistance > 10) {
+            // If the vertical movement is significantly more than horizontal, consider it a vertical drag
+            context.isVerticalDrag = verticalDistance > horizontalDistance * 1.5;
+          } else {
+            // Not enough movement yet to determine direction
+            return;
+          }
+        }
+
+        // If this isn't primarily a vertical drag, don't move the tray
+        if (!context.isVerticalDrag) return;
+
+        // Apply a minimum threshold to make it less sensitive
+        if (event.translationY < 20) return;
 
         translateY.value = clamp(
           event.translationY + context.offsetY,
@@ -96,7 +117,14 @@ export const TrayScreen = ({
       onEnd: (event, context) => {
         if (!dismissable) return;
 
-        const thresholdMet = translateY.value > 120;
+        // If we never determined this was a vertical drag, don't dismiss
+        if (!context.isVerticalDrag) {
+          translateY.value = withTiming(0, {duration: 300});
+          return;
+        }
+
+        // Increase the threshold for dismissal
+        const thresholdMet = translateY.value > 180; // Increased from 120 to 180
         translateY.value = withTiming(thresholdMet ? fullHeight : 0, {
           duration: 300,
         });
@@ -117,22 +145,23 @@ export const TrayScreen = ({
         />
       </Pressable>
 
-      <PanGestureHandler onGestureEvent={panGestureEvent}>
-        <Animated.View
-          style={[animatedTrayStyles, tw`bg-neutral-900 rounded-t-3xl`, {
-            height: fullHeight,
-            width: Math.min(540, width)
-          }]}>
-          <View style={tw`justify-center items-center h-[28px]`}>
+      <Animated.View
+        style={[animatedTrayStyles, tw`bg-neutral-900 rounded-t-3xl`, {
+          height: fullHeight,
+          width: Math.min(540, width)
+        }]}>
+        {/* Dedicated drag handle area - only this area responds to the pan gesture */}
+        <PanGestureHandler onGestureEvent={panGestureEvent}>
+          <Animated.View style={tw`justify-center items-center h-[40px] w-full`}>
             <View
-              style={tw`h-1 w-20 bg-neutral-800 rounded-sm`}
+              style={tw`h-1 w-20 bg-neutral-800 rounded-sm mt-3`}
             />
-          </View>
-          <View style={tw`px-4 flex-1`}>
-            {children}
-          </View>
-        </Animated.View>
-      </PanGestureHandler>
+          </Animated.View>
+        </PanGestureHandler>
+        <View style={tw`px-4 flex-1`}>
+          {children}
+        </View>
+      </Animated.View>
     </View>
   );
 };

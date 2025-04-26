@@ -3003,6 +3003,7 @@ __metadata:
     eventemitter3: "npm:^5.0.1"
     expo: "npm:~52.0.46"
     expo-av: "npm:15.0.2"
+    expo-linear-gradient: "npm:14.0.2"
     expo-splash-screen: "npm:~0.29.24"
     expo-status-bar: "npm:~2.0.1"
     its-fine: "npm:^2.0.0"
@@ -3011,7 +3012,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.76.9"
     react-native-audio-session: "npm:^0.0.6"
-    react-native-draggable-flatlist: "npm:^4.0.1"
+    react-native-draggable-flatlist: "npm:^4.0.2"
     react-native-gesture-handler: "npm:~2.20.2"
     react-native-haptic-feedback: "npm:^2.2.0"
     react-native-mmkv: "npm:^3.2.0"
@@ -4124,6 +4125,17 @@ __metadata:
     expo: "*"
     react: "*"
   checksum: 10c0/37957d4a8c76309fd95ab2f36f04951f7f9b8e992e61907d911a1668df176144ef74a12f7b35e4ed35d3c480c7b0e4c07b8e6f125db222f79598d9ec3cebf338
+  languageName: node
+  linkType: hard
+
+"expo-linear-gradient@npm:14.0.2":
+  version: 14.0.2
+  resolution: "expo-linear-gradient@npm:14.0.2"
+  peerDependencies:
+    expo: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/0c8c6af9d2f686315b67217bab3f601b260e470097399b5e86f10266e1a7ba26445993a45554da3440ed952b4efc53a4fd1a2e0d70d7f02053f81942c2a2c7f1
   languageName: node
   linkType: hard
 
@@ -7123,16 +7135,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-draggable-flatlist@npm:^4.0.1":
-  version: 4.0.1
-  resolution: "react-native-draggable-flatlist@npm:4.0.1"
+"react-native-draggable-flatlist@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "react-native-draggable-flatlist@npm:4.0.2"
   dependencies:
     "@babel/preset-typescript": "npm:^7.17.12"
   peerDependencies:
     react-native: ">=0.64.0"
     react-native-gesture-handler: ">=2.0.0"
     react-native-reanimated: ">=2.8.0"
-  checksum: 10c0/914e4c1df1a0fed11da474499b78f6144644ab1e45cf22b8d6c3098f12f732d3f15ad26e932114016a80d99a39e9c16cb37357ea707333065dee9d2067639c0b
+  checksum: 10c0/4caf76d76eea87442e5a3dd9313793e6ed7a3055145506d44cb399bb32ca81817e3e16405bb604ff06afe1bca146dfedc50e391ddb9db47373193f604d347d2d
   languageName: node
   linkType: hard
 

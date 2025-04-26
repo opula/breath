@@ -1,6 +1,6 @@
 import { useKeepAwake } from "@sayem314/react-native-keep-awake";
 import React, { useCallback } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
 
 import { Icon } from "../../components/Icon";
@@ -39,6 +39,7 @@ export const Main = () => {
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
   const { top, left } = useSafeAreaInsets();
+  const osTop = top + (Platform.OS === "android" ? 16 : 0);
 
   const isPaused = useAppSelector(isPausedSelector);
   const isTutorial = useAppSelector(isTutorialSelector);
@@ -103,7 +104,10 @@ export const Main = () => {
             transition={{ opacity: { type: "timing", duration: 300 } }}
             style={[
               tw`absolute`,
-              { left: Math.max(left, 16), top: Math.max(top, 16) },
+              {
+                left: Math.max(left, 16),
+                top: Math.max(osTop, 16),
+              },
             ]}
           >
             <TouchableOpacity
@@ -138,7 +142,10 @@ export const Main = () => {
             transition={{ opacity: { type: "timing", duration: 300 } }}
             style={[
               tw`absolute`,
-              { right: Math.max(left, 16), top: Math.max(top, 16) },
+              {
+                right: Math.max(left, 16),
+                top: Math.max(osTop, 16),
+              },
             ]}
           >
             <TouchableOpacity
