@@ -22,32 +22,37 @@ import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
+// Set the animation options. This is optional.
+SplashScreen.setOptions({
+  duration: 500,
+  fade: true,
+});
 
 // Create a custom dark theme to prevent white flashing during navigation
 const DarkTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: 'black',
-    card: 'black',
-    text: 'white',
-    border: 'transparent',
-    primary: 'blue',
-    notification: 'blue',
+    background: "black",
+    card: "black",
+    text: "white",
+    border: "transparent",
+    primary: "blue",
+    notification: "blue",
   },
 };
 
 const Main = () => {
   const [appIsReady, setAppIsReady] = useState(false);
-  
+
   useEffect(() => {
     async function prepare() {
       try {
         // Pre-load fonts, make API calls, etc.
-        
+
         // Artificially delay for two seconds to simulate a slow loading
         // experience. Please remove this if you copy and paste the code!
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (e) {
         console.warn(e);
       } finally {
@@ -72,10 +77,7 @@ const Main = () => {
 
   return (
     <NavigationContainer theme={DarkTheme}>
-      <View 
-        style={tw`flex-1 bg-black`} 
-        onLayout={onLayoutRootView}
-      >
+      <View style={tw`flex-1 bg-black`} onLayout={onLayoutRootView}>
         <MainStack />
       </View>
     </NavigationContainer>
@@ -89,10 +91,10 @@ const App = () => {
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <SafeAreaProvider style={tw`bg-black`}>
-              <StatusBar 
-                hidden 
-                backgroundColor="black" 
-                barStyle="light-content" 
+              <StatusBar
+                hidden
+                backgroundColor="black"
+                barStyle="light-content"
               />
               <AudioPlayerProvider>
                 <Main />

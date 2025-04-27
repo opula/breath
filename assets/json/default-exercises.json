@@ -4,12 +4,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2,
-          0,
-          1,
-          0
-        ],
+        "value": [2, 0, 1, 0],
         "count": 0
       },
       {
@@ -40,12 +35,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 0
       },
       {
@@ -60,16 +50,37 @@
     "loopable": true
   },
   {
+    "name": "Longer Holds",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [6, 0, 6, 0],
+        "count": 12
+      },
+      {
+        "type": "breath",
+        "value": [8, 0, 8, 0],
+        "count": 12
+      },
+      {
+        "type": "breath",
+        "value": [10, 0, 10, 0],
+        "count": 12
+      },
+      {
+        "type": "breath",
+        "value": [12, 0, 12, 0],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
     "name": "Rebalance",
     "seq": [
       {
         "type": "breath",
-        "value": [
-          4,
-          7,
-          8,
-          0
-        ],
+        "value": [4, 7, 8, 0],
         "count": 0
       },
       {
@@ -88,12 +99,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          7,
-          11,
-          12,
-          0
-        ],
+        "value": [7, 11, 12, 0],
         "count": 0
       },
       {
@@ -112,12 +118,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          4,
-          4,
-          4,
-          4
-        ],
+        "value": [4, 4, 4, 4],
         "count": 0
       },
       {
@@ -136,12 +137,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          3.5,
-          0,
-          1.5,
-          0
-        ],
+        "value": [3.5, 0, 1.5, 0],
         "count": 10
       },
       {
@@ -179,12 +175,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 3
       },
       {
@@ -199,12 +190,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 3
       },
       {
@@ -219,12 +205,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 3
       },
       {
@@ -239,12 +220,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 3
       },
       {
@@ -259,12 +235,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          0,
-          6,
-          0
-        ],
+        "value": [6, 0, 6, 0],
         "count": 3
       }
     ],
@@ -275,12 +246,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          4,
-          4,
-          4,
-          4
-        ],
+        "value": [4, 4, 4, 4],
         "count": 12
       },
       {
@@ -297,12 +263,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          5,
-          5,
-          5,
-          5
-        ],
+        "value": [5, 5, 5, 5],
         "count": 12
       },
       {
@@ -319,12 +280,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          6,
-          6,
-          6
-        ],
+        "value": [6, 6, 6, 6],
         "count": 12
       },
       {
@@ -341,12 +297,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          7,
-          7,
-          7,
-          7
-        ],
+        "value": [7, 7, 7, 7],
         "count": 12
       },
       {
@@ -363,12 +314,7 @@
       },
       {
         "type": "breath",
-        "value": [
-          8,
-          8,
-          8,
-          8
-        ],
+        "value": [8, 8, 8, 8],
         "count": 12
       },
       {
@@ -391,12 +337,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2,
-          0,
-          1,
-          0
-        ],
+        "value": [2, 0, 1, 0],
         "count": 40
       },
       {
@@ -419,62 +360,32 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2.4,
-          0,
-          0.6,
-          0
-        ],
+        "value": [2.4, 0, 0.6, 0],
         "count": 20
       },
       {
         "type": "breath",
-        "value": [
-          2.0,
-          0,
-          0.6,
-          0
-        ],
+        "value": [2.0, 0, 0.6, 0],
         "count": 24
       },
       {
         "type": "breath",
-        "value": [
-          1.6,
-          0,
-          0.6,
-          0
-        ],
+        "value": [1.6, 0, 0.6, 0],
         "count": 28
       },
       {
         "type": "breath",
-        "value": [
-          1.1,
-          0,
-          0.6,
-          0
-        ],
+        "value": [1.1, 0, 0.6, 0],
         "count": 36
       },
       {
         "type": "breath",
-        "value": [
-          0.6,
-          0,
-          0.6,
-          0
-        ],
+        "value": [0.6, 0, 0.6, 0],
         "count": 50
       },
       {
         "type": "breath",
-        "value": [
-          3,
-          0,
-          3,
-          0
-        ],
+        "value": [3, 0, 3, 0],
         "count": 3
       },
       {
@@ -497,22 +408,12 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2,
-          0,
-          2,
-          0
-        ],
+        "value": [2, 0, 2, 0],
         "count": 0
       },
       {
         "type": "breath",
-        "value": [
-          3,
-          0,
-          3,
-          0
-        ],
+        "value": [3, 0, 3, 0],
         "count": 3
       }
     ],
@@ -523,22 +424,12 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          1,
-          0,
-          0.6,
-          0
-        ],
+        "value": [1, 0, 0.6, 0],
         "count": 0
       },
       {
         "type": "breath",
-        "value": [
-          3,
-          0,
-          3,
-          0
-        ],
+        "value": [3, 0, 3, 0],
         "count": 3
       },
       {
@@ -561,32 +452,17 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          6,
-          12,
-          6,
-          0
-        ],
+        "value": [6, 12, 6, 0],
         "count": 0
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          18,
-          12,
-          0
-        ],
+        "value": [6, 18, 12, 0],
         "count": 0
       },
       {
         "type": "breath",
-        "value": [
-          6,
-          24,
-          12,
-          0
-        ],
+        "value": [6, 24, 12, 0],
         "count": 0
       }
     ],
@@ -597,12 +473,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          4,
-          0,
-          4,
-          12
-        ],
+        "value": [4, 0, 4, 12],
         "count": 0
       }
     ],
@@ -613,32 +484,17 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2,
-          0,
-          4,
-          0
-        ],
+        "value": [2, 0, 4, 0],
         "count": 30
       },
       {
         "type": "breath",
-        "value": [
-          4,
-          0,
-          8,
-          0
-        ],
+        "value": [4, 0, 8, 0],
         "count": 20
       },
       {
         "type": "breath",
-        "value": [
-          8,
-          0,
-          16,
-          0
-        ],
+        "value": [8, 0, 16, 0],
         "count": 10
       },
       {
@@ -666,12 +522,7 @@
     "seq": [
       {
         "type": "breath",
-        "value": [
-          2.4,
-          0,
-          0.8,
-          0
-        ],
+        "value": [2.4, 0, 0.8, 0],
         "count": 11
       },
       {

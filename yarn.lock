@@ -3004,7 +3004,7 @@ __metadata:
     expo: "npm:~52.0.46"
     expo-av: "npm:15.0.2"
     expo-linear-gradient: "npm:14.0.2"
-    expo-splash-screen: "npm:~0.29.24"
+    expo-splash-screen: "npm:^0.29.24"
     expo-status-bar: "npm:~2.0.1"
     its-fine: "npm:^2.0.0"
     lodash: "npm:^4.17.21"
@@ -4166,7 +4166,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-splash-screen@npm:~0.29.24":
+"expo-splash-screen@npm:^0.29.24":
   version: 0.29.24
   resolution: "expo-splash-screen@npm:0.29.24"
   dependencies:

@@ -22,7 +22,7 @@
     "expo": "~52.0.46",
     "expo-av": "15.0.2",
     "expo-linear-gradient": "14.0.2",
-    "expo-splash-screen": "~0.29.24",
+    "expo-splash-screen": "^0.29.24",
     "expo-status-bar": "~2.0.1",
     "its-fine": "^2.0.0",
     "lodash": "^4.17.21",

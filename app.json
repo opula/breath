@@ -8,7 +8,7 @@
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#131313"
     },
     "assetBundlePatterns": ["**/*"],
@@ -29,17 +29,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font",
-      [
-        "expo-splash-screen",
-        {
-          "imageResizeMode": "cover",
-          "backgroundColor": "#131313",
-          "image": "./assets/splash.png"
-        }
-      ]
-    ],
+    "plugins": ["expo-font", "expo-av", "expo-splash-screen"],
     "fonts": [
       {
         "asset": "./assets/fonts/Lusitana-Regular.ttf",
