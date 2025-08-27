@@ -1428,7 +1428,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-skia (1.5.0):
+  - react-native-skia (1.12.4):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2265,7 +2265,7 @@ SPEC CHECKSUMS:
   react-native-mmkv: ef0ad6b44a71c90c660234cae828bfb3c0e43a26
   react-native-orientation-locker: 78dae7f0fc920de01a69c6d8a4ceae234f0b70cf
   react-native-safe-area-context: cd916088cac5300c3266876218377518987b995e
-  react-native-skia: 9b4e1185bdc0d4e7e6488c5419b5643cc456dd2e
+  react-native-skia: 304147b8b355c1af97fcebf34efa5032c0e43b6a
   React-nativeconfig: 8efdb1ef1e9158c77098a93085438f7e7b463678
   React-NativeModulesApple: cebca2e5320a3d66e123cade23bd90a167ffce5e
   React-perflogger: 72e653eb3aba9122f9e57cf012d22d2486f33358
@@ -2302,6 +2302,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: c78b6438bf9b66121c6cb165a31e9373fea14a26
+PODFILE CHECKSUM: c995e659b658de3a89bb87fe74ccb42574bae5a6
 
 COCOAPODS: 1.16.2

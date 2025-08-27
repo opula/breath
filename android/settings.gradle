@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'Midnight Breath'
+rootProject.name = 'MDNT BRWK'
 
 dependencyResolutionManagement {
   versionCatalogs {

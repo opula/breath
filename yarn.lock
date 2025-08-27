@@ -2223,15 +2223,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shopify/react-native-skia@npm:1.5.0":
-  version: 1.5.0
-  resolution: "@shopify/react-native-skia@npm:1.5.0"
+"@shopify/react-native-skia@npm:^1.12.4":
+  version: 1.12.4
+  resolution: "@shopify/react-native-skia@npm:1.12.4"
   dependencies:
-    canvaskit-wasm: "npm:0.39.1"
+    canvaskit-wasm: "npm:0.40.0"
     react-reconciler: "npm:0.27.0"
   peerDependencies:
-    react: ">=18.0"
-    react-native: ">=0.64"
+    react: ">=18.0 <19.0.0"
+    react-native: ">=0.64 <0.78.0"
     react-native-reanimated: ">=2.0.0"
   peerDependenciesMeta:
     react-native:
@@ -2239,8 +2239,8 @@ __metadata:
     react-native-reanimated:
       optional: true
   bin:
-    setup-skia-web: ./scripts/setup-canvaskit.js
-  checksum: 10c0/d55784982bfd04d5c9fdd2b27e80faa10bea558a47d8f091f388d56ac2a98c5328bda63607093ebe43332e64c533b65514354872cdb232c64d39a662a3609f7f
+    setup-skia-web: scripts/setup-canvaskit.js
+  checksum: 10c0/479c8b2b5f83c497cc54a103f7365b505306e7a35f6eada93250a3ef2ae62533db13d1f96acacde3094980d34bf97cca3d34166a2308bba7e0565e8d40b43cf3
   languageName: node
   linkType: hard
 
@@ -2996,10 +2996,10 @@ __metadata:
     "@reduxjs/toolkit": "npm:^2.6.1"
     "@sayem314/react-native-keep-awake": "npm:^1.1.0"
     "@shopify/flash-list": "npm:1.7.3"
-    "@shopify/react-native-skia": "npm:1.5.0"
+    "@shopify/react-native-skia": "npm:^1.12.4"
     "@types/lodash": "npm:^4.14.202"
     "@types/react": "npm:~18.3.12"
-    decimal.js: "npm:^10.4.3"
+    decimal.js: "npm:^10.5.0"
     eventemitter3: "npm:^5.0.1"
     expo: "npm:~52.0.46"
     expo-av: "npm:15.0.2"
@@ -3012,6 +3012,7 @@ __metadata:
     react: "npm:18.3.1"
     react-native: "npm:0.76.9"
     react-native-audio-session: "npm:^0.0.6"
+    react-native-awesome-slider: "npm:^2.9.0"
     react-native-draggable-flatlist: "npm:^4.0.2"
     react-native-gesture-handler: "npm:~2.20.2"
     react-native-haptic-feedback: "npm:^2.2.0"
@@ -3209,12 +3210,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"canvaskit-wasm@npm:0.39.1":
-  version: 0.39.1
-  resolution: "canvaskit-wasm@npm:0.39.1"
+"canvaskit-wasm@npm:0.40.0":
+  version: 0.40.0
+  resolution: "canvaskit-wasm@npm:0.40.0"
   dependencies:
     "@webgpu/types": "npm:0.1.21"
-  checksum: 10c0/0ae60ae5c430aaa88152f3a20f40fc9a6debb15714a2ce1bdebef93005ec6d5e72e0316b91ab637f50aab220dd8694101abac497209bcf16788d00db78f5a898
+  checksum: 10c0/dde817c0ef979a67afad4ac3adf31c03133af2592efec17f715a98508fdf801104fbf05af29723fb39b4d8b2798ce5306bb3cb5c062209d9d90a750430f3361d
   languageName: node
   linkType: hard
 
@@ -3647,7 +3648,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decimal.js@npm:^10.4.3":
+"decimal.js@npm:^10.5.0":
   version: 10.5.0
   resolution: "decimal.js@npm:10.5.0"
   checksum: 10c0/785c35279df32762143914668df35948920b6c1c259b933e0519a69b7003fc0a5ed2a766b1e1dda02574450c566b21738a45f15e274b47c2ac02072c0d1f3ac3
@@ -7132,6 +7133,18 @@ __metadata:
   version: 0.0.6
   resolution: "react-native-audio-session@npm:0.0.6"
   checksum: 10c0/694f1864f50e7777b2618653f696d5794b202d56846393cf409c69cb76e75c40723ed1cac54edf41befdf48f2abb5c410573ea2ea3ba2654d13671c1a980be33
+  languageName: node
+  linkType: hard
+
+"react-native-awesome-slider@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "react-native-awesome-slider@npm:2.9.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-gesture-handler: ">=2.0.0"
+    react-native-reanimated: ">=3.0.0"
+  checksum: 10c0/54e1ed4994f7d4cbf02f542dc2e4b8f4e3f8c88a32855ceb83a383d5dcf4ed3eff8e076c05fcc53ab38ef5196d2e0a3c18aa65e0b2f89776a4a4f632f198adc8
   languageName: node
   linkType: hard
 

@@ -1,16 +1,23 @@
-import React from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
-import { View, Text, TouchableOpacity, useWindowDimensions } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
 import { Icon } from "../../components/Icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { storage } from "../../utils/storage";
-import { Slider, genSliderStyle2 } from "react-native-re-slider";
+import { Slider } from "react-native-awesome-slider";
+import { useSharedValue } from "react-native-reanimated";
 import {
   OrientationLocker,
   PORTRAIT,
 } from "@hortau/react-native-orientation-locker";
 import tw from "../../utils/tw";
+import Decimal from "decimal.js";
 
 export const MusicControls = () => {
   const { width } = useWindowDimensions();
@@ -25,6 +32,19 @@ export const MusicControls = () => {
     volume,
     setVolume,
   } = useAudioPlayer();
+
+  // Create shared values for the slider
+  const progress = useSharedValue(
+    Decimal(volume).toDecimalPlaces(2).toNumber()
+  );
+  const min = useSharedValue(0);
+  const max = useSharedValue(1);
+  console.log(progress.value);
+
+  // Keep shared value in sync with volume from context
+  useEffect(() => {
+    progress.value = volume;
+  }, [volume, progress]);
 
   const { bottom } = useSafeAreaInsets();
 
@@ -45,7 +65,7 @@ export const MusicControls = () => {
               </TouchableOpacity>
             </View>
             <View style={tw`flex-1 items-center justify-center`}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={tw`active:opacity-80`}
                 onPress={isPlaying ? pause : play}
               >
@@ -67,21 +87,32 @@ export const MusicControls = () => {
           </View>
 
           <View style={tw`flex-1`} />
-          <View style={tw`mt-2 mb-2`} key={`${layoutWidth}`}>
+          <View
+            style={tw`mt-2 mb-2 items-center justify-center`}
+            key={`${layoutWidth}`}
+          >
             <Slider
-              {...genSliderStyle2({
-                minTrackColor: "#e5e5e5",
-                maxTrackColor: "#262626",
-                thumbBorderColor: "#000000",
-              })}
-              width={layoutWidth - 54}
-              onIndexChange={async (value) => {
-                setVolume(value);
+              style={{ width: layoutWidth - 96 }}
+              progress={progress}
+              minimumValue={min}
+              maximumValue={max}
+              onSlidingComplete={useCallback(
+                (value: number) => {
+                  // Update volume when sliding completes
+                  setVolume(Decimal(value).toDecimalPlaces(2).toNumber());
+                },
+                [setVolume]
+              )}
+              // Customize the slider appearance
+              theme={{
+                minimumTrackTintColor: "#e5e5e5",
+                maximumTrackTintColor: "#262626",
+                bubbleBackgroundColor: "#000000",
               }}
-              step={0.01}
-              maxValue={1}
-              minValue={0}
-              initialValue={volume}
+              // Smooth step size
+              // steps={0.1}
+              // Disable cache track for smoother appearance
+              disableTrackFollow
             />
           </View>
           <View style={{ height: bottom }} />
