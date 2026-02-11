@@ -116,8 +116,10 @@ const starLayer = Fn(
 
 // --- Component ---
 
-export const Starfield = () => {
+export const Starfield = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -175,9 +177,14 @@ export const Starfield = () => {
     const centerFade = smoothstep(float(0.01), float(0.25), uvLen.sub(0.02));
     const finalColor = col.mul(centerFade);
 
+    // Grayscale desaturation
+    const grayscaleU = uniform(float(0));
+    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = finalColor;
+    material.colorNode = outputColor;
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -194,6 +201,8 @@ export const Starfield = () => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      (grayscaleU as unknown as { value: number }).value =
+        grayscaleRef.current ? 1.0 : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

@@ -73,8 +73,10 @@ const getFlow = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 // --- Component ---
 
-export const Waves = () => {
+export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -146,9 +148,14 @@ export const Waves = () => {
     const c3 = vec3(0.4, 0.8, 0.8); // Cyan/teal
     const finalColor = c1.mul(b1).add(c2.mul(b2)).add(c3.mul(b3));
 
+    // Grayscale desaturation
+    const grayscaleU = uniform(float(0));
+    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = finalColor;
+    material.colorNode = outputColor;
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -165,6 +172,8 @@ export const Waves = () => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      (grayscaleU as unknown as { value: number }).value =
+        grayscaleRef.current ? 1.0 : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

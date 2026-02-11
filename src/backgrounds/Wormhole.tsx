@@ -19,8 +19,10 @@ const rotationSpeed = 0.3;
 const radialSegments = 96;
 const lengthSegments = 2048;
 
-export const Wormhole = () => {
+export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -79,9 +81,26 @@ export const Wormhole = () => {
       colorsArr[colorOffset + 2] = color.b;
     }
 
+    // Pre-compute grayscale vertex colors
+    const grayColorsArr = new Float32Array(colorsArr.length);
+    for (let i = 0; i < colorsArr.length; i += 3) {
+      const lum =
+        colorsArr[i] * 0.299 +
+        colorsArr[i + 1] * 0.587 +
+        colorsArr[i + 2] * 0.114;
+      grayColorsArr[i] = lum;
+      grayColorsArr[i + 1] = lum;
+      grayColorsArr[i + 2] = lum;
+    }
+
+    const activeColorArr = new Float32Array(colorsArr);
+    const activeColorAttr = new THREE.BufferAttribute(activeColorArr, 3);
+
     const tunnelGeo = new THREE.BufferGeometry();
     tunnelGeo.setAttribute("position", tubeVerts.clone());
-    tunnelGeo.setAttribute("color", new THREE.BufferAttribute(colorsArr, 3));
+    tunnelGeo.setAttribute("color", activeColorAttr);
+
+    let wasGrayscale = false;
 
     const mat = new THREE.PointsMaterial({
       size: 0.03,
@@ -128,6 +147,14 @@ export const Wormhole = () => {
       }
       const delta = clock.getDelta();
       const elapsed = clock.elapsedTime;
+
+      // Swap vertex colors for grayscale (only on change)
+      const isGray = grayscaleRef.current;
+      if (isGray !== wasGrayscale) {
+        activeColorArr.set(isGray ? grayColorsArr : colorsArr);
+        activeColorAttr.needsUpdate = true;
+        wasGrayscale = isGray;
+      }
 
       tubes.forEach((tb) => tb.update(delta));
 

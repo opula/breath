@@ -86,8 +86,10 @@ const layeredNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 // --- Component ---
 
-export const Rorschach = () => {
+export const Rorschach = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -158,14 +160,19 @@ export const Rorschach = () => {
       inkNoise.sub(THRESHOLD),
     );
 
-    // Classic Rorschach: warm paper bg + dark ink
-    const bgColor = vec3(0.976, 0.965, 0.95);
-    const inkColor = vec3(0.08, 0.08, 0.14);
+    // Inverted Rorschach: dark bg + light ink
+    const bgColor = vec3(0.02, 0.02, 0.03);
+    const inkColor = vec3(0.97, 0.97, 0.96);
     const finalColor = mix(bgColor, inkColor, inkIntensity);
+
+    // Grayscale desaturation
+    const grayscaleU = uniform(float(0));
+    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = finalColor;
+    material.colorNode = outputColor;
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -182,6 +189,8 @@ export const Rorschach = () => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      (grayscaleU as unknown as { value: number }).value =
+        grayscaleRef.current ? 1.0 : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

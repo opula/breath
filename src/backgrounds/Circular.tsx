@@ -9,6 +9,8 @@ import {
   float,
   vec2,
   vec3,
+  sin,
+  cos,
   fract,
   floor,
   mix,
@@ -18,6 +20,7 @@ import {
   max,
   pow,
   clamp,
+  abs,
   dot,
   atan2,
   uv,
@@ -28,18 +31,26 @@ import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 
 // --- Constants ---
 const TWO_PI = 6.2831853;
-const ZOOM = 0.3;
-const ROTATION_SPEED = 0.01;
-const TRAIL_LENGTH = 0.25;
-const TRAIL_SHARPNESS = 14.0;
+const ZOOM = 0.4;
+const BASE_SPEED = 0.024;
+const SPEED_VARIANCE = 0.008;
+const BAND_COUNT = 250.0;
 const MIN_RADIUS = 0.02;
 const MAX_RADIUS = 1.5;
-const BRIGHTNESS_VARIANCE = 0.5;
-const DENSITY_NOISE_SCALE = 3.0;
-const DENSITY_THRESHOLD = 0.35;
-const DENSITY_SOFTNESS = 0.1;
+const CENTER_DRIFT = 0.1;
+
+// Cosine gradient palette (from Echo)
+const PAL_A = vec3(0.0, 0.5, 0.5);
+const PAL_B = vec3(0.0, 0.5, 0.5);
+const PAL_C = vec3(0.0, 0.5, 0.333);
+const PAL_D = vec3(0.0, 0.5, 0.667);
 
 // --- TSL shader functions ---
+
+// Cosine color palette: cycles through harmonious cool tones
+const palette = Fn(([t]: [ReturnType<typeof float>]) => {
+  return PAL_A.add(PAL_B.mul(cos(float(TWO_PI).mul(PAL_C.mul(t).add(PAL_D)))));
+});
 
 // float → float hash
 const hash11 = Fn(([pIn]: [ReturnType<typeof float>]) => {
@@ -51,9 +62,7 @@ const hash11 = Fn(([pIn]: [ReturnType<typeof float>]) => {
 
 // float → vec2 hash
 const hash12 = Fn(([pIn]: [ReturnType<typeof float>]) => {
-  const p3 = fract(
-    vec3(pIn.mul(0.1031), pIn.mul(0.103), pIn.mul(0.0973)),
-  );
+  const p3 = fract(vec3(pIn.mul(0.1031), pIn.mul(0.103), pIn.mul(0.0973)));
   const dp = dot(p3, vec3(p3.y, p3.z, p3.x).add(33.33));
   const p3b = p3.add(dp);
   return fract(
@@ -61,18 +70,63 @@ const hash12 = Fn(([pIn]: [ReturnType<typeof float>]) => {
   );
 });
 
-// 1D value noise
-const noise1D = Fn(([x]: [ReturnType<typeof float>]) => {
-  const i = floor(x);
-  const f = fract(x);
-  const u = f.mul(f).mul(float(3.0).sub(float(2.0).mul(f)));
-  return mix(hash11(i), hash11(i.add(1.0)), u);
-});
+// Compute 3 stars for one band, returns vec3 colored intensity
+const bandContribution = Fn(
+  ([bandIdx, angle, radius, timeU]: [
+    ReturnType<typeof float>,
+    ReturnType<typeof float>,
+    ReturnType<typeof float>,
+    ReturnType<typeof float>,
+  ]) => {
+    // Band center and radial falloff
+    const bandCenter = bandIdx.add(0.5).div(BAND_COUNT);
+    const bandWidth = float(1.0 / BAND_COUNT);
+    const radialDist = abs(radius.sub(bandCenter)).div(bandWidth.mul(0.5));
+    const radialFalloff = float(1.0).sub(
+      smoothstep(float(0.0), float(1.0), radialDist),
+    );
+
+    // 3 stars per band (unrolled)
+    let colorAccum = vec3(0.0, 0.0, 0.0);
+    for (let s = 0; s < 3; s++) {
+      const seed = bandIdx.mul(51.7).add(s * 137.3);
+      const rand = hash12(seed);
+      const angleOffset = rand.x.mul(TWO_PI);
+      const brightness = float(0.3).add(rand.y.mul(0.7));
+      const trailLen = float(0.08).add(hash11(seed.add(7.7)).mul(0.3));
+      const speed = float(BASE_SPEED).add(
+        hash11(seed.add(19.3)).mul(SPEED_VARIANCE),
+      );
+
+      // Per-star color from palette
+      const starColor = palette(hash11(seed.add(42.0)));
+
+      // Animated angular position (per-star speed)
+      const angularPos = fract(
+        angle.div(TWO_PI).add(timeU.mul(speed)).add(angleOffset),
+      );
+
+      // Streak shape with sharp falloff
+      const distFromHead = min(angularPos, float(1.0).sub(angularPos));
+      const rawShape = max(
+        float(0.0),
+        float(1.0).sub(distFromHead.div(trailLen.mul(0.5))),
+      );
+      const streak = pow(rawShape, float(10.0));
+
+      colorAccum = colorAccum.add(starColor.mul(streak.mul(brightness)));
+    }
+
+    return colorAccum.mul(radialFalloff);
+  },
+);
 
 // --- Component ---
 
-export const Circular = () => {
+export const Circular = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -99,60 +153,48 @@ export const Circular = () => {
     const uvCentered = uvRaw.mul(2.0).sub(1.0);
     const uvZoomed = vec2(uvCentered.x.mul(aspectU), uvCentered.y).mul(ZOOM);
 
-    // Polar coords from pole star center
-    const center = vec2(0.0, 0.02);
+    // Drifting pole star center (slow Lissajous motion)
+    const center = vec2(
+      sin(timeU.mul(0.03)).mul(CENTER_DRIFT),
+      cos(timeU.mul(0.02)).mul(CENTER_DRIFT).add(0.02),
+    );
     const dir = uvZoomed.sub(center);
     const radius = length(dir);
     const angle = atan2(dir.y, dir.x);
 
-    // Radius-based randomization
-    const radiusSeed = floor(radius.mul(1000.0)).div(1000.0);
-    const rand = hash12(radiusSeed.mul(51.7));
-    const angleOffset = rand.x.mul(TWO_PI);
-    const brightnessFactor = float(0.5).add(rand.y.mul(BRIGHTNESS_VARIANCE));
+    // Sample 3 neighboring bands for smooth blending
+    const baseBand = floor(radius.mul(BAND_COUNT));
+    let totalColor = vec3(0.0, 0.0, 0.0);
+    for (let b = -1; b <= 1; b++) {
+      const band = baseBand.add(b);
+      totalColor = totalColor.add(
+        bandContribution(band, angle, radius, timeU),
+      );
+    }
 
-    // Animated angular position
-    const angularPos = fract(
-      angle.div(TWO_PI).add(timeU.mul(ROTATION_SPEED)).add(angleOffset),
+    // Radius masks
+    const innerMask = smoothstep(
+      float(MIN_RADIUS - 0.005),
+      float(MIN_RADIUS),
+      radius,
     );
-
-    // Streak shape (sharp trail falloff)
-    const distFromHead = min(angularPos, float(1.0).sub(angularPos));
-    const trailHalf = TRAIL_LENGTH * 0.5;
-    const rawShape = max(
-      float(0.0),
-      float(1.0).sub(distFromHead.div(trailHalf)),
-    );
-    const streakShape = pow(rawShape, float(TRAIL_SHARPNESS));
-
-    // Density modulation via 1D noise
-    const densityNoise = noise1D(radius.mul(DENSITY_NOISE_SCALE).add(23.4));
-    const densityFactor = smoothstep(
-      float(DENSITY_THRESHOLD - DENSITY_SOFTNESS),
-      float(DENSITY_THRESHOLD + DENSITY_SOFTNESS),
-      densityNoise,
-    );
-
-    // Combined intensity with radius mask (replaces if/else)
-    const rawIntensity = streakShape.mul(densityFactor).mul(brightnessFactor);
-    const innerMask = smoothstep(float(MIN_RADIUS - 0.005), float(MIN_RADIUS), radius);
     const outerMask = float(1.0).sub(
       smoothstep(float(MAX_RADIUS), float(MAX_RADIUS + 0.05), radius),
     );
-    const totalIntensity = clamp(
-      rawIntensity.mul(innerMask).mul(outerMask),
+    const finalColor = clamp(
+      totalColor.mul(innerMask).mul(outerMask),
       float(0.0),
       float(1.0),
     );
 
-    // Blend sky and trail colors
-    const skyColor = vec3(0.0, 0.0, 0.0);
-    const trailColor = vec3(0.9, 0.92, 0.96);
-    const finalColor = mix(skyColor, trailColor, totalIntensity);
+    // Grayscale desaturation
+    const grayscaleU = uniform(float(0));
+    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = finalColor;
+    material.colorNode = outputColor;
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -169,6 +211,8 @@ export const Circular = () => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      (grayscaleU as unknown as { value: number }).value =
+        grayscaleRef.current ? 1.0 : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

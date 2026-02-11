@@ -17,6 +17,7 @@ import {
   length,
   pow,
   clamp,
+  dot,
   uv,
   uniform,
 } from "three/tsl";
@@ -71,8 +72,10 @@ const auroraLayer = Fn(
 
 // --- Component ---
 
-export const Aurora = () => {
+export const Aurora = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -142,9 +145,14 @@ export const Aurora = () => {
       .add(sky2)
       .mul(middle);
 
+    // Grayscale desaturation
+    const grayscaleU = uniform(float(0));
+    const lum = dot(color, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(color, vec3(lum, lum, lum), grayscaleU);
+
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = color;
+    material.colorNode = outputColor;
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -161,6 +169,8 @@ export const Aurora = () => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      (grayscaleU as unknown as { value: number }).value =
+        grayscaleRef.current ? 1.0 : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }
