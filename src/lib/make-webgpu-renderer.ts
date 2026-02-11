@@ -61,10 +61,11 @@ export class ReactNativeCanvas {
 
 export const makeWebGPURenderer = (
   context: GPUCanvasContext,
-  { antialias = true }: { antialias?: boolean } = {},
+  { antialias = true, alpha = false }: { antialias?: boolean; alpha?: boolean } = {},
 ) =>
   new THREE.WebGPURenderer({
     antialias,
+    alpha,
     // @ts-expect-error - RN canvas doesn't match HTMLCanvasElement type
     canvas: new ReactNativeCanvas(context.canvas),
     context,

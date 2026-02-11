@@ -17,19 +17,11 @@ import { incrementalCompletionTimer } from "../../utils/exercise";
 
 import { exerciseScheduler } from "../../services/ExerciseScheduler";
 import {
-  Canvas,
-  Fill,
-  Shader,
-  useClock,
-  vec,
-} from "@shopify/react-native-skia";
-import { source } from "./source";
-import {
   runOnJS,
-  useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { BreathRing } from "./BreathRing";
 import {
   Directions,
   Gesture,
@@ -452,16 +444,6 @@ export const DynamicExercise = memo(
       exercisesRef.current = exercises;
     }, [exercises]);
 
-    const clock = useClock();
-
-    const uniforms = useDerivedValue(() => {
-      return {
-        canvas: vec(240, 240),
-        iTime: clock.value / 1000,
-        iBreath: iBreath.value,
-      };
-    }, [clock, iBreath]);
-
     const singleTap = useMemo(
       () =>
         Gesture.Tap().onEnd((_, success) => {
@@ -558,11 +540,7 @@ export const DynamicExercise = memo(
         <Animated.View style={tw`absolute inset-0 bg-transparent`}>
           <View style={tw`absolute inset-0 justify-center items-center z-0`}>
             {isBreathing ? (
-              <Canvas style={{ height: 240, width: 240 }}>
-                <Fill>
-                  <Shader source={source} uniforms={uniforms} />
-                </Fill>
-              </Canvas>
+              <BreathRing breath={iBreath} />
             ) : null}
           </View>
           <View style={tw`absolute inset-0 items-center justify-center`}>
