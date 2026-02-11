@@ -2,14 +2,10 @@ import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {useCardAnimation} from '@react-navigation/stack';
 import React, {ReactNode, useCallback, useEffect, useMemo} from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
-import {
-  PanGestureHandler,
-  PanGestureHandlerGestureEvent,
-} from 'react-native-gesture-handler';
+import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   runOnJS,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -74,66 +70,54 @@ export const TrayScreen = ({
     ],
   }));
 
-  const panGestureEvent = useAnimatedGestureHandler<
-    PanGestureHandlerGestureEvent,
-    {offsetY: number; startY: number; isVerticalDrag: boolean | null}
-  >(
-    {
-      onStart: (event, context) => {
-        context.offsetY = translateY.value;
-        context.startY = event.absoluteY;
-        context.isVerticalDrag = null; // We don't know yet if this is a vertical drag
-      },
-      onActive: (event, context) => {
-        if (!dismissable) return;
+  const offsetY = useSharedValue(0);
+  const startY = useSharedValue(0);
+  const isVerticalDrag = useSharedValue<number>(0); // 0 = unknown, 1 = yes, -1 = no
 
-        // Only determine direction once, when we have enough movement to be confident
-        if (context.isVerticalDrag === null) {
-          const verticalDistance = Math.abs(event.absoluteY - context.startY);
-          const horizontalDistance = Math.abs(event.translationX);
+  const panGesture = Gesture.Pan()
+    .onStart((event) => {
+      offsetY.value = translateY.value;
+      startY.value = event.absoluteY;
+      isVerticalDrag.value = 0;
+    })
+    .onUpdate((event) => {
+      if (!dismissable) return;
 
-          // If we've moved at least 10 pixels, determine if this is primarily a vertical gesture
-          if (verticalDistance > 10 || horizontalDistance > 10) {
-            // If the vertical movement is significantly more than horizontal, consider it a vertical drag
-            context.isVerticalDrag = verticalDistance > horizontalDistance * 1.5;
-          } else {
-            // Not enough movement yet to determine direction
-            return;
-          }
-        }
+      if (isVerticalDrag.value === 0) {
+        const verticalDistance = Math.abs(event.absoluteY - startY.value);
+        const horizontalDistance = Math.abs(event.translationX);
 
-        // If this isn't primarily a vertical drag, don't move the tray
-        if (!context.isVerticalDrag) return;
-
-        // Apply a minimum threshold to make it less sensitive
-        if (event.translationY < 20) return;
-
-        translateY.value = clamp(
-          event.translationY + context.offsetY,
-          0,
-          fullHeight,
-        );
-      },
-      onEnd: (event, context) => {
-        if (!dismissable) return;
-
-        // If we never determined this was a vertical drag, don't dismiss
-        if (!context.isVerticalDrag) {
-          translateY.value = withTiming(0, {duration: 300});
+        if (verticalDistance > 10 || horizontalDistance > 10) {
+          isVerticalDrag.value = verticalDistance > horizontalDistance * 1.5 ? 1 : -1;
+        } else {
           return;
         }
+      }
 
-        // Increase the threshold for dismissal
-        const thresholdMet = translateY.value > 180; // Increased from 120 to 180
-        translateY.value = withTiming(thresholdMet ? fullHeight : 0, {
-          duration: 300,
-        });
+      if (isVerticalDrag.value !== 1) return;
+      if (event.translationY < 20) return;
 
-        if (thresholdMet) runOnJS(navigation.goBack)();
-      },
-    },
-    [navigation],
-  );
+      translateY.value = clamp(
+        event.translationY + offsetY.value,
+        0,
+        fullHeight,
+      );
+    })
+    .onEnd(() => {
+      if (!dismissable) return;
+
+      if (isVerticalDrag.value !== 1) {
+        translateY.value = withTiming(0, {duration: 300});
+        return;
+      }
+
+      const thresholdMet = translateY.value > 180;
+      translateY.value = withTiming(thresholdMet ? fullHeight : 0, {
+        duration: 300,
+      });
+
+      if (thresholdMet) runOnJS(navigation.goBack)();
+    });
 
   return (
     <View style={tw`flex-1 justify-end items-center`}>
@@ -151,13 +135,13 @@ export const TrayScreen = ({
           width: Math.min(540, width)
         }]}>
         {/* Dedicated drag handle area - only this area responds to the pan gesture */}
-        <PanGestureHandler onGestureEvent={panGestureEvent}>
+        <GestureDetector gesture={panGesture}>
           <Animated.View style={tw`justify-center items-center h-[40px] w-full`}>
             <View
               style={tw`h-1 w-20 bg-neutral-800 rounded-sm mt-3`}
             />
           </Animated.View>
-        </PanGestureHandler>
+        </GestureDetector>
         <View style={tw`px-4 flex-1`}>
           {children}
         </View>

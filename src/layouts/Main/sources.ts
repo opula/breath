@@ -14,7 +14,8 @@ import { source as CircleSource } from "../../shaders/Circle";
 import { source as IntrospectiveSource } from "../../shaders/Introspective";
 import { source as SpaceZoomSource } from "../../shaders/SpaceZoom";
 
-export const sources = [
+// Skia shader sources (indices 0 through skiaSources.length - 1)
+export const skiaSources = [
   SpaceGifSource,
   StarfieldSource,
   BlocksSource,
@@ -27,3 +28,12 @@ export const sources = [
   TunnelSource,
   RipplesSource,
 ];
+
+// Three.js background names (indices skiaSources.length and beyond)
+export const threeBackgrounds = ["Wormhole"] as const;
+
+// Keep the old export name for backward compatibility during transition
+export const sources = skiaSources;
+
+// Total number of backgrounds available (Skia + Three.js)
+export const TOTAL_BACKGROUNDS = skiaSources.length + threeBackgrounds.length;

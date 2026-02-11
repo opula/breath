@@ -51,7 +51,7 @@ const AudioPlayerContext = createContext<
 >(undefined);
 
 // Define the provider component
-export const AudioPlayerProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+export const AudioPlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const soundRef = useRef<Audio.Sound | null>(null);
   const [state, setState] = useState<AudioPlayerState>({
     isPlaying: false,

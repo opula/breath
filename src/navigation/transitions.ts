@@ -1,9 +1,9 @@
 import { Animated, Easing, Platform } from 'react-native';
-import { 
-  StackCardInterpolationProps, 
+import {
+  StackCardInterpolationProps,
   StackCardInterpolatedStyle,
   TransitionSpec
-} from '@react-navigation/stack/lib/typescript/src/types';
+} from '@react-navigation/stack';
 
 /**
  * Custom transition configurations for smoother cross-platform transitions

@@ -13,7 +13,11 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "three": ["./node_modules/@types/three/src/Three.WebGPU"],
+      "three/addons/*": ["./node_modules/@types/three/examples/jsm/*"]
+    }
   },
   "exclude": [
     "node_modules",

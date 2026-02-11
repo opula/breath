@@ -6,8 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
-import { FiberProvider } from "its-fine";
-import { StatusBar, Text, View, Platform } from "react-native";
+import { StatusBar, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // Theme is now handled by twrnc
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -86,25 +85,22 @@ const Main = () => {
 
 const App = () => {
   return (
-    <FiberProvider>
-      <GestureHandlerRootView style={tw`flex-1 bg-black`}>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <SafeAreaProvider style={tw`bg-black`}>
-              <StatusBar
-                hidden
-                backgroundColor="black"
-                barStyle="light-content"
-              />
-              <AudioPlayerProvider>
-                <Main />
-              </AudioPlayerProvider>
-              {/* <Playground /> */}
-            </SafeAreaProvider>
-          </PersistGate>
-        </Provider>
-      </GestureHandlerRootView>
-    </FiberProvider>
+    <GestureHandlerRootView style={tw`flex-1 bg-black`}>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <SafeAreaProvider style={tw`bg-black`}>
+            <StatusBar
+              hidden
+              backgroundColor="black"
+              barStyle="light-content"
+            />
+            <AudioPlayerProvider>
+              <Main />
+            </AudioPlayerProvider>
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
+    </GestureHandlerRootView>
   );
 };
 

@@ -31,7 +31,7 @@ import {
   engageTutorial as engageTutorialAction,
 } from "../../state/configuration.reducer";
 import { getSelectorSnapshot } from "../../utils/selectors";
-import { sources } from "./sources";
+import { TOTAL_BACKGROUNDS } from "./sources";
 
 export const Main = () => {
   useKeepAwake();
@@ -47,8 +47,8 @@ export const Main = () => {
   const changeSource = useCallback(
     (direction: number) => {
       const sourceIndex = getSelectorSnapshot(sourceIndexSelector);
-      const nextIndex = (sourceIndex + direction) % sources.length;
-      const newSourceIndex = nextIndex > -1 ? nextIndex : sources.length - 1;
+      const nextIndex = (sourceIndex + direction) % TOTAL_BACKGROUNDS;
+      const newSourceIndex = nextIndex > -1 ? nextIndex : TOTAL_BACKGROUNDS - 1;
       dispatch(updateSourceAction(newSourceIndex));
     },
     [dispatch]

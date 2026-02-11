@@ -11,7 +11,7 @@ export const reduxStorage: Storage = {
     return Promise.resolve(value);
   },
   removeItem: key => {
-    reduxPersistedStorage.delete(key);
+    reduxPersistedStorage.remove(key);
     return Promise.resolve();
   },
 };
