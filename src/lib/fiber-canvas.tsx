@@ -27,12 +27,15 @@ export const FiberCanvas = ({
   scene,
   camera,
 }: FiberCanvasProps) => {
-  const root = useRef<ReconcilerRoot<OffscreenCanvas>>(null!);
+  const root = useRef<ReconcilerRoot<OffscreenCanvas> | null>(null);
   // @ts-expect-error - extend expects different type signature
   React.useMemo(() => extend(THREE), []);
   const canvasRef = useRef<CanvasRef>(null);
   useEffect(() => {
-    const context = canvasRef.current!.getContext("webgpu")!;
+    const context = canvasRef.current?.getContext("webgpu");
+    if (!context) {
+      return;
+    }
     const renderer = makeWebGPURenderer(context);
 
     // @ts-expect-error - RN canvas doesn't match HTMLCanvasElement type
@@ -46,10 +49,9 @@ export const FiberCanvas = ({
       height: canvas.clientHeight,
     };
 
-    if (!root.current) {
-      root.current = createRoot(canvas);
-    }
-    root.current.configure({
+    const rootInstance = createRoot(canvas);
+    root.current = rootInstance;
+    rootInstance.configure({
       size,
       events,
       scene,
@@ -66,13 +68,19 @@ export const FiberCanvas = ({
         };
       },
     });
-    root.current.render(children);
     return () => {
+      root.current = null;
       if (canvas != null) {
         unmountComponentAtNode(canvas!);
       }
+      renderer.setAnimationLoop(null);
+      renderer.dispose();
     };
-  });
+  }, [camera, scene]);
+
+  useEffect(() => {
+    root.current?.render(children);
+  }, [children]);
 
   return <Canvas ref={canvasRef} style={style} />;
 };

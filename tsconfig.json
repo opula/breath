@@ -16,6 +16,8 @@
     "noEmit": true,
     "paths": {
       "three": ["./node_modules/@types/three/src/Three.WebGPU"],
+      "three/tsl": ["./node_modules/@types/three/src/Three.TSL"],
+      "three/webgpu": ["./node_modules/@types/three/src/Three.WebGPU"],
       "three/addons/*": ["./node_modules/@types/three/examples/jsm/*"]
     }
   },

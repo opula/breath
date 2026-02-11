@@ -16,13 +16,20 @@ const noiseAmp = 0.5;
 const hueNoiseFreq = 0.005;
 const tunnelSpeed = 12;
 const rotationSpeed = 0.3;
+const radialSegments = 96;
+const lengthSegments = 2048;
 
 export const Wormhole = () => {
   const ref = useRef<CanvasRef>(null);
 
   useEffect(() => {
-    const context = ref.current!.getContext("webgpu")!;
-    const { width, height } = context.canvas;
+    const context = ref.current?.getContext("webgpu");
+    if (!context) {
+      return;
+    }
+    let disposed = false;
+    const canvas = context.canvas as unknown as { width: number; height: number };
+    const { width, height } = canvas;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -37,12 +44,12 @@ export const Wormhole = () => {
       radius,
       radius,
       tubeLength,
-      128,
-      4096,
+      radialSegments,
+      lengthSegments,
       true,
     );
     const tubeVerts = tubeGeo.attributes.position;
-    const colorsArr: number[] = [];
+    const colorsArr = new Float32Array(tubeVerts.count * 3);
     const noise = new ImprovedNoise();
     const p = new THREE.Vector3();
     const v3 = new THREE.Vector3();
@@ -66,8 +73,15 @@ export const Wormhole = () => {
         i * 0.001 * hueNoiseFreq,
       );
       color.setHSL(0.5 - colorNoise, 1, 0.5);
-      colorsArr.push(color.r, color.g, color.b);
+      const colorOffset = i * 3;
+      colorsArr[colorOffset] = color.r;
+      colorsArr[colorOffset + 1] = color.g;
+      colorsArr[colorOffset + 2] = color.b;
     }
+
+    const tunnelGeo = new THREE.BufferGeometry();
+    tunnelGeo.setAttribute("position", tubeVerts.clone());
+    tunnelGeo.setAttribute("color", new THREE.BufferAttribute(colorsArr, 3));
 
     const mat = new THREE.PointsMaterial({
       size: 0.03,
@@ -78,15 +92,7 @@ export const Wormhole = () => {
       const startPosZ = -tubeLength * index;
       const endPosZ = tubeLength;
       const resetPosZ = -tubeLength;
-
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", tubeVerts.clone());
-      geo.setAttribute(
-        "color",
-        new THREE.Float32BufferAttribute(colorsArr, 3),
-      );
-
-      const points = new THREE.Points(geo, mat);
+      const points = new THREE.Points(tunnelGeo, mat);
       points.rotation.x = Math.PI * 0.5;
       points.position.z = startPosZ;
 
@@ -107,7 +113,7 @@ export const Wormhole = () => {
     scene.add(tubeA.points, tubeB.points);
 
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    renderer.init();
+    void renderer.init();
     renderer.toneMapping = THREE.ReinhardToneMapping;
 
     const postProcessing = new THREE.PostProcessing(renderer);
@@ -117,6 +123,9 @@ export const Wormhole = () => {
     postProcessing.outputNode = scenePassColor.add(bloomPass);
 
     function animate() {
+      if (disposed) {
+        return;
+      }
       const delta = clock.getDelta();
       const elapsed = clock.elapsedTime;
 
@@ -126,17 +135,22 @@ export const Wormhole = () => {
       camera.position.y = Math.sin(elapsed * 0.6) * 1.5;
 
       postProcessing.render();
-      context.present();
+      context!.present();
     }
 
     renderer.setAnimationLoop(animate);
 
     return () => {
+      disposed = true;
       renderer.setAnimationLoop(null);
+      scene.remove(tubeA.points, tubeB.points);
+      tunnelGeo.dispose();
       tubeGeo.dispose();
       mat.dispose();
+      (postProcessing as { dispose?: () => void }).dispose?.();
+      renderer.dispose();
     };
-  }, [ref]);
+  }, []);
 
   return (
     <View style={{ flex: 1 }}>

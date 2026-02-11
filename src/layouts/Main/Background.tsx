@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { MotiView } from "moti";
 import tw from "../../utils/tw";
+import { Aurora } from "../../backgrounds/Aurora";
 import { Wormhole } from "../../backgrounds/Wormhole";
 
 export const Background = memo(() => {
@@ -12,7 +13,8 @@ export const Background = memo(() => {
       transition={{ opacity: { type: "timing", duration: 300 } }}
       style={tw`flex-1`}
     >
-      <Wormhole />
+      <Aurora />
+      {/* <Wormhole /> */}
     </MotiView>
   );
 });
