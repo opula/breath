@@ -5,6 +5,9 @@ import { Aurora } from "../../backgrounds/Aurora";
 import { Wormhole } from "../../backgrounds/Wormhole";
 import { Starfield } from "../../backgrounds/Starfield";
 import { Rorschach } from "../../backgrounds/Rorschach";
+import { Waves } from "../../backgrounds/Waves";
+import { Circular } from "../../backgrounds/Circular";
+import { Echo } from "../../backgrounds/Echo";
 
 export const Background = memo(() => {
   return (
@@ -15,7 +18,10 @@ export const Background = memo(() => {
       transition={{ opacity: { type: "timing", duration: 300 } }}
       style={tw`flex-1`}
     >
-      <Rorschach />
+      <Echo />
+      {/* <Circular /> */}
+      {/* <Waves /> */}
+      {/* <Rorschach /> */}
       {/* <Starfield /> */}
       {/* <Aurora /> */}
       {/* <Wormhole /> */}
