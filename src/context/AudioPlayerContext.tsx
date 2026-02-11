@@ -1,267 +1,270 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
-  useRef,
   useCallback,
+  useRef,
 } from 'react';
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import playlistData from '../../assets/data/playlist.json';
-import { storage, LAST_TRACK_PLAYED, MUSIC_BG_VOLUME } from '../utils/storage';
+import {
+  useAudioPlayer as useExpoAudioPlayer,
+  useAudioPlayerStatus,
+  setAudioModeAsync,
+} from 'expo-audio';
+import * as DocumentPicker from 'expo-document-picker';
+import * as Clipboard from 'expo-clipboard';
+import uuid from 'react-native-uuid';
+import {useSelector, useDispatch} from 'react-redux';
+import {
+  storage,
+  MUSIC_BG_VOLUME,
+  LEGACY_MUSIC_FILE_URI,
+  LEGACY_MUSIC_FILE_NAME,
+} from '../utils/storage';
+import {
+  addFile,
+  removeFile,
+  setActiveFile,
+} from '../state/musicLibrary.reducer';
+import {
+  activeFileSelector,
+  activeFileIdSelector,
+} from '../state/musicLibrary.selectors';
+import {
+  copyToMusicDir,
+  downloadToMusicDir,
+  deleteFromMusicDir,
+  getMusicFileUri,
+} from '../utils/musicFiles';
+import {store} from '../store';
+import {MusicFile} from '../types/music';
 
-// Define the shape of our track data (adjust based on playlist.json structure)
-interface Track {
-  id?: string | number; 
-  url: string; 
-  title: string;
-  artist: string;
-  // Add other relevant fields like artwork, duration if available
+function getInitialSource(): {uri: string} | undefined {
+  const state = store.getState();
+  const active = activeFileSelector(state);
+  if (active) {
+    return {uri: getMusicFileUri(active.fileName)};
+  }
+  // Fall back to legacy MMKV key for first launch after upgrade
+  const legacyUri = storage.getString(LEGACY_MUSIC_FILE_URI);
+  if (legacyUri) {
+    return {uri: legacyUri};
+  }
+  return undefined;
 }
 
-// Define the shape of the context state
 interface AudioPlayerState {
   isPlaying: boolean;
   isLoaded: boolean;
-  isBuffering: boolean;
-  isLooping: boolean;
-  durationMillis: number;
-  positionMillis: number;
-  currentTrack: Track | null;
-  currentTrackIndex: number;
   volume: number;
-  error: string | null;
+  activeFileName: string | null;
 }
 
-// Define the actions available on the context
 interface AudioPlayerActions {
   play: () => void;
   pause: () => void;
-  seek: (positionMillis: number) => void;
-  nextTrack: () => void;
-  previousTrack: () => void;
-  loadTrack: (index: number) => Promise<void>;
-  setVolume: (volume: number) => void;
-  toggleLooping: () => void;
+  setVolume: (v: number) => void;
+  setLiveVolume: (v: number) => void;
+  pickLocalFile: () => Promise<void>;
+  pasteUrl: () => Promise<void>;
+  playFile: (id: string) => void;
+  deleteFile: (id: string) => void;
 }
 
-// Create the context
 const AudioPlayerContext = createContext<
   (AudioPlayerState & AudioPlayerActions) | undefined
 >(undefined);
 
-// Define the provider component
-export const AudioPlayerProvider = ({ children }: { children: React.ReactNode }) => {
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const [state, setState] = useState<AudioPlayerState>({
-    isPlaying: false,
-    isLoaded: false,
-    isBuffering: false,
-    isLooping: false,
-    durationMillis: 0,
-    positionMillis: 0,
-    currentTrack: null,
-    currentTrackIndex: -1,
-    volume: storage.getNumber(MUSIC_BG_VOLUME) ?? 1,
-    error: null,
-  });
+export const AudioPlayerProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const dispatch = useDispatch();
+  const activeFile = useSelector(activeFileSelector);
+  const activeFileId = useSelector(activeFileIdSelector);
+  const savedVolume = storage.getNumber(MUSIC_BG_VOLUME) ?? 1;
+  const migrated = useRef(false);
 
-  // Use type assertion carefully - ensure playlistData matches Track shape as much as possible
-  const playlist = playlistData as Track[];
+  const player = useExpoAudioPlayer(getInitialSource());
+  const status = useAudioPlayerStatus(player);
 
-  // Forward declaration for functions used in callbacks
-  const loadTrackRef = useRef<(index: number) => Promise<void>>();
-  const onPlaybackStatusUpdateRef = useRef<(status: AVPlaybackStatus) => void>();
+  // Configure audio mode on mount
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: false,
+      interruptionMode: 'mixWithOthers',
+    });
+  }, []);
 
-  // --- Track Loading Function ---
-  const loadTrack = useCallback(async (index: number) => {
-    if (index < 0 || index >= playlist.length) {
-      console.error('Invalid track index:', index);
-      setState(prev => ({ ...prev, error: 'Invalid track index' }));
+  // Set loop and initial volume
+  useEffect(() => {
+    player.loop = true;
+    player.volume = savedVolume;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player]);
+
+  // One-time migration from legacy MMKV keys
+  useEffect(() => {
+    if (migrated.current) return;
+    migrated.current = true;
+
+    const legacyUri = storage.getString(LEGACY_MUSIC_FILE_URI);
+    const legacyName = storage.getString(LEGACY_MUSIC_FILE_NAME);
+    if (!legacyUri || !legacyName) return;
+
+    try {
+      const id = uuid.v4() as string;
+      const ext = legacyName.split('.').pop() || 'mp3';
+      const fileName = `${id}.${ext}`;
+      copyToMusicDir(legacyUri, fileName);
+      const file: MusicFile = {id, name: legacyName, fileName};
+      dispatch(addFile(file));
+      dispatch(setActiveFile(id));
+      player.replace({uri: getMusicFileUri(fileName)});
+    } catch {
+      // Migration failed — legacy file may have been deleted
+    } finally {
+      storage.remove(LEGACY_MUSIC_FILE_URI);
+      storage.remove(LEGACY_MUSIC_FILE_NAME);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Watch activeFile changes and update player source
+  const prevActiveIdRef = useRef(activeFileId);
+  useEffect(() => {
+    if (activeFileId === prevActiveIdRef.current) return;
+    prevActiveIdRef.current = activeFileId;
+
+    if (activeFile) {
+      player.replace({uri: getMusicFileUri(activeFile.fileName)});
+    }
+  }, [activeFile, activeFileId, player]);
+
+  const play = useCallback(() => {
+    player.play();
+  }, [player]);
+
+  const pause = useCallback(() => {
+    player.pause();
+  }, [player]);
+
+  const setLiveVolume = useCallback(
+    (v: number) => {
+      player.volume = Math.max(0, Math.min(1, v));
+    },
+    [player],
+  );
+
+  const setVolume = useCallback(
+    (v: number) => {
+      const clamped = Math.max(0, Math.min(1, v));
+      player.volume = clamped;
+      storage.set(MUSIC_BG_VOLUME, clamped);
+    },
+    [player],
+  );
+
+  const pickLocalFile = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'audio/*',
+      copyToCacheDirectory: true,
+    });
+
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    const id = uuid.v4() as string;
+    const ext = asset.name.split('.').pop() || 'mp3';
+    const fileName = `${id}.${ext}`;
+    copyToMusicDir(asset.uri, fileName);
+    const file: MusicFile = {id, name: asset.name, fileName};
+    dispatch(addFile(file));
+    dispatch(setActiveFile(id));
+    player.replace({uri: getMusicFileUri(fileName)});
+  }, [dispatch, player]);
+
+  const pasteUrl = useCallback(async () => {
+    const text = await Clipboard.getStringAsync();
+    if (!text) return;
+
+    const trimmed = text.trim();
+    // Basic URL validation
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
       return;
     }
 
-    const track = playlist[index];
-    setState(prev => ({ ...prev, isBuffering: true, currentTrack: track, currentTrackIndex: index, error: null }));
+    const id = uuid.v4() as string;
+    // Try to extract a filename from the URL path
+    const urlPath = trimmed.split('?')[0];
+    const segments = urlPath.split('/');
+    const lastSegment = segments[segments.length - 1] || 'download';
+    const ext = lastSegment.includes('.') ? lastSegment.split('.').pop() : 'mp3';
+    const displayName = decodeURIComponent(lastSegment) || 'Downloaded track';
+    const fileName = `${id}.${ext}`;
 
-    try {
-      // Unload previous sound if it exists
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
-      }
+    const downloaded = await downloadToMusicDir(trimmed, fileName);
 
-      // Load new sound
-      const { sound, status } = await Audio.Sound.createAsync(
-        typeof track.url === 'number' ? track.url : { uri: track.url },
-        {
-          shouldPlay: state.isPlaying, 
-          volume: state.volume,
-          isLooping: state.isLooping,
-          progressUpdateIntervalMillis: 500,
-        },
-        onPlaybackStatusUpdateRef.current 
-      );
-
-      soundRef.current = sound;
-      storage.set(LAST_TRACK_PLAYED, index); 
-
-      if (!status.isLoaded) {
-         console.warn('Sound loaded but status is not isLoaded initially.');
-         // onPlaybackStatusUpdateRef.current will handle error if status.error exists
-      }
-
-    } catch (err: any) {
-      console.error('Error loading track:', err);
-      setState(prev => ({ ...prev, error: `Failed to load track: ${err.message}`, isBuffering: false }));
-      soundRef.current = null; 
+    // Validate the downloaded file is actually audio
+    if (!downloaded.type.startsWith('audio/')) {
+      deleteFromMusicDir(fileName);
+      return;
     }
-  }, [playlist, state.isPlaying, state.volume, state.isLooping]);
 
-  loadTrackRef.current = loadTrack; 
+    const file: MusicFile = {id, name: displayName, fileName};
+    dispatch(addFile(file));
+    dispatch(setActiveFile(id));
+    player.replace({uri: getMusicFileUri(fileName)});
+  }, [dispatch, player]);
 
-  // --- Next/Previous Track Functions ---
-  const nextTrackInternal = useCallback(() => {
-    const nextIndex = (state.currentTrackIndex + 1) % playlist.length;
-    loadTrackRef.current?.(nextIndex);
-  }, [state.currentTrackIndex, playlist.length]);
-
-  const previousTrackInternal = useCallback(() => {
-    const prevIndex = (state.currentTrackIndex - 1 + playlist.length) % playlist.length;
-    loadTrackRef.current?.(prevIndex);
-  }, [state.currentTrackIndex, playlist.length]);
-
-  // --- Playback Status Update Handler ---
-  const onPlaybackStatusUpdate = useCallback(
-    (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        if (status.error) {
-          console.error(`Playback Error: ${status.error}`);
-          // Use ?? null to ensure correct type for error
-          setState(prev => ({ ...prev, error: status.error ?? 'Unknown playback error', isLoaded: false, isPlaying: false }));
-        } else if (state.isLoaded) {
-            // If it was previously loaded (e.g., unloaded manually or finished), reset state
-            setState(prev => ({ ...prev, isLoaded: false, isPlaying: false, positionMillis: 0, durationMillis: 0 }));
+  const playFile = useCallback(
+    (id: string) => {
+      if (id === activeFileId) {
+        // Toggle play/pause for the already-active file
+        if (status.playing) {
+          player.pause();
+        } else {
+          player.play();
         }
         return;
       }
-
-      // If we reach here, status is AVPlaybackStatusSuccess
-      setState(prev => ({
-        ...prev,
-        isLoaded: true,
-        isPlaying: status.isPlaying,
-        isBuffering: status.isBuffering,
-        isLooping: status.isLooping,
-        durationMillis: status.durationMillis ?? 0,
-        positionMillis: status.positionMillis,
-        volume: status.volume,
-        error: null, 
-      }));
-
-      // Handle track finishing (if not looping)
-      if (status.didJustFinish && !status.isLooping) {
-        nextTrackInternal(); 
-      }
+      dispatch(setActiveFile(id));
     },
-    [state.isLoaded, nextTrackInternal] 
+    [activeFileId, dispatch, player, status.playing],
   );
 
-  onPlaybackStatusUpdateRef.current = onPlaybackStatusUpdate; 
+  const deleteFile = useCallback(
+    (id: string) => {
+      const state = store.getState();
+      const file = state.musicLibrary.files.find(
+        (f: MusicFile) => f.id === id,
+      );
+      if (!file) return;
 
-  // --- Control Functions ---
-  const play = useCallback(async () => {
-    if (soundRef.current && state.isLoaded) {
-      try {
-        if (!state.isPlaying) {
-             await soundRef.current.playAsync();
-        }
-      } catch (error: any) {
-        console.error('Error playing sound:', error);
-        setState(prev => ({ ...prev, error: `Playback error: ${error.message}` }));
+      if (id === activeFileId) {
+        player.pause();
       }
-    } else if (!state.isLoaded && state.currentTrackIndex !== -1) {
-      // If not loaded, try loading the current index
-      loadTrackRef.current?.(state.currentTrackIndex);
-    }
-  }, [state.isLoaded, state.currentTrackIndex, state.isPlaying]);
 
-  const pause = useCallback(async () => {
-    if (soundRef.current && state.isPlaying) {
-      try {
-        await soundRef.current.pauseAsync();
-      } catch (error: any) {
-        console.error('Error pausing sound:', error);
-        setState(prev => ({ ...prev, error: `Pause error: ${error.message}` }));
-      }
-    }
-  }, [state.isPlaying]);
+      deleteFromMusicDir(file.fileName);
+      dispatch(removeFile(id));
+    },
+    [activeFileId, dispatch, player],
+  );
 
-  const seek = useCallback(async (positionMillis: number) => {
-    if (soundRef.current && state.isLoaded) {
-      try {
-        await soundRef.current.setPositionAsync(positionMillis);
-      } catch (error: any) {
-        console.error('Error seeking sound:', error);
-        setState(prev => ({ ...prev, error: `Seek error: ${error.message}` }));
-      }
-    }
-  }, [state.isLoaded]);
-
-  const setVolume = useCallback(async (newVolume: number) => {
-    const clampedVolume = Math.max(0, Math.min(1, newVolume));
-    setState(prev => ({ ...prev, volume: clampedVolume })); 
-    if (soundRef.current && state.isLoaded) {
-      try {
-        await soundRef.current.setVolumeAsync(clampedVolume);
-        storage.set(MUSIC_BG_VOLUME, clampedVolume);
-      } catch (error: any) {
-        console.error('Error setting volume:', error);
-        setState(prev => ({ ...prev, error: `Volume error: ${error.message}` }));
-      }
-    }
-  }, [state.isLoaded]);
-
-  const toggleLooping = useCallback(async () => {
-    if (soundRef.current && state.isLoaded) {
-      try {
-        const newLoopingState = !state.isLooping;
-        await soundRef.current.setIsLoopingAsync(newLoopingState);
-        // onPlaybackStatusUpdate will update the state.isLooping value
-      } catch (error: any) {
-        console.error('Error toggling looping:', error);
-        setState(prev => ({ ...prev, error: `Looping error: ${error.message}` }));
-      }
-    }
-  }, [state.isLoaded, state.isLooping]);
-
-  // --- Initial Load Effect ---
-  useEffect(() => {
-    const initialIndex = storage.getNumber(LAST_TRACK_PLAYED) ?? 0;
-    if (playlist.length > 0 && state.currentTrackIndex === -1) { 
-      loadTrackRef.current?.(initialIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playlist.length]); 
-
-  // --- Cleanup Effect ---
-  useEffect(() => {
-    return () => {
-      soundRef.current?.unloadAsync();
-    };
-  }, []);
-
-  // Combine state and actions for the context value
   const value = {
-    ...state,
+    isPlaying: status.playing,
+    isLoaded: status.isLoaded,
+    volume: player.volume,
+    activeFileName: activeFile?.name ?? null,
     play,
     pause,
-    seek,
-    nextTrack: nextTrackInternal,
-    previousTrack: previousTrackInternal,
-    loadTrack,
     setVolume,
-    toggleLooping,
+    setLiveVolume,
+    pickLocalFile,
+    pasteUrl,
+    playFile,
+    deleteFile,
   };
 
   return (
@@ -271,11 +274,12 @@ export const AudioPlayerProvider = ({ children }: { children: React.ReactNode })
   );
 };
 
-// Custom hook to use the context
 export const useAudioPlayer = () => {
   const context = useContext(AudioPlayerContext);
   if (context === undefined) {
-    throw new Error('useAudioPlayer must be used within an AudioPlayerProvider');
+    throw new Error(
+      'useAudioPlayer must be used within an AudioPlayerProvider',
+    );
   }
   return context;
 };

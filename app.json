@@ -29,7 +29,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font", "expo-av", "expo-splash-screen"],
+    "plugins": ["expo-font", "expo-splash-screen"],
     "fonts": [
       {
         "asset": "./assets/fonts/Lusitana-Regular.ttf",

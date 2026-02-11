@@ -1,4 +1,4 @@
-import { useKeepAwake } from "@sayem314/react-native-keep-awake";
+import { useKeepAwake } from "expo-keep-awake";
 import React, { useCallback } from "react";
 import { Platform, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
@@ -114,13 +114,13 @@ export const Main = () => {
             ]}
           >
             <TouchableOpacity
-              style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
+              style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={toggleGrayscale}
             >
               <Icon name="moon" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={tw`mt-2 h-10 w-10 items-center justify-center active:opacity-80`}
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={() => {
                 navigation.navigate("MusicControls");
               }}
@@ -128,7 +128,7 @@ export const Main = () => {
               <Icon name="headphones" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={tw`mt-2 h-10 w-10 items-center justify-center active:opacity-80`}
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={engageTutorial}
             >
               <Icon name="help" size={24} color="white" />
@@ -152,7 +152,7 @@ export const Main = () => {
             ]}
           >
             <TouchableOpacity
-              style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
+              style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={() => {
                 navigation.navigate("ExercisesList");
               }}

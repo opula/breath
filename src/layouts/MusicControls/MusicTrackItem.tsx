@@ -1,0 +1,42 @@
+import React from 'react';
+import {Text, TouchableOpacity, View} from 'react-native';
+import {Icon} from '../../components/Icon';
+import tw from '../../utils/tw';
+import {MusicFile} from '../../types/music';
+
+interface MusicTrackItemProps {
+  item: MusicFile;
+  isActive: boolean;
+  isPlaying: boolean;
+  onPress: () => void;
+}
+
+export const MusicTrackItem = ({
+  item,
+  isActive,
+  isPlaying,
+  onPress,
+}: MusicTrackItemProps) => {
+  return (
+    <TouchableOpacity
+      style={tw`flex-row items-center px-4 py-3 active:opacity-80`}
+      onPress={onPress}>
+      <View style={tw`w-6 items-center`}>
+        {isActive && (
+          <Icon
+            name={isPlaying ? 'pause' : 'play'}
+            color="white"
+            size={14}
+          />
+        )}
+      </View>
+      <Text
+        style={tw`flex-1 ml-2 text-sm font-lusitana ${
+          isActive ? 'text-white' : 'text-neutral-400'
+        }`}
+        numberOfLines={1}>
+        {item.name}
+      </Text>
+    </TouchableOpacity>
+  );
+};

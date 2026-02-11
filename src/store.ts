@@ -4,10 +4,12 @@ import { reduxStorage } from "./storage";
 
 import { exercisesReducer as exercises } from "./state/exercises.reducer";
 import { configurationReducer as configuration } from "./state/configuration.reducer";
+import { musicLibraryReducer as musicLibrary } from "./state/musicLibrary.reducer";
 
 const rootReducers = combineReducers({
   exercises,
   configuration,
+  musicLibrary,
 });
 
 export const store = configureStore({

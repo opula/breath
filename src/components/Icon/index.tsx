@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, { useMemo } from "react";
 import {
   BlendMode,
   Canvas,
@@ -7,10 +7,11 @@ import {
   Skia,
   fitbox,
   rect,
-} from '@shopify/react-native-skia';
+} from "@shopify/react-native-skia";
 
-import svgs from './svgs';
-import Animated from 'react-native-reanimated';
+import svgs from "./svgs";
+import Animated from "react-native-reanimated";
+import { View } from "react-native";
 
 export type IconName = keyof typeof svgs;
 
@@ -20,7 +21,7 @@ export interface IconProps {
   color: string;
 }
 
-export const Icon = ({name, size, color}: IconProps) => {
+export const Icon = ({ name, size, color }: IconProps) => {
   const paint = useMemo(() => Skia.Paint(), []);
 
   if (!name || !Object.keys(svgs).includes(name)) {
@@ -39,10 +40,12 @@ export const Icon = ({name, size, color}: IconProps) => {
   );
 
   return (
-    <Canvas style={{height: size, width: size}}>
-      <Group transform={fitbox('contain', src, dst)} layer={paint}>
-        <ImageSVG svg={svg} />
-      </Group>
-    </Canvas>
+    <View pointerEvents="none">
+      <Canvas style={{ height: size, width: size }}>
+        <Group transform={fitbox("contain", src, dst)} layer={paint}>
+          <ImageSVG svg={svg} />
+        </Group>
+      </Canvas>
+    </View>
   );
 };
