@@ -3,6 +3,8 @@ import { MotiView } from "moti";
 import tw from "../../utils/tw";
 import { Aurora } from "../../backgrounds/Aurora";
 import { Wormhole } from "../../backgrounds/Wormhole";
+import { Starfield } from "../../backgrounds/Starfield";
+import { Rorschach } from "../../backgrounds/Rorschach";
 
 export const Background = memo(() => {
   return (
@@ -13,7 +15,9 @@ export const Background = memo(() => {
       transition={{ opacity: { type: "timing", duration: 300 } }}
       style={tw`flex-1`}
     >
-      <Aurora />
+      <Rorschach />
+      {/* <Starfield /> */}
+      {/* <Aurora /> */}
       {/* <Wormhole /> */}
     </MotiView>
   );
