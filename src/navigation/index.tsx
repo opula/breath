@@ -51,6 +51,8 @@ const defaultScreenOptions: StackNavigationOptions = {
 const modalScreenOptions: StackNavigationOptions = {
   ...defaultScreenOptions,
   presentation: 'transparentModal',
+  // Keep previous screen mounted so it's visible behind the modal
+  detachPreviousScreen: false,
   // Use our custom modal interpolator for smoother transitions
   cardStyleInterpolator: smoothModalInterpolator,
   // Ensure modals have proper background

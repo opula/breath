@@ -51,30 +51,33 @@ export const Main = () => {
       const newSourceIndex = nextIndex > -1 ? nextIndex : TOTAL_BACKGROUNDS - 1;
       dispatch(updateSourceAction(newSourceIndex));
     },
-    [dispatch]
+    [dispatch],
   );
   const togglePaused = useCallback(
     () => dispatch(togglePausedAction()),
-    [dispatch]
+    [dispatch],
   );
   const setPause = useCallback(
     (status: boolean) => dispatch(setPauseAction(status)),
-    [dispatch]
+    [dispatch],
   );
   const toggleGrayscale = useCallback(
     () => dispatch(toggleGrayscaleAction()),
-    [dispatch]
+    [dispatch],
   );
   const engagePaused = useCallback(() => dispatch(engagePausedAction()), []);
   const engageTutorial = useCallback(
     () => dispatch(engageTutorialAction()),
-    []
+    [],
   );
 
   return (
     <>
       <View style={tw`flex-1 bg-black`}>
-        <AnimatePresence>{isFocused ? <Background /> : null}</AnimatePresence>
+        {/* <AnimatePresence>{isFocused ? <Background /> : null}</AnimatePresence> */}
+        <AnimatePresence>
+          <Background />
+        </AnimatePresence>
       </View>
 
       <AnimatePresence>
