@@ -74,11 +74,11 @@ export const BreathTimer = ({
           transition={{opacity: {type: 'timing', duration: 400}}}
           style={tw`items-center`}>
           <Text
-            style={[tw`text-3xl font-lusitana text-neutral-300 text-center`, {fontVariant: ['tabular-nums']}]}>
+            style={[tw`text-3xl font-inter text-neutral-300 text-center`, {fontVariant: ['tabular-nums']}]}>
             {padStart(count, 2, '0')}
           </Text>
           <Text
-            style={[tw`text-base font-lusitana text-neutral-300 text-center mt-1`, {fontVariant: ['tabular-nums']}]}>
+            style={[tw`text-base font-inter text-neutral-300 text-center mt-1`, {fontVariant: ['tabular-nums']}]}>
             {label}
           </Text>
         </MotiView>

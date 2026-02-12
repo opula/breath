@@ -42,12 +42,12 @@
     ],
     "fonts": [
       {
-        "asset": "./assets/fonts/Lusitana-Regular.ttf",
-        "family": "Lusitana"
+        "asset": "./assets/fonts/Inter-Regular.ttf",
+        "family": "Inter"
       },
       {
-        "asset": "./assets/fonts/Lusitana-Bold.ttf",
-        "family": "Lusitana-Bold"
+        "asset": "./assets/fonts/Inter-Bold.ttf",
+        "family": "Inter-Bold"
       }
     ]
   }

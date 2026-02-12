@@ -10,8 +10,8 @@ interface Props {
 export const Card = ({title, message}: Props) => {
   return (
     <View style={tw`flex-1 items-center justify-center`}>
-      <Text style={tw`text-white font-lusitana text-center`}>{title}</Text>
-      <Text style={tw`text-white font-lusitana text-center`}>{message}</Text>
+      <Text style={tw`text-white font-inter text-center`}>{title}</Text>
+      <Text style={tw`text-white font-inter text-center`}>{message}</Text>
     </View>
   );
 };

@@ -112,12 +112,12 @@ export const Welcome = ({ navigation }: Props) => {
               <View style={tw`flex-1 px-8 items-center justify-center`}>
                 <View style={tw`pt-12 mt-12`}>
                   <Text
-                    style={tw`text-2xl font-lusitana text-white text-center`}
+                    style={tw`text-2xl font-inter text-white text-center`}
                   >
                     {item.title}
                   </Text>
                   <Text
-                    style={tw`text-base font-lusitana text-white text-center mt-4`}
+                    style={tw`text-base font-inter text-white text-center mt-4`}
                   >
                     {item.message}
                   </Text>
@@ -156,7 +156,7 @@ export const Welcome = ({ navigation }: Props) => {
                 storage.set(HAS_COMPLETED_WELCOME, true);
               }}
             >
-              <Text style={tw`text-base font-lusitana font-bold text-white`}>
+              <Text style={tw`text-base font-inter font-bold text-white`}>
                 Get started
               </Text>
             </Pressable>
@@ -180,7 +180,7 @@ export const Welcome = ({ navigation }: Props) => {
                 carouselRef.current?.next();
               }}
             >
-              <Text style={tw`text-base font-lusitana font-bold text-white`}>
+              <Text style={tw`text-base font-inter font-bold text-white`}>
                 Next
               </Text>
             </Pressable>

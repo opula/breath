@@ -116,7 +116,7 @@ export const ExercisesList = ({ navigation }: Props) => {
           style={tw`items-center justify-center active:opacity-80`}
           onPress={() => dispatch(resetExercises())}
         >
-          <Text style={tw`text-base font-lusitana`}>Reset exercises</Text>
+          <Text style={tw`text-base font-inter`}>Reset exercises</Text>
         </Pressable>
       </View>
     ),

@@ -11,7 +11,7 @@ export const HorizontalDialExample = () => {
   return (
     <View style={tw`flex-1 bg-black p-4 justify-center`}>
       <View style={tw`mb-8`}>
-        <Text style={tw`text-white text-xl font-lusitana mb-4 text-center`}>
+        <Text style={tw`text-white text-xl font-inter mb-4 text-center`}>
           Original NumberWheelPicker
         </Text>
         <NumberWheelPicker
@@ -27,7 +27,7 @@ export const HorizontalDialExample = () => {
       </View>
 
       <View style={tw`mt-8`}>
-        <Text style={tw`text-white text-xl font-lusitana mb-4 text-center`}>
+        <Text style={tw`text-white text-xl font-inter mb-4 text-center`}>
           New HorizontalDial
         </Text>
         <HorizontalDial

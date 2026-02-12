@@ -31,7 +31,7 @@ export const MusicTrackItem = ({
         )}
       </View>
       <Text
-        style={tw`flex-1 ml-2 text-sm font-lusitana ${
+        style={tw`flex-1 ml-2 text-sm font-inter ${
           isActive ? 'text-white' : 'text-neutral-400'
         }`}
         numberOfLines={1}>

@@ -13,12 +13,10 @@ module.exports = {
         neutral700: '#404040',
         neutral800: '#262626',
         neutral900: '#171717',
-        blue: '#3b82f6',
-        red: '#ef4444',
         backdrop: 'rgba(0,0,0,.3)',
       },
       fontFamily: {
-        lusitana: ['Lusitana'],
+        inter: ['Inter'],
       },
     },
   },

@@ -109,14 +109,14 @@ export const Exercise = ({ navigation, route }: Props) => {
           >
             <Icon name="left-arrow" size={20} color="white" />
           </Pressable>
-          <Text style={tw`text-base font-lusitana text-white`}>
+          <Text style={tw`text-base font-inter text-white`}>
             {exercise.name}
           </Text>
           <View style={tw`h-10 w-10 items-center justify-center`}></View>
         </View>
 
         <View style={tw`py-4 mb-2 px-4`}>
-          <Text style={tw`text-xs font-lusitana text-neutral-400 mb-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
             Edit name
           </Text>
           <EditName exerciseId={id} />
@@ -141,7 +141,7 @@ export const Exercise = ({ navigation, route }: Props) => {
             }
             ListHeaderComponent={() => (
               <View style={tw`mt-6 px-4 border-b border-neutral-800`}>
-                <Text style={tw`text-xs font-lusitana text-neutral-400 mb-2`}>
+                <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
                   Steps
                 </Text>
               </View>
@@ -154,7 +154,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                     navigation.navigate("NewStepMenu", { exerciseId: id })
                   }
                 >
-                  <Text style={tw`text-base font-lusitana text-blue-500`}>
+                  <Text style={tw`text-base font-inter text-blue-500`}>
                     Add step
                   </Text>
                 </Pressable>

@@ -30,13 +30,13 @@ export const StepCard = ({exerciseId, step, drag}: Props) => {
 
         navigation.navigate('AdjustStep', {exerciseId, stepId: id});
       }}>
-      <Text style={tw`text-base font-lusitana text-white`}>{capitalize(type)}</Text>
+      <Text style={tw`text-base font-inter text-white`}>{capitalize(type)}</Text>
       {type === 'breath' && prettyTime ? (
         <>
-          <Text style={tw`text-xs font-lusitana text-neutral-300 mt-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
             {(value as number[]).map(secs => `${secs}s`).join(' · ')}
           </Text>
-          <Text style={tw`text-xs font-lusitana text-neutral-300 mt-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
             {count
               ? `Do ${count} repetitions for a total of ${prettyTime.minutes} min, ${prettyTime.seconds} sec.`
               : 'At your discretion.'}
@@ -44,17 +44,17 @@ export const StepCard = ({exerciseId, step, drag}: Props) => {
         </>
       ) : null}
       {type === 'exhale' || type === 'hold' || type === 'inhale' ? (
-        <Text style={tw`text-xs font-lusitana text-neutral-300 mt-2`}>
+        <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
           {count ? `For a count of ${count} seconds.` : 'At your discretion.'}
         </Text>
       ) : null}
 
       {type === 'text' ? (
         <>
-          <Text style={tw`text-xs font-lusitana text-neutral-300 mt-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
             {`"${text}"`}
           </Text>
-          <Text style={tw`text-xs font-lusitana text-neutral-300 mt-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
             {count ? `For ${count} seconds.` : 'For as long as you need.'}
           </Text>
         </>

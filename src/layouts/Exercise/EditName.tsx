@@ -36,7 +36,7 @@ export const EditName = memo(({exerciseId}: Props) => {
   return (
     <View style={tw`border-b border-neutral-800 pb-1`}>
       <TextInput
-        style={tw`text-base font-lusitana text-white p-2`}
+        style={tw`text-base font-inter text-white p-2`}
         value={name}
         onChangeText={name => {
           setName(name);

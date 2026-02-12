@@ -569,7 +569,7 @@ export const DynamicExercise = memo(
                   style={[
                     tw`${
                       isText ? "text-sm" : "text-base"
-                    } font-lusitana text-neutral-200 text-center mb-2`,
+                    } font-inter text-neutral-200 text-center mb-2`,
                     { fontVariant: ["tabular-nums"] },
                   ]}
                 >
@@ -579,7 +579,7 @@ export const DynamicExercise = memo(
                   <View style={tw`absolute left-0 right-0 bottom-[22px]`}>
                     <Text
                       style={[
-                        tw`text-xs font-lusitana text-neutral-400 text-center`,
+                        tw`text-xs font-inter text-neutral-400 text-center`,
                         { fontVariant: ["tabular-nums"] },
                       ]}
                     >
@@ -607,7 +607,7 @@ export const DynamicExercise = memo(
                 ]}
               >
                 <View style={tw`px-6 py-2 rounded-xl bg-black`}>
-                  <Text style={tw`text-neutral-200 text-xs font-lusitana`}>
+                  <Text style={tw`text-neutral-200 text-xs font-inter`}>
                     {exerciseName}
                   </Text>
                 </View>

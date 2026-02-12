@@ -104,7 +104,7 @@ export const MusicControls = () => {
               ) : (
                 <>
                   <Icon name="clipboard" color="white" size={16} />
-                  <Text style={tw`ml-2 text-sm font-lusitana text-white`}>
+                  <Text style={tw`ml-2 text-sm font-inter text-white`}>
                     Paste URL
                   </Text>
                 </>
@@ -114,7 +114,7 @@ export const MusicControls = () => {
               style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
               onPress={pickLocalFile}>
               <Icon name="folder" color="white" size={16} />
-              <Text style={tw`ml-2 text-sm font-lusitana text-white`}>
+              <Text style={tw`ml-2 text-sm font-inter text-white`}>
                 Pick File
               </Text>
             </Pressable>
@@ -124,11 +124,11 @@ export const MusicControls = () => {
           <Pressable
             style={tw`flex-row items-center justify-between px-4 py-3 mb-4 rounded-full border border-neutral-600`}
             onPress={() => dispatch(toggleSounds())}>
-            <Text style={tw`text-sm font-lusitana text-white`}>
+            <Text style={tw`text-sm font-inter text-white`}>
               Exercise Sounds
             </Text>
             <Text
-              style={tw`text-sm font-lusitana ${
+              style={tw`text-sm font-inter ${
                 soundsEnabled ? 'text-white' : 'text-neutral-500'
               }`}>
               {soundsEnabled ? 'On' : 'Off'}
@@ -138,7 +138,7 @@ export const MusicControls = () => {
           {/* Library list */}
           {files.length === 0 ? (
             <View style={tw`flex-1 items-center justify-center`}>
-              <Text style={tw`text-base font-lusitana text-neutral-500`}>
+              <Text style={tw`text-base font-inter text-neutral-500`}>
                 No tracks yet
               </Text>
             </View>

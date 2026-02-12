@@ -2,45 +2,52 @@ import {
   NavigationProp,
   RouteProp,
   useFocusEffect,
-} from '@react-navigation/native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {MainStackParams} from '../../navigation';
-import {useParametrizedAppSelector} from '../../utils/selectors';
-import {exerciseByIdSelector} from '../../state/exercises.selectors';
-import {View, Text, Pressable} from 'react-native';
-import tw from '../../utils/tw';
-import {Icon} from '../../components/Icon';
-import {Canvas, Fill, Shader, useClock, vec} from '@shopify/react-native-skia';
-import {source} from '../../components/DynamicExercise/source';
+} from "@react-navigation/native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { MainStackParams } from "../../navigation";
+import { useParametrizedAppSelector } from "../../utils/selectors";
+import { exerciseByIdSelector } from "../../state/exercises.selectors";
+import { View, Text, Pressable } from "react-native";
+import tw from "../../utils/tw";
+import { Icon } from "../../components/Icon";
+import {
+  Canvas,
+  Fill,
+  Shader,
+  useClock,
+  vec,
+} from "@shopify/react-native-skia";
+import { source } from "../../components/DynamicExercise/source";
 import {
   useDerivedValue,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated';
-import {Ops, exerciseEmitter} from '../../components/DynamicExercise/emitter';
-import {exerciseScheduler} from '../../services/ExerciseScheduler';
-import {Vibration} from 'react-native';
-import {capitalize, defer, padStart, range, toNumber} from 'lodash';
-import {triggerHaptics} from '../../utils/haptics';
-import EventEmitter from 'eventemitter3';
-import {count} from 'rxjs';
+} from "react-native-reanimated";
+import { Ops, exerciseEmitter } from "../../components/DynamicExercise/emitter";
+import { exerciseScheduler } from "../../services/ExerciseScheduler";
+import { Vibration } from "react-native";
+import { capitalize, defer, padStart, range, toNumber } from "lodash";
+import { triggerHaptics } from "../../utils/haptics";
+import EventEmitter from "eventemitter3";
+import { count } from "rxjs";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const breathLabels = ['inhale', 'hold', 'exhale', 'hold'];
+const breathLabels = ["inhale", "hold", "exhale", "hold"];
 
 interface Props {
-  navigation: NavigationProp<MainStackParams, 'ExerciseInfo'>;
-  route: RouteProp<MainStackParams, 'ExerciseInfo'>;
+  navigation: NavigationProp<MainStackParams, "ExerciseInfo">;
+  route: RouteProp<MainStackParams, "ExerciseInfo">;
 }
 
-export const ExerciseInfo = ({navigation, route}: Props) => {
+export const ExerciseInfo = ({ navigation, route }: Props) => {
   const exercise = useParametrizedAppSelector(
     exerciseByIdSelector,
     route.params.id,
   );
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [label, setLabel] = useState('');
-  const [sublabel, setSublabel] = useState('');
+  const [label, setLabel] = useState("");
+  const [sublabel, setSublabel] = useState("");
   const [isBreathing, setBreathing] = useState(false);
   const [isText, setText] = useState(false);
 
@@ -66,7 +73,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
     exerciseScheduler.clearJobs();
     triggerHaptics();
     emitter.current.emit(Ops.PREV_SEQUENCE_STEP);
-    iBreath.value = withTiming(0, {duration: 1});
+    iBreath.value = withTiming(0, { duration: 1 });
   };
 
   const runUserNext = () => {
@@ -79,13 +86,13 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
     exerciseScheduler.clearJobs();
     triggerHaptics();
     emitter.current.emit(Ops.NEXT_SEQUENCE_STEP);
-    iBreath.value = withTiming(0, {duration: 1});
+    iBreath.value = withTiming(0, { duration: 1 });
   };
 
   const runReset = useCallback(() => {
     exerciseScheduler.reset();
 
-    iBreath.value = withTiming(0, {duration: 1});
+    iBreath.value = withTiming(0, { duration: 1 });
     seqIndex.current = -1;
     breathPattern.current = [0, 0, 0, 0];
 
@@ -99,10 +106,10 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
 
   useFocusEffect(
     useCallback(() => {
-      emitter.current.on(Ops.START_BREATHING_PATTERN, isLooped => {
+      emitter.current.on(Ops.START_BREATHING_PATTERN, (isLooped) => {
         const currentSeqIndex = seqIndex.current;
         const stepTime = breathPattern.current[0];
-        const {count} = exercise.seq[currentSeqIndex];
+        const { count } = exercise.seq[currentSeqIndex];
 
         setSublabel(`n° ${count ? count : 1}`);
         setLabel(breathLabels[0]);
@@ -110,7 +117,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         exerciseScheduler.addJob(
           0,
           () => {
-            iBreath.value = withTiming(1, {duration: stepTime * 1000});
+            iBreath.value = withTiming(1, { duration: stepTime * 1000 });
 
             if (isLooped) {
               Vibration.vibrate(400);
@@ -121,7 +128,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
           },
         );
 
-        range(1, stepTime + 1).forEach(timeSeconds => {
+        range(1, stepTime + 1).forEach((timeSeconds) => {
           exerciseScheduler.addJob(
             timeSeconds * 1000,
             () => {
@@ -129,7 +136,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             },
             {
               priority: 0,
-              label: 'Change count',
+              label: "Change count",
             },
           );
         });
@@ -142,7 +149,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
           },
           {
             priority: 1,
-            label: 'Next seq',
+            label: "Next seq",
           },
         );
       });
@@ -155,8 +162,8 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         const totalPatterns = exercise.seq[currentSeqIndex].count;
         const completedPatterns = Math.floor(step / 4);
         const nextVibratePattern =
-          exercise.seq[nextIndex].type === 'breath' ? 400 : [300, 300];
-        const {count} = exercise.seq[currentSeqIndex];
+          exercise.seq[nextIndex].type === "breath" ? 400 : [300, 300];
+        const { count } = exercise.seq[currentSeqIndex];
 
         if (stepTime === 0) {
           if (
@@ -175,9 +182,9 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         }
 
         if (stepIndex === 0) {
-          iBreath.value = withTiming(1, {duration: stepTime * 1000});
+          iBreath.value = withTiming(1, { duration: stepTime * 1000 });
         } else if (stepIndex === 2) {
-          iBreath.value = withTiming(0, {duration: stepTime * 1000});
+          iBreath.value = withTiming(0, { duration: stepTime * 1000 });
         }
 
         setLabel(breathLabels[stepIndex]);
@@ -185,7 +192,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
           `n° ${count ? count - completedPatterns : completedPatterns + 1}`,
         );
 
-        range(1, stepTime + 1).forEach(timeSeconds => {
+        range(1, stepTime + 1).forEach((timeSeconds) => {
           exerciseScheduler.addJob(
             timeSeconds * 1000,
             () => {
@@ -193,7 +200,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             },
             {
               priority: 0,
-              label: 'Change count',
+              label: "Change count",
             },
           );
         });
@@ -218,30 +225,30 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
           },
           {
             priority: 1,
-            label: 'Next seq',
+            label: "Next seq",
           },
         );
       });
 
       emitter.current.on(Ops.START_HIE, () => {
         const currentSeqIndex = seqIndex.current;
-        const {type, count} = exercise.seq[currentSeqIndex];
+        const { type, count } = exercise.seq[currentSeqIndex];
 
         setLabel(type);
         setSublabel(
-          count ? padStart(`${count}`, 2, '0') : padStart(`${0}`, 2, '0'),
+          count ? padStart(`${count}`, 2, "0") : padStart(`${0}`, 2, "0"),
         );
 
         if (count) {
-          range(1, count + 1).forEach(timeSeconds => {
+          range(1, count + 1).forEach((timeSeconds) => {
             exerciseScheduler.addJob(
               timeSeconds * 1000,
               () => {
-                setSublabel(padStart(`${count - timeSeconds}`, 2, '0'));
+                setSublabel(padStart(`${count - timeSeconds}`, 2, "0"));
               },
               {
                 priority: 0,
-                label: 'Countdown',
+                label: "Countdown",
               },
             );
           });
@@ -254,18 +261,20 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             },
             {
               priority: 1,
-              label: 'Next Seq',
+              label: "Next Seq",
             },
           );
         } else {
           exerciseScheduler.addJob(
             1000,
             () => {
-              setSublabel(count => padStart(`${toNumber(count) + 1}`, 2, '0'));
+              setSublabel((count) =>
+                padStart(`${toNumber(count) + 1}`, 2, "0"),
+              );
             },
             {
               priority: 0,
-              label: 'Count up, inf',
+              label: "Count up, inf",
               repeat: 1000,
             },
           );
@@ -276,20 +285,20 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         const currentSeqIndex = seqIndex.current;
 
         // @ts-ignore
-        const {text, count} = exercise.seq[currentSeqIndex];
+        const { text, count } = exercise.seq[currentSeqIndex];
 
         setLabel(text!);
 
         if (count) {
-          range(1, count + 1).forEach(timeSeconds => {
+          range(1, count + 1).forEach((timeSeconds) => {
             exerciseScheduler.addJob(
               timeSeconds * 1000,
               () => {
-                setSublabel(padStart(`${count - timeSeconds}`, 2, '0'));
+                setSublabel(padStart(`${count - timeSeconds}`, 2, "0"));
               },
               {
                 priority: 0,
-                label: 'Countdown',
+                label: "Countdown",
               },
             );
           });
@@ -302,18 +311,20 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             },
             {
               priority: 1,
-              label: 'Next Seq',
+              label: "Next Seq",
             },
           );
         } else {
           exerciseScheduler.addJob(
             1000,
             () => {
-              setSublabel(count => padStart(`${toNumber(count) + 1}`, 2, '0'));
+              setSublabel((count) =>
+                padStart(`${toNumber(count) + 1}`, 2, "0"),
+              );
             },
             {
               priority: 0,
-              label: 'Count up, inf',
+              label: "Count up, inf",
               repeat: 1000,
             },
           );
@@ -329,12 +340,12 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         }
 
         // @ts-ignore
-        const {type, value, count} = exercise.seq[nextIndex];
+        const { type, value, count } = exercise.seq[nextIndex];
 
         seqIndex.current = nextIndex;
 
         switch (type) {
-          case 'breath':
+          case "breath":
             breathPattern.current = value as number[];
             emitter.current.emit(
               Ops.START_BREATHING_PATTERN,
@@ -344,15 +355,15 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             setText(false);
             break;
 
-          case 'text':
+          case "text":
             emitter.current.emit(Ops.START_TEXT);
             setText(true);
             setBreathing(false);
             break;
 
-          case 'hold':
-          case 'inhale':
-          case 'exhale':
+          case "hold":
+          case "inhale":
+          case "exhale":
             emitter.current.emit(Ops.START_HIE);
             setBreathing(false);
             setText(false);
@@ -369,12 +380,12 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
         }
 
         // @ts-ignore
-        const {type, value, count} = exercise.seq[nextIndex];
+        const { type, value, count } = exercise.seq[nextIndex];
 
         seqIndex.current = nextIndex;
 
         switch (type) {
-          case 'breath':
+          case "breath":
             breathPattern.current = value as number[];
             emitter.current.emit(
               Ops.START_BREATHING_PATTERN,
@@ -384,15 +395,15 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             setText(false);
             break;
 
-          case 'text':
+          case "text":
             emitter.current.emit(Ops.START_TEXT);
             setText(true);
             setBreathing(false);
             break;
 
-          case 'hold':
-          case 'inhale':
-          case 'exhale':
+          case "hold":
+          case "inhale":
+          case "exhale":
             emitter.current.emit(Ops.START_HIE);
             setBreathing(false);
             setText(false);
@@ -415,17 +426,21 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
 
   return (
     <View style={tw`flex-1 bg-black`}>
-      <View style={tw`flex-1 px-4`}>
-        <View
-          style={tw`flex-row px-4 justify-between items-center`}>
-          <View
-            style={tw`h-10 w-10 items-center justify-center`}></View>
-          <Text style={tw`text-base font-lusitana text-white`}>{exercise.name}</Text>
+      <SafeAreaView style={tw`flex-1 px-4`}>
+        <View style={tw`flex-row px-4 justify-between items-center`}>
           <Pressable
             style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
-            onPress={() => navigation.goBack()}>
+            onPress={() => navigation.goBack()}
+          >
             <Icon name="close" size={20} color="white" />
           </Pressable>
+          <Text
+            style={tw`text-sm font-inter font-medium text-neutral-200 text-white`}
+          >
+            {exercise.name}
+          </Text>
+
+          <View style={tw`h-10 w-10 items-center justify-center`}></View>
         </View>
 
         <View style={tw`flex-1`}>
@@ -433,34 +448,43 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             {exercise.seq.map((_, index) => (
               <View
                 key={`${index}-step`}
-                style={tw`${index !== 0 ? 'ml-1' : ''} ${index !== exercise.seq.length - 1 ? 'mr-1' : ''} flex-1 h-1 rounded-sm ${currentIndex >= index ? 'bg-neutral-200' : 'bg-neutral-700'}`}
+                style={tw`${index !== 0 ? "ml-1" : ""} ${index !== exercise.seq.length - 1 ? "mr-1" : ""} flex-1 h-1 rounded-sm ${currentIndex >= index ? "bg-neutral-200" : "bg-neutral-700"}`}
               />
             ))}
           </View>
 
           <View style={tw`flex-1 justify-center items-center`}>
             {isBreathing ? (
-              <Canvas style={{height: 240, width: 240}}>
+              <Canvas style={{ height: 240, width: 240 }}>
                 <Fill>
                   <Shader source={source} uniforms={uniforms} />
                 </Fill>
               </Canvas>
             ) : (
               <View
-                style={tw`${isText ? 'h-36 w-36' : 'h-24 w-24'} items-center justify-center`}>
+                style={tw`${isText ? "h-36 w-36" : "h-24 w-24"} items-center justify-center`}
+              >
                 <Text
-                  style={[tw`${isText ? 'text-base' : 'text-xl'} font-lusitana text-center text-neutral-200 mb-2`, {
-                    fontVariant: isText ? [] : ['tabular-nums'],
-                    fontStyle: isText ? 'italic' : undefined,
-                  }]}>
+                  style={[
+                    tw`${isText ? "text-base" : "text-xl"} font-inter text-center text-neutral-200 mb-2`,
+                    {
+                      fontVariant: isText ? [] : ["tabular-nums"],
+                      fontStyle: isText ? "italic" : undefined,
+                    },
+                  ]}
+                >
                   {label}
                 </Text>
                 {!isText ? (
                   <View style={tw`absolute inset-x-0 bottom-[22px]`}>
                     <Text
-                      style={[tw`text-xs font-lusitana text-center text-neutral-400`, {
-                        fontVariant: ['tabular-nums']
-                      }]}>
+                      style={[
+                        tw`text-xs font-inter text-center text-neutral-400`,
+                        {
+                          fontVariant: ["tabular-nums"],
+                        },
+                      ]}
+                    >
                       {sublabel}
                     </Text>
                   </View>
@@ -469,50 +493,54 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             )}
           </View>
 
-          <View style={tw`justify-center items-center mb-6`}>
-            {currentType === 'breath' ? (
+          <View style={tw`justify-end items-center mb-2 h-16`}>
+            {currentType === "breath" ? (
               <>
                 <Text
-                  style={tw`text-xs font-lusitana text-white text-center`}>{`Maintain a breathing cycle of: ${
+                  style={tw`text-xs font-inter text-white text-center`}
+                >{`Maintain a breathing cycle of: ${
                   currentValue![0]
                 }s · ${currentValue![1]}s · ${currentValue![2]}s · ${
                   currentValue![3]
                 }s`}</Text>
                 <Text
-                  style={tw`text-xxs font-lusitana text-neutral-200 text-center mt-2`}>
+                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
+                >
                   {currentCount
                     ? `Repeat ${currentCount} times`
                     : `Will repeat until you tap to continue`}
                 </Text>
               </>
-            ) : currentType === 'hold' ? (
+            ) : currentType === "hold" ? (
               <>
-                <Text style={tw`text-xs font-lusitana text-white text-center`}>
+                <Text style={tw`text-xs font-inter text-white text-center`}>
                   {currentCount
                     ? `Hold for ${currentCount} seconds`
-                    : 'Hold as long as you can'}
+                    : "Hold as long as you can"}
                 </Text>
                 {!currentCount ? (
                   <Text
-                    style={tw`text-xxs font-lusitana text-neutral-200 text-center mt-2`}>
+                    style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
+                  >
                     {`Tap to continue`}
                   </Text>
                 ) : null}
               </>
-            ) : currentType === 'inhale' || currentType === 'exhale' ? (
-              <Text style={tw`text-xs font-lusitana text-white text-center`}>
+            ) : currentType === "inhale" || currentType === "exhale" ? (
+              <Text style={tw`text-xs font-inter text-white text-center`}>
                 {`${capitalize(currentType)} for ${currentCount} seconds`}
               </Text>
-            ) : currentType === 'text' ? (
+            ) : currentType === "text" ? (
               <>
-                <Text style={tw`text-xs font-lusitana text-white text-center`}>
+                <Text style={tw`text-xs font-inter text-white text-center`}>
                   {currentCount
                     ? `Will show text for ${currentCount} seconds`
-                    : 'Will show text for as long as you like'}
+                    : "Will show text for as long as you like"}
                 </Text>
                 {!currentCount ? (
                   <Text
-                    style={tw`text-xxs font-lusitana text-neutral-200 text-center mt-2`}>
+                    style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
+                  >
                     {`Tap to continue`}
                   </Text>
                 ) : null}
@@ -520,10 +548,9 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             ) : null}
           </View>
 
-          <View
-            style={tw`absolute inset-0 flex-row`}>
+          <View style={tw`absolute inset-0 flex-row`}>
             <Pressable
-              style={tw`flex-1 h-full`}
+              style={tw`w-32 h-full`}
               onPress={() => {
                 if (currentIndex) {
                   setCurrentIndex(currentIndex - 1);
@@ -532,7 +559,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
               }}
             />
             <Pressable
-              style={tw`flex-[2] h-full`}
+              style={tw`flex-1 h-full`}
               onPress={() => {
                 if (currentIndex < exercise.seq.length - 1) {
                   setCurrentIndex(currentIndex + 1);
@@ -544,7 +571,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
             />
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 };

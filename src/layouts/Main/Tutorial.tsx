@@ -91,7 +91,7 @@ export const Tutorial = ({ onClose }: Props) => {
         renderItem={({ item }) =>
           item.id === "intro" ? (
             <View style={tw`flex-1 justify-center px-6`}>
-              <Text style={tw`text-lg font-lusitana text-white`}>
+              <Text style={tw`text-lg font-inter text-white`}>
                 Midnight Satori is the breath work app that empowers you to
                 create highly personalized and sophisticated breathing
                 exercises. With our intuitive interface, you can fine-tune every
@@ -103,7 +103,7 @@ export const Tutorial = ({ onClose }: Props) => {
                 well-being with Midnight Satori – the app that puts the power of
                 breath work in your hands.
               </Text>
-              {/* <Text style={tw`text-base font-lusitana text-white`}>
+              {/* <Text style={tw`text-base font-inter text-white`}>
                 Welcome to Midnight Satori, the ultimate breath work app
                 designed for those seeking to create highly customized and
                 sophisticated breathing exercises. Our app is dedicated to
@@ -111,7 +111,7 @@ export const Tutorial = ({ onClose }: Props) => {
                 craft personalized routines that suit their unique needs and
                 goals.
               </Text> */}
-              {/* <Text style={tw`text-base font-lusitana text-white mt-4`}>
+              {/* <Text style={tw`text-base font-inter text-white mt-4`}>
                 With Midnight Satori, you have the freedom to fine-tune every
                 aspect of your breath work practice. Our intuitive interface
                 allows you to manipulate variables such as inhale and exhale
@@ -121,7 +121,7 @@ export const Tutorial = ({ onClose }: Props) => {
                 boundaries of your practice, Midnight Satori provides you with
                 the tools to build elaborate and precise breath work exercises.
               </Text> */}
-              {/* <Text style={tw`text-base font-lusitana text-white mt-4`}>
+              {/* <Text style={tw`text-base font-inter text-white mt-4`}>
                 Dive into a world of endless possibilities as you create, save,
                 and share your custom breathing patterns. Elevate your
                 well-being, enhance your focus, and unlock your full potential
@@ -132,7 +132,7 @@ export const Tutorial = ({ onClose }: Props) => {
           ) : item.id === "other" ? (
             <View style={tw`flex-1 justify-center items-center`}>
               <Text
-                style={tw`text-2xl font-lusitana font-bold text-white text-center mb-12`}
+                style={tw`text-2xl font-inter font-bold text-white text-center mb-12`}
               >
                 Other actions
               </Text>
@@ -140,13 +140,13 @@ export const Tutorial = ({ onClose }: Props) => {
               <View style={tw`flex-row`}>
                 <View style={tw`flex-1 justify-center items-center`}>
                   <Icon name="unordered-list" color="white" size={28} />
-                  <Text style={tw`text-base font-lusitana text-white mt-2`}>
+                  <Text style={tw`text-base font-inter text-white mt-2`}>
                     View & edit exercises
                   </Text>
                 </View>
                 <View style={tw`flex-1 justify-center items-center`}>
                   <Icon name="headphones" color="white" size={28} />
-                  <Text style={tw`text-base font-lusitana text-white mt-2`}>
+                  <Text style={tw`text-base font-inter text-white mt-2`}>
                     In-app music
                   </Text>
                 </View>
@@ -154,13 +154,13 @@ export const Tutorial = ({ onClose }: Props) => {
               <View style={tw`flex-row mt-12`}>
                 <View style={tw`flex-1 justify-center items-center`}>
                   <Icon name="moon" color="white" size={28} />
-                  <Text style={tw`text-base font-lusitana text-white mt-2`}>
+                  <Text style={tw`text-base font-inter text-white mt-2`}>
                     Toggle grayscale
                   </Text>
                 </View>
                 <View style={tw`flex-1 justify-center items-center`}>
                   <Icon name="help" color="white" size={28} />
-                  <Text style={tw`text-base font-lusitana text-white mt-2`}>
+                  <Text style={tw`text-base font-inter text-white mt-2`}>
                     See tutorial
                   </Text>
                 </View>
@@ -175,7 +175,7 @@ export const Tutorial = ({ onClose }: Props) => {
                 ]}
               >
                 <Text
-                  style={tw`text-2xl font-lusitana font-bold text-white text-center mb-8`}
+                  style={tw`text-2xl font-inter font-bold text-white text-center mb-8`}
                 >
                   {item.title}
                 </Text>
@@ -193,7 +193,7 @@ export const Tutorial = ({ onClose }: Props) => {
                 ]}
               >
                 <Text
-                  style={tw`text-lg font-lusitana text-white text-center mt-8`}
+                  style={tw`text-lg font-inter text-white text-center mt-8`}
                 >
                   {item.message}
                 </Text>

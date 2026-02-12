@@ -22,7 +22,7 @@ export const AnimatedText = memo(({
       editable={false}
       value={text.value}
       animatedProps={animatedProps}
-      style={[tw`mt-6 font-lusitana text-white`, {marginBottom: -16, fontSize, lineHeight}]}
+      style={[tw`mt-6 font-inter text-white`, {marginBottom: -16, fontSize, lineHeight}]}
       {...props}
     />
   );

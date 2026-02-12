@@ -26,7 +26,9 @@ export const Header = ({ navigation }: Props) => {
       >
         <Icon name="close" size={20} color="white" />
       </Pressable>
-      <Text style={tw`text-base font-lusitana text-white`}>Your Exercises</Text>
+      <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
+        Your Exercises
+      </Text>
       <Pressable
         style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
         onPress={() => {

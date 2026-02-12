@@ -49,7 +49,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
   return (
     <TrayScreen trayHeight={(isBreath ? 440 : 240) + bottom}>
       <View style={tw`pt-6 px-2 flex-1 items-center`}>
-        <Text style={tw`text-base font-lusitana text-white`}>
+        <Text style={tw`text-base font-inter text-white`}>
           {capitalize(type)}
         </Text>
 
@@ -64,7 +64,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                 }}
               >
                 <Text
-                  style={tw`text-center text-xs font-lusitana ${
+                  style={tw`text-center text-xs font-inter ${
                     selectedPart === 0 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Inhale (${(value as number[])[0]}s)`}</Text>
@@ -77,7 +77,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                 }}
               >
                 <Text
-                  style={tw`text-center text-xs font-lusitana ${
+                  style={tw`text-center text-xs font-inter ${
                     selectedPart === 1 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Hold (${(value as number[])[1]}s)`}</Text>
@@ -90,7 +90,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                 }}
               >
                 <Text
-                  style={tw`text-center text-xs font-lusitana ${
+                  style={tw`text-center text-xs font-inter ${
                     selectedPart === 2 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Exhale (${(value as number[])[2]}s)`}</Text>
@@ -103,7 +103,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                 }}
               >
                 <Text
-                  style={tw`text-center text-xs font-lusitana ${
+                  style={tw`text-center text-xs font-inter ${
                     selectedPart === 3 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Hold (${(value as number[])[3]}s)`}</Text>
@@ -131,7 +131,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
               }}
             />
 
-            <Text style={tw`text-base font-lusitana text-white mt-6`}>
+            <Text style={tw`text-base font-inter text-white mt-6`}>
               Count
             </Text>
             <NumberWheelPicker
@@ -157,7 +157,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
         {isSingle ? (
           <>
             <View style={tw`items-center justify-center`}>
-              <Text style={tw`text-base font-lusitana text-white mt-8`}>
+              <Text style={tw`text-base font-inter text-white mt-8`}>
                 Count
               </Text>
               <NumberWheelPicker
