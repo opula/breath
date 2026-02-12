@@ -1,4 +1,5 @@
 import {Paths, File, Directory} from 'expo-file-system';
+import {fetch} from 'expo/fetch';
 
 const musicDir = new Directory(Paths.document, 'music');
 
@@ -24,12 +25,14 @@ export async function downloadToMusicDir(
 
   // Decode first to prevent double-encoding (%20 → %2520)
   const decodedUrl = decodeURI(url);
+
+  // Use expo/fetch which supports streaming binary data to avoid loading
+  // the entire file into a JS string (which hits the string length limit).
   const response = await fetch(decodedUrl);
   if (!response.ok) return null;
 
   const contentType = response.headers.get('content-type') ?? '';
-  const buffer = new Uint8Array(await response.arrayBuffer());
-  dest.write(buffer);
+  dest.write(await response.bytes());
 
   return {type: contentType};
 }

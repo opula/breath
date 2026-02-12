@@ -28,7 +28,7 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MDNTBRWK/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MDNTBRWK-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MDNTBRWK-Bridging-Header.h"; path = "MDNTBRWK/MDNTBRWK-Bridging-Header.h"; sourceTree = "<group>"; };
-		F437CE2F78A44739B0D888F3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MDNTBRWK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F437CE2F78A44739B0D888F3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = MDNTBRWK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F7FDFCF69A8C195821C32FE5 /* libPods-MDNTBRWK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MDNTBRWK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -103,7 +103,6 @@
 				CF15AFE33AA76D5BAC4EC141 /* Pods-MDNTBRWK.debug.xcconfig */,
 				BAB46966A65667BB2DB772B4 /* Pods-MDNTBRWK.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -337,6 +336,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MDNTBRWK/MDNTBRWK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QTZ99Y3958;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -373,6 +373,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MDNTBRWK/MDNTBRWK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QTZ99Y3958;
 				INFOPLIST_FILE = MDNTBRWK/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
