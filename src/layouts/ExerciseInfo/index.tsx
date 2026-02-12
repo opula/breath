@@ -7,7 +7,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {MainStackParams} from '../../navigation';
 import {useParametrizedAppSelector} from '../../utils/selectors';
 import {exerciseByIdSelector} from '../../state/exercises.selectors';
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, Pressable} from 'react-native';
 import tw from '../../utils/tw';
 import {Icon} from '../../components/Icon';
 import {Canvas, Fill, Shader, useClock, vec} from '@shopify/react-native-skia';
@@ -421,11 +421,11 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
           <View
             style={tw`h-10 w-10 items-center justify-center`}></View>
           <Text style={tw`text-base font-lusitana text-white`}>{exercise.name}</Text>
-          <TouchableOpacity
+          <Pressable
             style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}>
             <Icon name="close" size={20} color="white" />
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         <View style={tw`flex-1`}>
@@ -522,8 +522,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
 
           <View
             style={tw`absolute inset-0 flex-row`}>
-            <TouchableOpacity
-              activeOpacity={1}
+            <Pressable
               style={tw`flex-1 h-full`}
               onPress={() => {
                 if (currentIndex) {
@@ -532,8 +531,7 @@ export const ExerciseInfo = ({navigation, route}: Props) => {
                 }
               }}
             />
-            <TouchableOpacity
-              activeOpacity={1}
+            <Pressable
               style={tw`flex-[2] h-full`}
               onPress={() => {
                 if (currentIndex < exercise.seq.length - 1) {

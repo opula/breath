@@ -1,6 +1,6 @@
 import React from 'react';
 import {Exercise} from '../../types/exercise';
-import {Text, TouchableOpacity} from 'react-native';
+import {Text, Pressable} from 'react-native';
 import tw from '../../utils/tw';
 import {capitalize, sum} from 'lodash';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
@@ -22,8 +22,7 @@ export const StepCard = ({exerciseId, step, drag}: Props) => {
     type === 'breath' && convertSecondsToHHMM(count * sum(value as number[]));
 
   return (
-    <TouchableOpacity
-      activeOpacity={1}
+    <Pressable
       style={tw`border-b border-neutral-800 bg-black px-4 py-4`}
       onLongPress={drag}
       onPress={() => {
@@ -60,6 +59,6 @@ export const StepCard = ({exerciseId, step, drag}: Props) => {
           </Text>
         </>
       ) : null}
-    </TouchableOpacity>
+    </Pressable>
   );
 };

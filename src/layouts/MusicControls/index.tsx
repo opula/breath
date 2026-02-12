@@ -3,7 +3,7 @@ import {TrayScreen} from '../../components/TrayScreen';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   FlatList,
   useWindowDimensions,
   ActivityIndicator,
@@ -95,7 +95,7 @@ export const MusicControls = () => {
         <View style={tw`pt-6 px-2 flex-1`}>
           {/* Action buttons */}
           <View style={tw`flex-row items-center justify-center gap-3 mb-4`}>
-            <TouchableOpacity
+            <Pressable
               style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
               onPress={pasteUrl}
               disabled={isDownloading}>
@@ -109,19 +109,19 @@ export const MusicControls = () => {
                   </Text>
                 </>
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
               onPress={pickLocalFile}>
               <Icon name="folder" color="white" size={16} />
               <Text style={tw`ml-2 text-sm font-lusitana text-white`}>
                 Pick File
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           {/* Exercise sounds toggle */}
-          <TouchableOpacity
+          <Pressable
             style={tw`flex-row items-center justify-between px-4 py-3 mb-4 rounded-full border border-neutral-600`}
             onPress={() => dispatch(toggleSounds())}>
             <Text style={tw`text-sm font-lusitana text-white`}>
@@ -133,7 +133,7 @@ export const MusicControls = () => {
               }`}>
               {soundsEnabled ? 'On' : 'Off'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Library list */}
           {files.length === 0 ? (

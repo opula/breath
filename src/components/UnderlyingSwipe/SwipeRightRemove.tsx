@@ -1,6 +1,6 @@
 import {useAnimatedStyle} from 'react-native-reanimated';
 import {useSwipeableItemParams} from 'react-native-swipeable-item';
-import {Text, TouchableOpacity} from 'react-native';
+import {Text, Pressable} from 'react-native';
 import Animated from 'react-native-reanimated';
 import tw from '../../utils/tw';
 
@@ -23,13 +23,13 @@ export const SwipeRightRemove = ({
   return (
     <Animated.View
       style={[tw`bg-white h-full w-full flex-row items-center justify-end`, animStyle]}>
-      <TouchableOpacity
+      <Pressable
         style={tw`bg-white justify-center items-center h-full w-30 active:opacity-80`}
         onPress={onPressDelete}>
         <Text style={tw`text-base font-lusitana text-black`}>
           Remove
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, TouchableOpacity, View} from 'react-native';
+import {Text, Pressable, View} from 'react-native';
 import {Icon} from '../../components/Icon';
 import tw from '../../utils/tw';
 import {MusicFile} from '../../types/music';
@@ -18,7 +18,7 @@ export const MusicTrackItem = ({
   onPress,
 }: MusicTrackItemProps) => {
   return (
-    <TouchableOpacity
+    <Pressable
       style={tw`flex-row items-center px-4 py-3 active:opacity-80`}
       onPress={onPress}>
       <View style={tw`w-6 items-center`}>
@@ -37,6 +37,6 @@ export const MusicTrackItem = ({
         numberOfLines={1}>
         {item.name}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };

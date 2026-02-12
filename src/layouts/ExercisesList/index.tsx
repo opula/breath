@@ -1,19 +1,9 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { NavigationProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
-import {
-  LayoutAnimation,
-  View,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { LayoutAnimation, View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import {
   updateExercises,
@@ -33,6 +23,7 @@ import { Exercise } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { ExerciseItem } from "./ExerciseItem";
 import { Header } from "./Header";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const OVERSWIPE_DIST = 20;
 const SNAP_LEFT = [120];
@@ -121,36 +112,38 @@ export const ExercisesList = ({ navigation }: Props) => {
   const listFooter = useMemo(
     () => (
       <View style={tw`py-4 mb-8`}>
-        <TouchableOpacity
+        <Pressable
           style={tw`items-center justify-center active:opacity-80`}
           onPress={() => dispatch(resetExercises())}
         >
           <Text style={tw`text-base font-lusitana`}>Reset exercises</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     ),
     [dispatch],
   );
 
   return (
-    <View style={tw`flex-1 bg-black`}>
-      <View style={tw`px-4 py-4`}>
-        <Header navigation={navigation} />
+    <View style={tw`flex-1 bg-black bg-opacity-50`}>
+      <SafeAreaView>
+        <View style={tw`px-0 pb-4`}>
+          <Header navigation={navigation} />
 
-        <DraggableFlatList
-          data={exercises}
-          renderItem={renderItem}
-          onDragEnd={onDragEnd}
-          keyExtractor={keyExtractor}
-          activationDistance={20}
-          showsVerticalScrollIndicator={false}
-          maxToRenderPerBatch={5}
-          initialNumToRender={5}
-          windowSize={5}
-          updateCellsBatchingPeriod={32}
-          ListFooterComponent={listFooter}
-        />
-      </View>
+          <DraggableFlatList
+            data={exercises}
+            renderItem={renderItem}
+            onDragEnd={onDragEnd}
+            keyExtractor={keyExtractor}
+            activationDistance={20}
+            showsVerticalScrollIndicator={false}
+            maxToRenderPerBatch={5}
+            initialNumToRender={5}
+            windowSize={5}
+            updateCellsBatchingPeriod={32}
+            ListFooterComponent={listFooter}
+          />
+        </View>
+      </SafeAreaView>
     </View>
   );
 };

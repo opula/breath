@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
@@ -56,7 +56,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
         {isBreath ? (
           <>
             <View style={tw`mt-4 flex-row items-center justify-center`}>
-              <TouchableOpacity
+              <Pressable
                 style={tw`h-10 flex-1 mx-1`}
                 onPress={() => {
                   setSelectedPart(0);
@@ -68,8 +68,8 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                     selectedPart === 0 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Inhale (${(value as number[])[0]}s)`}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={tw`h-10 flex-1 mx-1`}
                 onPress={() => {
                   setSelectedPart(1);
@@ -81,8 +81,8 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                     selectedPart === 1 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Hold (${(value as number[])[1]}s)`}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={tw`h-10 flex-1 mx-1`}
                 onPress={() => {
                   setSelectedPart(2);
@@ -94,8 +94,8 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                     selectedPart === 2 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Exhale (${(value as number[])[2]}s)`}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={tw`h-10 flex-1 mx-1`}
                 onPress={() => {
                   setSelectedPart(3);
@@ -107,7 +107,7 @@ export const AdjustStep = ({ navigation, route }: Props) => {
                     selectedPart === 3 ? "text-blue-500" : "text-white"
                   }`}
                 >{`Hold (${(value as number[])[3]}s)`}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
 
             <NumberWheelPicker

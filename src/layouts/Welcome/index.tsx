@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import {
   OrientationLocker,
@@ -148,7 +148,7 @@ export const Welcome = ({ navigation }: Props) => {
             exit={{ opacity: 0 }}
             transition={{ opacity: { type: "timing", duration: 300 } }}
           >
-            <TouchableOpacity
+            <Pressable
               style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
               onPress={() => {
                 dispatch(engageTutorial());
@@ -159,7 +159,7 @@ export const Welcome = ({ navigation }: Props) => {
               <Text style={tw`text-base font-lusitana font-bold text-white`}>
                 Get started
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </MotiView>
         ) : (
           <MotiView
@@ -173,7 +173,7 @@ export const Welcome = ({ navigation }: Props) => {
             exit={{ opacity: 0 }}
             transition={{ opacity: { type: "timing", duration: 300 } }}
           >
-            <TouchableOpacity
+            <Pressable
               style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
               onPress={() => {
                 setCurrentIndex(currentIndex + 1);
@@ -183,7 +183,7 @@ export const Welcome = ({ navigation }: Props) => {
               <Text style={tw`text-base font-lusitana font-bold text-white`}>
                 Next
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </MotiView>
         )}
       </AnimatePresence>

@@ -9,7 +9,7 @@ import {
   LayoutAnimation,
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
 } from "react-native";
 import tw from "../../utils/tw";
 import { StepCard } from "./StepCard";
@@ -103,12 +103,12 @@ export const Exercise = ({ navigation, route }: Props) => {
     <View style={tw`flex-1 bg-black`}>
       <View style={tw`flex-1 px-4 py-4`}>
         <View style={tw`flex-row px-4 justify-between items-center`}>
-          <TouchableOpacity
+          <Pressable
             style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
           >
             <Icon name="left-arrow" size={20} color="white" />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={tw`text-base font-lusitana text-white`}>
             {exercise.name}
           </Text>
@@ -148,7 +148,7 @@ export const Exercise = ({ navigation, route }: Props) => {
             )}
             ListFooterComponent={() => (
               <View style={tw`py-4 mb-8`}>
-                <TouchableOpacity
+                <Pressable
                   style={tw`items-center justify-center active:opacity-80`}
                   onPress={() =>
                     navigation.navigate("NewStepMenu", { exerciseId: id })
@@ -157,7 +157,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                   <Text style={tw`text-base font-lusitana text-blue-500`}>
                     Add step
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
           />

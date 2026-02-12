@@ -1,31 +1,33 @@
-import React from 'react';
-import {NavigationProp} from '@react-navigation/native';
-import {MainStackParams} from '../../navigation';
-import {Icon} from '../../components/Icon';
-import uuid from 'react-native-uuid';
-import {useAppDispatch} from '../../hooks/store';
-import {addExercise} from '../../state/exercises.reducer';
-import {defer} from 'lodash';
-import {View, Text, TouchableOpacity} from 'react-native';
-import tw from '../../utils/tw';
+import React from "react";
+import { NavigationProp } from "@react-navigation/native";
+import { MainStackParams } from "../../navigation";
+import { Icon } from "../../components/Icon";
+import uuid from "react-native-uuid";
+import { useAppDispatch } from "../../hooks/store";
+import { addExercise } from "../../state/exercises.reducer";
+import { defer } from "lodash";
+import { View, Text, Pressable } from "react-native";
+import tw from "../../utils/tw";
 
 interface Props {
-  navigation: NavigationProp<MainStackParams, 'ExercisesList'>;
+  navigation: NavigationProp<MainStackParams, "ExercisesList">;
 }
 
-export const Header = ({navigation}: Props) => {
+export const Header = ({ navigation }: Props) => {
   const dispatch = useAppDispatch();
 
   return (
     <View
-      style={tw`flex-row px-4 justify-between items-center`}>
-      <TouchableOpacity
+      style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
+    >
+      <Pressable
         style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
-        onPress={() => navigation.goBack()}>
-        <Icon name="left-arrow" size={20} color="white" />
-      </TouchableOpacity>
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="close" size={20} color="white" />
+      </Pressable>
       <Text style={tw`text-base font-lusitana text-white`}>Your Exercises</Text>
-      <TouchableOpacity
+      <Pressable
         style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
         onPress={() => {
           const exerciseId = uuid.v4() as string;
@@ -35,10 +37,11 @@ export const Header = ({navigation}: Props) => {
             }),
           );
 
-          defer(() => navigation.navigate('Exercise', {id: exerciseId}));
-        }}>
+          defer(() => navigation.navigate("Exercise", { id: exerciseId }));
+        }}
+      >
         <Icon name="plus" size={20} color="white" />
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 };

@@ -6,7 +6,7 @@ import { DynamicExercise } from "../../components/DynamicExercise";
 import { Icon } from "../../components/Icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatePresence, MotiView } from "moti";
-import { TouchableOpacity } from "react-native";
+import { Pressable } from "react-native";
 import tw from "../../utils/tw";
 import {
   NavigationProp,
@@ -98,7 +98,7 @@ export const Main = () => {
       </View>
 
       <AnimatePresence>
-        {isPaused ? (
+        {isPaused && isFocused ? (
           <MotiView
             key="left"
             from={{ opacity: 0 }}
@@ -113,30 +113,30 @@ export const Main = () => {
               },
             ]}
           >
-            <TouchableOpacity
+            <Pressable
               style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={toggleGrayscale}
             >
               <Icon name="moon" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={() => {
                 navigation.navigate("MusicControls");
               }}
             >
               <Icon name="headphones" size={24} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={engageTutorial}
             >
               <Icon name="help" size={24} color="white" />
-            </TouchableOpacity>
+            </Pressable>
           </MotiView>
         ) : null}
 
-        {isPaused ? (
+        {isPaused && isFocused ? (
           <MotiView
             key="right"
             from={{ opacity: 0 }}
@@ -151,14 +151,14 @@ export const Main = () => {
               },
             ]}
           >
-            <TouchableOpacity
+            <Pressable
               style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={() => {
                 navigation.navigate("ExercisesList");
               }}
             >
               <Icon name="unordered-list" size={24} color="white" />
-            </TouchableOpacity>
+            </Pressable>
           </MotiView>
         ) : null}
 

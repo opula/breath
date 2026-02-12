@@ -4,7 +4,7 @@ import {
   useWindowDimensions,
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   Platform,
 } from "react-native";
 import { range } from "lodash";
@@ -207,7 +207,7 @@ export const Tutorial = ({ onClose }: Props) => {
         <Pagination count={SLIDES.length} progressValue={progressValue} />
       </View>
 
-      <TouchableOpacity
+      <Pressable
         style={[
           tw`absolute right-2 h-10 w-10 items-center justify-center active:opacity-80`,
           { top: osTop },
@@ -215,7 +215,7 @@ export const Tutorial = ({ onClose }: Props) => {
         onPress={handleClose}
       >
         <Icon name="close" color="white" size={24} />
-      </TouchableOpacity>
+      </Pressable>
     </MotiView>
   );
 };

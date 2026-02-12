@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
+import {View, Text, Pressable} from 'react-native';
 import tw from '../../utils/tw';
 import {NavigationProp, RouteProp} from '@react-navigation/native';
 import {MainStackParams} from '../../navigation';
@@ -45,42 +45,42 @@ export const NewStepMenu = ({navigation, route}: Props) => {
       </View>
 
       <View style={[tw`flex-1 pb-4`, {marginBottom: bottom}]}>
-        <TouchableOpacity
+        <Pressable
           style={tw`h-[54px] rounded-sm border border-blue mb-4 items-center justify-center`}
           onPress={() => createStep('breath')}>
           <Text style={tw`text-xl font-lusitana text-blue`}>
             Breath cycle
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={tw`h-[54px] rounded-sm border border-blue mb-4 items-center justify-center`}
           onPress={() => createStep('inhale')}>
           <Text style={tw`text-xl font-lusitana text-blue`}>
             Inhale
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={tw`h-[54px] rounded-sm border border-blue mb-4 items-center justify-center`}
           onPress={() => createStep('hold')}>
           <Text style={tw`text-xl font-lusitana text-blue`}>
             Hold
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={tw`h-[54px] rounded-sm border border-blue mb-4 items-center justify-center`}
           onPress={() => createStep('exhale')}>
           <Text style={tw`text-xl font-lusitana text-blue`}>
             Exhale
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={tw`h-[54px] rounded-sm border border-blue items-center justify-center opacity-50`}
           disabled={true}
           onPress={() => {}}>
           <Text style={tw`text-xl font-lusitana text-blue`}>
             Message
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </TrayScreen>
   );
