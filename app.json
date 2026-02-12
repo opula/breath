@@ -11,25 +11,35 @@
       "resizeMode": "cover",
       "backgroundColor": "#131313"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
-      "bundleIdentifier": "com.midnight.breathapp"
+      "bundleIdentifier": "com.midnight.breathapp",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#000000"
       },
-
       "newArchEnabled": true,
       "package": "com.midnight.breathapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-font", "expo-splash-screen"],
+    "plugins": [
+      "expo-font",
+      "expo-splash-screen"
+    ],
     "fonts": [
       {
         "asset": "./assets/fonts/Lusitana-Regular.ttf",

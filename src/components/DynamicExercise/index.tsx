@@ -16,6 +16,9 @@ import EventEmitter from "eventemitter3";
 import { incrementalCompletionTimer } from "../../utils/exercise";
 
 import { exerciseScheduler } from "../../services/ExerciseScheduler";
+import { playExerciseSound } from "../../services/ExerciseSounds";
+import { soundsEnabledSelector } from "../../state/configuration.selectors";
+import { store } from "../../store";
 import {
   runOnJS,
   useSharedValue,
@@ -164,6 +167,7 @@ export const DynamicExercise = memo(
 
         setSublabel(`n° ${count ? count : 1}`);
         setLabel(breathLabels[0]);
+        if (soundsEnabledSelector(store.getState())) playExerciseSound('inhale');
 
         exerciseScheduler.addJob(
           0,
@@ -240,6 +244,10 @@ export const DynamicExercise = memo(
         }
 
         setLabel(breathLabels[stepIndex]);
+        if (soundsEnabledSelector(store.getState())) {
+          const sound = breathLabels[stepIndex] as 'inhale' | 'hold' | 'exhale';
+          playExerciseSound(sound);
+        }
         setSublabel(
           `n° ${count ? count - completedPatterns : completedPatterns + 1}`
         );
@@ -288,6 +296,9 @@ export const DynamicExercise = memo(
         const { type, count } = exercise.seq[currentSeqIndex];
 
         setLabel(type);
+        if (soundsEnabledSelector(store.getState())) {
+          playExerciseSound(type as 'inhale' | 'exhale' | 'hold');
+        }
         setSublabel(
           count ? padStart(`${count}`, 2, "0") : padStart(`${0}`, 2, "0")
         );

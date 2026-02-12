@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useCallback,
   useRef,
+  useState,
 } from 'react';
 import {
   useAudioPlayer as useExpoAudioPlayer,
@@ -57,6 +58,7 @@ interface AudioPlayerState {
   isLoaded: boolean;
   volume: number;
   activeFileName: string | null;
+  isDownloading: boolean;
 }
 
 interface AudioPlayerActions {
@@ -84,6 +86,7 @@ export const AudioPlayerProvider = ({
   const activeFileId = useSelector(activeFileIdSelector);
   const savedVolume = storage.getNumber(MUSIC_BG_VOLUME) ?? 1;
   const migrated = useRef(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const player = useExpoAudioPlayer(getInitialSource());
   const status = useAudioPlayerStatus(player);
@@ -189,10 +192,10 @@ export const AudioPlayerProvider = ({
     const text = await Clipboard.getStringAsync();
     if (!text) return;
 
-    const trimmed = text.trim();
-    // Basic URL validation
+    let trimmed = text.trim();
+    // Prepend http:// if no scheme is present
     if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-      return;
+      trimmed = `http://${trimmed}`;
     }
 
     const id = uuid.v4() as string;
@@ -204,18 +207,30 @@ export const AudioPlayerProvider = ({
     const displayName = decodeURIComponent(lastSegment) || 'Downloaded track';
     const fileName = `${id}.${ext}`;
 
-    const downloaded = await downloadToMusicDir(trimmed, fileName);
+    setIsDownloading(true);
 
-    // Validate the downloaded file is actually audio
-    if (!downloaded.type.startsWith('audio/')) {
+    const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'opus'];
+    const hasAudioExt = audioExtensions.includes((ext ?? '').toLowerCase());
+
+    try {
+      const downloaded = await downloadToMusicDir(trimmed, fileName);
+
+      if (!downloaded) return;
+
+      if (!downloaded.type.startsWith('audio/') && !hasAudioExt) {
+        deleteFromMusicDir(fileName);
+        return;
+      }
+
+      const file: MusicFile = {id, name: displayName, fileName};
+      dispatch(addFile(file));
+      dispatch(setActiveFile(id));
+      player.replace({uri: getMusicFileUri(fileName)});
+    } catch {
       deleteFromMusicDir(fileName);
-      return;
+    } finally {
+      setIsDownloading(false);
     }
-
-    const file: MusicFile = {id, name: displayName, fileName};
-    dispatch(addFile(file));
-    dispatch(setActiveFile(id));
-    player.replace({uri: getMusicFileUri(fileName)});
   }, [dispatch, player]);
 
   const playFile = useCallback(
@@ -257,6 +272,7 @@ export const AudioPlayerProvider = ({
     isLoaded: status.isLoaded,
     volume: player.volume,
     activeFileName: activeFile?.name ?? null,
+    isDownloading,
     play,
     pause,
     setVolume,

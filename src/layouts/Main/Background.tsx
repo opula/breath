@@ -26,10 +26,10 @@ export const Background = memo(() => {
       {/* <Circular grayscale={isGrayscale} /> */}
       {/* <Echo grayscale={isGrayscale} /> */}
       {/* <Waves grayscale={isGrayscale} /> */}
-      <Rorschach grayscale={isGrayscale} />
+      {/* <Rorschach grayscale={isGrayscale} /> */}
       {/* <Starfield grayscale={isGrayscale} /> */}
       {/* <Aurora grayscale={isGrayscale} /> */}
-      {/* <Wormhole grayscale={isGrayscale} /> */}
+      <Wormhole grayscale={isGrayscale} />
     </MotiView>
   );
 });

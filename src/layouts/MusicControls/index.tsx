@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   FlatList,
   useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {useAudioPlayer} from '../../context/AudioPlayerContext';
-import {useSelector} from 'react-redux';
+import {useSelector, useDispatch} from 'react-redux';
 import {
   musicFilesSelector,
   activeFileIdSelector,
@@ -23,6 +24,8 @@ import SwipeableItem from 'react-native-swipeable-item';
 import {SwipeRightRemove} from '../../components/UnderlyingSwipe/SwipeRightRemove';
 import {MusicTrackItem} from './MusicTrackItem';
 import {MusicFile} from '../../types/music';
+import {soundsEnabledSelector} from '../../state/configuration.selectors';
+import {toggleSounds} from '../../state/configuration.reducer';
 
 export const MusicControls = () => {
   const {width, height} = useWindowDimensions();
@@ -36,10 +39,13 @@ export const MusicControls = () => {
     pasteUrl,
     playFile,
     deleteFile,
+    isDownloading,
   } = useAudioPlayer();
 
+  const dispatch = useDispatch();
   const files = useSelector(musicFilesSelector);
   const activeFileId = useSelector(activeFileIdSelector);
+  const soundsEnabled = useSelector(soundsEnabledSelector);
 
   // Create shared values for the slider
   const progress = useSharedValue(
@@ -91,11 +97,18 @@ export const MusicControls = () => {
           <View style={tw`flex-row items-center justify-center gap-3 mb-4`}>
             <TouchableOpacity
               style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
-              onPress={pasteUrl}>
-              <Icon name="clipboard" color="white" size={16} />
-              <Text style={tw`ml-2 text-sm font-lusitana text-white`}>
-                Paste URL
-              </Text>
+              onPress={pasteUrl}
+              disabled={isDownloading}>
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Icon name="clipboard" color="white" size={16} />
+                  <Text style={tw`ml-2 text-sm font-lusitana text-white`}>
+                    Paste URL
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
@@ -106,6 +119,21 @@ export const MusicControls = () => {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Exercise sounds toggle */}
+          <TouchableOpacity
+            style={tw`flex-row items-center justify-between px-4 py-3 mb-4 rounded-full border border-neutral-600`}
+            onPress={() => dispatch(toggleSounds())}>
+            <Text style={tw`text-sm font-lusitana text-white`}>
+              Exercise Sounds
+            </Text>
+            <Text
+              style={tw`text-sm font-lusitana ${
+                soundsEnabled ? 'text-white' : 'text-neutral-500'
+              }`}>
+              {soundsEnabled ? 'On' : 'Off'}
+            </Text>
+          </TouchableOpacity>
 
           {/* Library list */}
           {files.length === 0 ? (

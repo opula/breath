@@ -15,10 +15,23 @@ export function copyToMusicDir(sourceUri: string, fileName: string) {
   source.copy(dest);
 }
 
-export async function downloadToMusicDir(url: string, fileName: string) {
+export async function downloadToMusicDir(
+  url: string,
+  fileName: string,
+): Promise<{type: string} | null> {
   ensureMusicDir();
   const dest = new File(musicDir, fileName);
-  return await File.downloadFileAsync(url, dest);
+
+  // Decode first to prevent double-encoding (%20 → %2520)
+  const decodedUrl = decodeURI(url);
+  const response = await fetch(decodedUrl);
+  if (!response.ok) return null;
+
+  const contentType = response.headers.get('content-type') ?? '';
+  const buffer = new Uint8Array(await response.arrayBuffer());
+  dest.write(buffer);
+
+  return {type: contentType};
 }
 
 export function deleteFromMusicDir(fileName: string) {

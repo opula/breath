@@ -71,6 +71,8 @@ PODS:
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
+  - MMKV (2.2.4):
+    - MMKVCore (~> 2.2.4)
   - MMKVCore (2.2.4)
   - NitroMmkv (4.1.2):
     - hermes-engine
@@ -1399,6 +1401,29 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-background-downloader (4.5.2):
+    - hermes-engine
+    - MMKV
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-orientation-locker (1.6.0):
     - React-Core
   - react-native-safe-area-context (5.6.2):
@@ -2177,6 +2202,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - "react-native-background-downloader (from `../node_modules/@kesha-antonov/react-native-background-downloader`)"
   - "react-native-orientation-locker (from `../node_modules/@hortau/react-native-orientation-locker`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
@@ -2222,6 +2248,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - MMKV
     - MMKVCore
 
 EXTERNAL SOURCES:
@@ -2324,6 +2351,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-background-downloader:
+    :path: "../node_modules/@kesha-antonov/react-native-background-downloader"
   react-native-orientation-locker:
     :path: "../node_modules/@hortau/react-native-orientation-locker"
   react-native-safe-area-context:
@@ -2424,6 +2453,7 @@ SPEC CHECKSUMS:
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
+  MMKV: 1a8e7dbce7f9cad02c52e1b1091d07bd843aefaf
   MMKVCore: f2dd4c9befea04277a55e84e7812f930537993df
   NitroMmkv: c9fd61d98afd00a6e4e1656a415c28f7be0fd74e
   NitroModules: a493494a3d0208c3e3613eb44cba1f42797649e8
@@ -2460,6 +2490,7 @@ SPEC CHECKSUMS:
   React-logger: 50fdb9a8236da90c0b1072da5c32ee03aeb5bf28
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
+  react-native-background-downloader: 297e65c9ffc86ea188d0ec426e8630e681259fc8
   react-native-orientation-locker: 78dae7f0fc920de01a69c6d8a4ceae234f0b70cf
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   react-native-skia: 05327e7acee05e7c27b68a5da0bc80d65f5d790c

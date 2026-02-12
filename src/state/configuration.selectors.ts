@@ -11,3 +11,6 @@ export const isGrayscaleSelector = (state: RootState) =>
 
 export const sourceIndexSelector = (state: RootState) =>
   state.configuration.bgSourceIndex;
+
+export const soundsEnabledSelector = (state: RootState) =>
+  state.configuration.soundsEnabled;
