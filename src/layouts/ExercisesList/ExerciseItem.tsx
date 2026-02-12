@@ -3,8 +3,6 @@ import {NavigationProp} from '@react-navigation/native';
 import {MainStackParams} from '../../navigation';
 import {Exercise} from '../../types/exercise';
 import {Icon} from '../../components/Icon';
-import {useAppDispatch} from '../../hooks/store';
-import {updateSource} from '../../state/configuration.reducer';
 import {defer, isNumber} from 'lodash';
 import {Ops, exerciseEmitter} from '../../components/DynamicExercise/emitter';
 import {View, Text, TouchableOpacity} from 'react-native';
@@ -17,9 +15,7 @@ interface Props {
   navigation: NavigationProp<MainStackParams, 'ExercisesList'>;
 }
 
-export const ExerciseItem = ({item, index, drag, navigation}: Props) => {
-  const dispatch = useAppDispatch();
-
+export const ExerciseItem = React.memo(({item, index, drag, navigation}: Props) => {
   return (
     <TouchableOpacity
       activeOpacity={1}
@@ -66,4 +62,4 @@ export const ExerciseItem = ({item, index, drag, navigation}: Props) => {
       </TouchableOpacity>
     </TouchableOpacity>
   );
-};
+});

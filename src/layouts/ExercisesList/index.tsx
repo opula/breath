@@ -1,86 +1,135 @@
-import React, {useCallback, useRef} from 'react';
-import {Icon} from '../../components/Icon';
-import {NavigationProp} from '@react-navigation/native';
-import {MainStackParams} from '../../navigation';
-import {useAppDispatch, useAppSelector} from '../../hooks/store';
-import {exercisesSelector} from '../../state/exercises.selectors';
-import {FlatList, LayoutAnimation, Pressable, View, Text, TouchableOpacity} from 'react-native';
-import tw from '../../utils/tw';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+import { NavigationProp } from "@react-navigation/native";
+import { MainStackParams } from "../../navigation";
+import { useAppDispatch, useAppSelector } from "../../hooks/store";
+import { exercisesSelector } from "../../state/exercises.selectors";
+import {
+  LayoutAnimation,
+  View,
+  Text,
+  TouchableOpacity,
+} from "react-native";
+import tw from "../../utils/tw";
 import {
   updateExercises,
   resetExercises,
-  addExercise,
-} from '../../state/exercises.reducer';
+  removeExercise,
+} from "../../state/exercises.reducer";
 import DraggableFlatList, {
+  DragEndParams,
   OpacityDecorator,
   RenderItemParams,
   ScaleDecorator,
   ShadowDecorator,
-} from 'react-native-draggable-flatlist';
-import SwipeableItem, {OpenDirection} from 'react-native-swipeable-item';
-import {Exercise} from '../../types/exercise';
-import {SwipeRightRemove} from '../../components/UnderlyingSwipe';
-import uuid from 'react-native-uuid';
-import {defer} from 'lodash';
-import {ExerciseItem} from './ExerciseItem';
-import {Header} from './Header';
+} from "react-native-draggable-flatlist";
+import SwipeableItem, { OpenDirection } from "react-native-swipeable-item";
+import type { SwipeableItemImperativeRef } from "react-native-swipeable-item";
+import { Exercise } from "../../types/exercise";
+import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
+import { ExerciseItem } from "./ExerciseItem";
+import { Header } from "./Header";
 
 const OVERSWIPE_DIST = 20;
 const SNAP_LEFT = [120];
 
 interface Props {
-  navigation: NavigationProp<MainStackParams, 'ExercisesList'>;
+  navigation: NavigationProp<MainStackParams, "ExercisesList">;
 }
 
-export const ExercisesList = ({navigation}: Props) => {
+export const ExercisesList = ({ navigation }: Props) => {
   const exercises = useAppSelector(exercisesSelector);
   const dispatch = useAppDispatch();
-  const itemRefs = useRef(new Map());
+  const itemRefs = useRef(new Map<string, SwipeableItemImperativeRef>());
+
+  useEffect(() => {
+    const activeIds = new Set(exercises.map((exercise) => exercise.id));
+    itemRefs.current.forEach((_, exerciseId) => {
+      if (!activeIds.has(exerciseId)) {
+        itemRefs.current.delete(exerciseId);
+      }
+    });
+  }, [exercises]);
+
+  const onDragEnd = useCallback(
+    (data: DragEndParams<Exercise>) => {
+      dispatch(updateExercises({ exercises: data.data }));
+    },
+    [dispatch],
+  );
 
   const renderItem = useCallback(
     (params: RenderItemParams<Exercise>) => {
-      const {item, getIndex, drag} = params;
+      const { item, getIndex, drag, isActive } = params;
       const index = getIndex();
 
       const onPressDelete = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        const updatedExercises = exercises.filter(item => item !== params.item);
-
-        dispatch(updateExercises({exercises: updatedExercises}));
+        dispatch(removeExercise({ exerciseId: item.id }));
       };
+
+      const row = (
+        <SwipeableItem
+          item={item}
+          ref={(ref) => {
+            if (ref) {
+              itemRefs.current.set(item.id, ref);
+            } else {
+              itemRefs.current.delete(item.id);
+            }
+          }}
+          onChange={({ openDirection }) => {
+            if (openDirection !== OpenDirection.NONE) {
+              [...itemRefs.current.entries()].forEach(([key, ref]) => {
+                if (key !== item.id) {
+                  ref.close();
+                }
+              });
+            }
+          }}
+          overSwipe={OVERSWIPE_DIST}
+          renderUnderlayLeft={() => (
+            <SwipeRightRemove onPressDelete={onPressDelete} drag={drag} />
+          )}
+          snapPointsLeft={SNAP_LEFT}
+        >
+          <ExerciseItem {...{ item, index, drag, navigation }} />
+        </SwipeableItem>
+      );
+
+      if (!isActive) {
+        return row;
+      }
 
       return (
         <ShadowDecorator>
           <ScaleDecorator>
-            <OpacityDecorator>
-              <SwipeableItem
-                key={item.id}
-                item={item}
-                ref={ref => {
-                  if (ref && !itemRefs.current.get(item.id)) {
-                    itemRefs.current.set(item.id, ref);
-                  }
-                }}
-                onChange={({openDirection}) => {
-                  if (openDirection !== OpenDirection.NONE) {
-                    [...itemRefs.current.entries()].forEach(([key, ref]) => {
-                      if (key !== item.id && ref) ref.close();
-                    });
-                  }
-                }}
-                overSwipe={OVERSWIPE_DIST}
-                renderUnderlayLeft={() => (
-                  <SwipeRightRemove onPressDelete={onPressDelete} drag={drag} />
-                )}
-                snapPointsLeft={SNAP_LEFT}>
-                <ExerciseItem {...{item, index, drag, navigation}} />
-              </SwipeableItem>
-            </OpacityDecorator>
+            <OpacityDecorator>{row}</OpacityDecorator>
           </ScaleDecorator>
         </ShadowDecorator>
       );
     },
-    [exercises],
+    [dispatch, navigation],
+  );
+
+  const keyExtractor = useCallback((item: Exercise) => item.id, []);
+
+  const listFooter = useMemo(
+    () => (
+      <View style={tw`py-4 mb-8`}>
+        <TouchableOpacity
+          style={tw`items-center justify-center active:opacity-80`}
+          onPress={() => dispatch(resetExercises())}
+        >
+          <Text style={tw`text-base font-lusitana`}>Reset exercises</Text>
+        </TouchableOpacity>
+      </View>
+    ),
+    [dispatch],
   );
 
   return (
@@ -91,23 +140,15 @@ export const ExercisesList = ({navigation}: Props) => {
         <DraggableFlatList
           data={exercises}
           renderItem={renderItem}
-          onDragEnd={data => {
-            dispatch(updateExercises({exercises: data.data}));
-          }}
-          keyExtractor={(item, index) => item.id}
+          onDragEnd={onDragEnd}
+          keyExtractor={keyExtractor}
           activationDistance={20}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={() => (
-            <View style={tw`py-4 mb-8`}>
-              <TouchableOpacity
-                style={tw`items-center justify-center active:opacity-80`}
-                onPress={() => dispatch(resetExercises())}>
-                <Text style={tw`text-base font-lusitana text-red-500`}>
-                  Reset exercises
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          maxToRenderPerBatch={5}
+          initialNumToRender={5}
+          windowSize={5}
+          updateCellsBatchingPeriod={32}
+          ListFooterComponent={listFooter}
         />
       </View>
     </View>

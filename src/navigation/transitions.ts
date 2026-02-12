@@ -110,71 +110,27 @@ export const crossFadeInterpolator = ({
   }
 };
 
-// Smooth modal transition that works well on Android
-export const smoothModalInterpolator = ({ 
-  current, 
-  inverted, 
-  layouts: { screen } 
+// Smooth modal transition - full-height slide up/down on both platforms
+export const smoothModalInterpolator = ({
+  current,
+  layouts: { screen }
 }: StackCardInterpolationProps): StackCardInterpolatedStyle => {
-  if (Platform.OS === 'android') {
-    // Android-specific modal animation to prevent flashing
-    // Use a fade-in combined with a smaller translation
-    const translateY = current.progress.interpolate({
-      inputRange: [0, 1],
-      outputRange: [screen.height / 3, 0],
-      extrapolate: 'clamp',
-    });
+  const translateY = current.progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [screen.height, 0],
+    extrapolate: 'clamp',
+  });
 
-    const opacity = current.progress.interpolate({
-      inputRange: [0, 0.1, 1],
-      outputRange: [0, 1, 1],
-      extrapolate: 'clamp',
-    });
-
-    return {
-      cardStyle: {
-        opacity,
-        backgroundColor: 'black', // Explicit black background
-        transform: [{ translateY }],
-      },
-      containerStyle: {
-        backgroundColor: 'black',
-      },
-      overlayStyle: {
-        backgroundColor: 'black',
-        opacity: current.progress.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [0, 0.5, 0.7],
-          extrapolate: 'clamp',
-        }),
-      },
-    };
-  } else {
-    // iOS modal animation - slide up from bottom
-    const translateY = current.progress.interpolate({
-      inputRange: [0, 1],
-      outputRange: [screen.height, 0],
-      extrapolate: 'clamp',
-    });
-
-    const opacity = current.progress.interpolate({
-      inputRange: [0, 0.1, 1],
-      outputRange: [0, 1, 1],
-      extrapolate: 'clamp',
-    });
-
-    return {
-      cardStyle: {
-        opacity,
-        transform: [{ translateY }],
-      },
-      overlayStyle: {
-        opacity: current.progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, 0.6],
-          extrapolate: 'clamp',
-        }),
-      },
-    };
-  }
+  return {
+    cardStyle: {
+      transform: [{ translateY }],
+    },
+    overlayStyle: {
+      opacity: current.progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 0.5],
+        extrapolate: 'clamp',
+      }),
+    },
+  };
 };

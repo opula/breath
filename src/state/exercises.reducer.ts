@@ -123,6 +123,14 @@ export const exercisesSlice = createSlice({
             },
       );
     },
+    removeExercise(
+      state,
+      action: PayloadAction<{exerciseId: string}>,
+    ) {
+      state.userExercises = state.userExercises.filter(
+        exercise => exercise.id !== action.payload.exerciseId,
+      );
+    },
     addExercise(
       state,
       action: PayloadAction<{
@@ -157,6 +165,7 @@ export const {
   resetExercises,
   updateExercises,
   updateExercise,
+  removeExercise,
   updateExerciseStepValue,
   updateExerciseStepCount,
   editExerciseName,
