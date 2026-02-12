@@ -16,19 +16,25 @@ import {
   dot,
   uv,
   uniform,
+  pow,
+  clamp,
+  abs,
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 
 // --- Constants ---
-const NOISE_SCALE = 3.5;
-const FLOW_STRENGTH = 0.2;
-const FLOW_TIME_SCALE = 0.05;
-const COLOR_TIME_SCALE = 0.1;
-const COLOR_FREQUENCY = 4.0;
+const NOISE_SCALE = 5.5;
+const FLOW_STRENGTH = 0.5;
+const FLOW_TIME_SCALE = 0.12;
+const COLOR_TIME_SCALE = 0.15;
+const COLOR_FREQUENCY = 5.0;
 const ADVECTION_STEPS = 15;
-const STEP_SIZE = 0.03;
-const FLOW_STEP = FLOW_STRENGTH * STEP_SIZE; // 0.006
+const STEP_SIZE = 0.04;
+const FLOW_STEP = FLOW_STRENGTH * STEP_SIZE;
+const PULSE_SPEED = 0.18;
+const PULSE_AMOUNT = 0.12;
+const DRIFT_STRENGTH = 0.8;
 
 // --- TSL shader functions ---
 
@@ -68,7 +74,7 @@ const noise3D = Fn(([p]: [ReturnType<typeof vec3>]) => {
 const getFlow = Fn(([p]: [ReturnType<typeof vec3>]) => {
   const noiseX = noise3D(p.add(vec3(12.3, 5.7, 9.1)));
   const noiseY = noise3D(p);
-  return vec2(noiseY.negate(), noiseX);
+  return vec2(noiseY.negate(), noiseX.sub(DRIFT_STRENGTH));
 });
 
 // --- Component ---
@@ -98,10 +104,16 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
 
-    // UV: center to (-1,1) with aspect correction
+    // UV: center to (-1,1) with aspect correction + slow breathing pulse
     const uvRaw = uv();
     const uvCentered = uvRaw.mul(2.0).sub(1.0);
-    const uvStart = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
+    const pulse = float(1.0).sub(
+      float(PULSE_AMOUNT).mul(sin(timeU.mul(PULSE_SPEED)).mul(0.5).add(0.5)),
+    );
+    const uvStart = vec2(
+      uvCentered.x.mul(aspectU).mul(pulse),
+      uvCentered.y.mul(pulse),
+    );
 
     // --- Backward advection (15 steps, unrolled) ---
     const noiseTime = timeU.mul(FLOW_TIME_SCALE);
@@ -126,14 +138,10 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
       float(0.5).mul(sin(blendPhase.add(timePhase))),
     );
     const blend2 = float(0.5).add(
-      float(0.5).mul(
-        sin(blendPhase.mul(0.8).add(timePhase.mul(1.2)).add(2.0)),
-      ),
+      float(0.5).mul(sin(blendPhase.mul(0.8).add(timePhase.mul(1.2)).add(2.0))),
     );
     const blend3 = float(0.5).add(
-      float(0.5).mul(
-        sin(blendPhase.mul(1.2).add(timePhase.mul(0.7)).add(4.0)),
-      ),
+      float(0.5).mul(sin(blendPhase.mul(1.2).add(timePhase.mul(0.7)).add(4.0))),
     );
 
     // Normalize blend factors
@@ -142,11 +150,21 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
     const b2 = blend2.div(totalBlend);
     const b3 = blend3.div(totalBlend);
 
-    // Three-color blend
-    const c1 = vec3(0.1, 0.2, 0.4); // Deep blue
-    const c2 = vec3(0.8, 0.5, 0.7); // Soft magenta
-    const c3 = vec3(0.4, 0.8, 0.8); // Cyan/teal
-    const finalColor = c1.mul(b1).add(c2.mul(b2)).add(c3.mul(b3));
+    // Three-color blend — richer, more saturated palette
+    const c1 = vec3(0.02, 0.05, 0.25); // Deep ocean
+    const c2 = vec3(0.3, 0.55, 1.0); // Electric ice blue
+    const c3 = vec3(0.1, 0.95, 0.8); // Bright cyan-mint
+    const baseColor = c1.mul(b1).add(c2.mul(b2)).add(c3.mul(b3));
+
+    // Brightness variation — glowing ribbons from flow-distorted noise
+    const brightNoise = noise3D(
+      vec3(p.x.mul(3.0), p.y.mul(3.0), timeU.mul(0.06)),
+    );
+    const glow = pow(
+      clamp(abs(brightNoise).mul(1.8), float(0.0), float(1.0)),
+      float(1.5),
+    );
+    const finalColor = baseColor.mul(float(0.5).add(glow.mul(0.8)));
 
     // Grayscale desaturation
     const grayscaleU = uniform(float(0));
@@ -172,8 +190,9 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
         return;
       }
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
-      (grayscaleU as unknown as { value: number }).value =
-        grayscaleRef.current ? 1.0 : 0.0;
+      (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
+        ? 1.0
+        : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

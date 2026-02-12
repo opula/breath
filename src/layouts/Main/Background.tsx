@@ -9,11 +9,26 @@ import { Waves } from "../../backgrounds/Waves";
 import { Circular } from "../../backgrounds/Circular";
 import { Echo } from "../../backgrounds/Echo";
 import { useAppSelector } from "../../hooks/store";
-import { isGrayscaleSelector } from "../../state/configuration.selectors";
+import {
+  isGrayscaleSelector,
+  sourceIndexSelector,
+} from "../../state/configuration.selectors";
+
+const BackgroundComponents = [
+  Aurora,
+  Circular,
+  Echo,
+  Rorschach,
+  Starfield,
+  Waves,
+  Wormhole,
+] as const;
 
 export const Background = memo(() => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
-  console.log(isGrayscale);
+  const sourceIndex = useAppSelector(sourceIndexSelector);
+
+  const ActiveBackground = BackgroundComponents[sourceIndex] ?? Wormhole;
 
   return (
     <MotiView
@@ -23,13 +38,7 @@ export const Background = memo(() => {
       transition={{ opacity: { type: "timing", duration: 300 } }}
       style={tw`flex-1`}
     >
-      {/* <Circular grayscale={isGrayscale} /> */}
-      {/* <Echo grayscale={isGrayscale} /> */}
-      {/* <Waves grayscale={isGrayscale} /> */}
-      {/* <Rorschach grayscale={isGrayscale} /> */}
-      {/* <Starfield grayscale={isGrayscale} /> */}
-      {/* <Aurora grayscale={isGrayscale} /> */}
-      <Wormhole grayscale={isGrayscale} />
+      <ActiveBackground grayscale={isGrayscale} />
     </MotiView>
   );
 });
