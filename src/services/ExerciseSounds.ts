@@ -3,7 +3,7 @@ import {createAudioPlayer} from 'expo-audio';
 const players = {
   inhale: createAudioPlayer(require('../../assets/sounds/inhale-sound.wav')),
   exhale: createAudioPlayer(require('../../assets/sounds/exhale-sound.wav')),
-  hold: createAudioPlayer(require('../../assets/sounds/hold-sound.wav')),
+  hold: createAudioPlayer(require('../../assets/sounds/hold-sound-v2.wav')),
 };
 
 export function playExerciseSound(type: 'inhale' | 'exhale' | 'hold') {
