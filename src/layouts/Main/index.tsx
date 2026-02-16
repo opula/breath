@@ -1,5 +1,5 @@
-import { useKeepAwake } from "expo-keep-awake";
-import React, { useCallback } from "react";
+import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
+import React, { useCallback, useEffect } from "react";
 import { Platform, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
 
@@ -33,8 +33,17 @@ import {
 import { getSelectorSnapshot } from "../../utils/selectors";
 import { TOTAL_BACKGROUNDS } from "./sources";
 
+const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
+
 export const Main = () => {
-  useKeepAwake();
+  useEffect(() => {
+    activateKeepAwake();
+    const timer = setTimeout(() => deactivateKeepAwake(), KEEP_AWAKE_TIMEOUT_MS);
+    return () => {
+      clearTimeout(timer);
+      deactivateKeepAwake();
+    };
+  }, []);
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
