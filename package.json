@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "jest"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -62,10 +63,13 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/runtime": "^7.26.10",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.14.202",
     "@types/react": "~19.1.10",
     "@types/three": "0.172.0",
+    "jest": "^30.2.0",
     "tailwindcss": "^3.0.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.3.3"
   },
   "private": true,
