@@ -6,8 +6,8 @@ const players = {
   hold: createAudioPlayer(require('../../assets/sounds/hold-sound-v2.wav')),
 };
 
-export function playExerciseSound(type: 'inhale' | 'exhale' | 'hold') {
+export const playExerciseSound = async (type: 'inhale' | 'exhale' | 'hold') => {
   const p = players[type];
-  p.seekTo(0);
+  await p.seekTo(0);
   p.play();
 }
