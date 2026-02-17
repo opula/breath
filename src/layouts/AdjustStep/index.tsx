@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text } from "react-native";
 import tw from "../../utils/tw";
-import { NavigationProp, RouteProp } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
@@ -18,13 +18,12 @@ import { HorizontalDial } from "../../components/HorizontalDial";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 
 interface Props {
-  navigation: NavigationProp<MainStackParams, "AdjustStep">;
   route: RouteProp<MainStackParams, "AdjustStep">;
 }
 
 const breathLabels = ["Inhale", "Hold", "Exhale", "Hold"];
 
-export const AdjustStep = ({ navigation, route }: Props) => {
+export const AdjustStep = ({ route }: Props) => {
   const { exerciseId, stepId } = route.params;
   const { bottom } = useSafeAreaInsets();
   const exercise = useAppSelector((state) =>

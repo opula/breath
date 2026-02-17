@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { LayoutChangeEvent, Text, TextStyle, View } from "react-native";
 import Animated, {
   clamp,
@@ -17,52 +17,46 @@ const _spacing = 8;
 const _rulerHeight = 24;
 const _rulerWidth = 2;
 const _itemSize = _spacing;
+const _fadeRange = 18;
 
 type RulerLineProps = {
   index: number;
   scrollX: SharedValue<number>;
 };
 
-const _fadeRange = 30;
+const _tickLayout = {
+  height: _rulerHeight,
+  width: _itemSize,
+  justifyContent: "center" as const,
+  alignItems: "center" as const,
+};
 
-function RulerLine({ index, scrollX }: RulerLineProps) {
+const _lineStyle = {
+  width: _rulerWidth,
+  height: "100%" as const,
+  backgroundColor: "white",
+};
+
+const RulerLine = React.memo(function RulerLine({
+  index,
+  scrollX,
+}: RulerLineProps) {
   const stylez = useAnimatedStyle(() => {
-    const dist = Math.abs(scrollX.value - index);
     return {
-      opacity: interpolate(dist, [0, _fadeRange], [0.4, 0], "clamp"),
-      transform: [
-        {
-          scaleY: interpolate(
-            scrollX.value,
-            [index - 1, index, index + 1],
-            [0.98, 1, 0.98],
-          ),
-        },
-      ],
+      opacity: interpolate(
+        Math.abs(scrollX.value - index),
+        [0, _fadeRange],
+        [0.8, 0],
+        "clamp",
+      ),
     };
   });
   return (
-    <Animated.View
-      style={[
-        {
-          height: _rulerHeight,
-          width: _itemSize,
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        stylez,
-      ]}
-    >
-      <View
-        style={{
-          width: _rulerWidth,
-          height: "100%",
-          backgroundColor: "white",
-        }}
-      />
+    <Animated.View style={[_tickLayout, stylez]}>
+      <View style={_lineStyle} />
     </Animated.View>
   );
-}
+});
 
 type AnimatedTextProps = {
   value: SharedValue<number>;
@@ -79,10 +73,8 @@ function AnimatedText({
   suffix = "min",
   zeroLabel,
 }: AnimatedTextProps) {
-  // Use a regular state value for rendering
   const [displayText, setDisplayText] = useState(zeroLabel ?? "0");
 
-  // Update the display text when the value changes
   useAnimatedReaction(
     () => value.value,
     (currentValue: number) => {
@@ -125,12 +117,10 @@ export const HorizontalDial = ({
   onChange,
   zeroLabel,
 }: HorizontalDialProps) => {
-  // Calculate the number of ticks needed based on min, max, and step
   const ticks = useMemo(() => {
     return Math.floor((max - min) / step) + 1;
   }, [min, max, step]);
 
-  // Calculate initial index based on defaultValue
   const initialIndex = useMemo(
     () =>
       defaultValue !== undefined ? Math.round((defaultValue - min) / step) : 0,
@@ -187,9 +177,9 @@ export const HorizontalDial = ({
             contentContainerStyle={{
               paddingHorizontal: containerWidth / 2 - _itemSize / 2,
             }}
-            renderItem={({ index }) => {
-              return <RulerLine index={index} scrollX={scrollX} />;
-            }}
+            renderItem={({ index }) => (
+              <RulerLine index={index} scrollX={scrollX} />
+            )}
             initialScrollIndex={initialIndex}
             getItemLayout={(_data, index) => ({
               length: _itemSize,
@@ -197,10 +187,15 @@ export const HorizontalDial = ({
               index,
             })}
             onScroll={onScroll}
-            scrollEventThrottle={16} // ~60fps
+            scrollEventThrottle={16}
+            windowSize={5}
+            maxToRenderPerBatch={50}
+            initialNumToRender={50}
+            removeClippedSubviews
           />
         )}
         <View
+          pointerEvents="none"
           style={{
             alignSelf: "center",
             position: "absolute",
