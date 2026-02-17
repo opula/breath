@@ -16,7 +16,7 @@ export interface ExerciseEngineCallbacks {
   onStateChange(state: EngineState): void;
   onPlaySound(type: SoundType): void;
   onVibrate(pattern: number | number[]): void;
-  onAnimateBreath(target: 0 | 1, durationSec: number): void;
+  onAnimateBreath(target: number, durationSec: number): void;
   onHaptic(): void;
   onPauseChange(isPaused: boolean): void;
 }

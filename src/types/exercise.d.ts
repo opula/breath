@@ -6,7 +6,7 @@ export type Exercise = {
     text?: string;
     count: number;
     value?: number[];
-    type: 'inhale' | 'exhale' | 'hold' | 'breath' | 'text';
+    type: 'inhale' | 'exhale' | 'hold' | 'breath' | 'text' | 'double-inhale';
   }[];
   loopable: boolean;
 };

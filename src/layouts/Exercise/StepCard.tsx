@@ -8,6 +8,9 @@ import { MainStackParams } from "../../navigation";
 import Decimal from "decimal.js";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 
+const stepDisplayName = (type: string) =>
+  type === "double-inhale" ? "Double Inhale" : capitalize(type);
+
 interface Props {
   exerciseId: string;
   step: Exercise["seq"][number];
@@ -27,13 +30,12 @@ export const StepCard = ({ exerciseId, step, drag }: Props) => {
       onLongPress={drag}
       onPress={() => {
         if (type === "text") return;
-
         navigation.navigate("AdjustStep", { exerciseId, stepId: id });
       }}
     >
       <View style={tw`border-b border-neutral-800 py-4`}>
         <Text style={tw`text-base font-inter text-white`}>
-          {capitalize(type)}
+          {stepDisplayName(type)}
         </Text>
         {type === "breath" && prettyTime ? (
           <>
@@ -46,6 +48,11 @@ export const StepCard = ({ exerciseId, step, drag }: Props) => {
                 : "At your discretion."}
             </Text>
           </>
+        ) : null}
+        {type === "double-inhale" && Array.isArray(value) ? (
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
+            {`${value[0]}s inhale · ${value[1]}s pause · ${value[2]}s inhale`}
+          </Text>
         ) : null}
         {type === "exhale" || type === "hold" || type === "inhale" ? (
           <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>

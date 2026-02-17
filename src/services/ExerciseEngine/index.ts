@@ -222,6 +222,10 @@ export class ExerciseEngine {
         });
         break;
 
+      case 'double-inhale':
+        this.startDoubleInhaleStep();
+        break;
+
       case 'hold':
       case 'inhale':
       case 'exhale':
@@ -367,6 +371,75 @@ export class ExerciseEngine {
         this.nextStep();
       },
     });
+  }
+
+  // --- Internal: Double-inhale steps ---
+
+  private startDoubleInhaleStep(): void {
+    const exercise = this.currentExercise();
+    const step = exercise.seq[this.seqIndex];
+    const { count } = step;
+    const [firstDur, pauseDur, secondDur] = (step.value as number[] | undefined) ?? [1.5, 0.3, 1.5];
+
+    this.callbacks.onStateChange({
+      label: 'inhale',
+      sublabel: '',
+      isBreathing: true,
+      isText: false,
+      isHIE: false,
+    });
+
+    // Phase 0: first inhale — animate 0 → 0.7
+    if (this.isSoundEnabled()) {
+      this.callbacks.onPlaySound('inhale');
+    }
+    this.callbacks.onAnimateBreath(0.7, firstDur);
+
+    // Phase 1: pause
+    this.scheduler.addJob(
+      firstDur * 1000,
+      () => {
+        if (this.isHapticsEnabled()) this.callbacks.onVibrate(200);
+        this.callbacks.onStateChange({
+          label: 'hold',
+          sublabel: '',
+          isBreathing: true,
+          isText: false,
+          isHIE: false,
+        });
+      },
+      { priority: 1, label: 'Double-inhale pause' },
+    );
+
+    // Phase 2: second inhale — animate 0.7 → 1.0
+    this.scheduler.addJob(
+      (firstDur + pauseDur) * 1000,
+      () => {
+        if (this.isSoundEnabled()) {
+          this.callbacks.onPlaySound('inhale');
+        }
+        this.callbacks.onAnimateBreath(1, secondDur);
+        this.callbacks.onStateChange({
+          label: 'inhale',
+          sublabel: '',
+          isBreathing: true,
+          isText: false,
+          isHIE: false,
+        });
+      },
+      { priority: 1, label: 'Double-inhale second' },
+    );
+
+    // Completion
+    const totalDur = firstDur + pauseDur + secondDur;
+    this.scheduler.addJob(
+      totalDur * 1000,
+      () => {
+        if (this.isHapticsEnabled()) this.callbacks.onHaptic();
+        this.nextStep();
+      },
+      { priority: 2, label: 'Double-inhale done' },
+    );
   }
 
   // --- Internal: Text steps ---

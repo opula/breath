@@ -1,5 +1,5 @@
 import {PayloadAction, createSlice} from '@reduxjs/toolkit';
-import exercises from '../../assets/json/default-exercises-v2.json';
+import exercises from '../../assets/json/default-exercises-v3.json';
 import uuid from 'react-native-uuid';
 import {Exercise} from '../types/exercise';
 import {reduxStorage} from '../storage';

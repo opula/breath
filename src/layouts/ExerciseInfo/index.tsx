@@ -332,6 +332,53 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
         }
       });
 
+      emitter.current.on(Ops.START_DOUBLE_INHALE, () => {
+        const currentSeqIndex = seqIndex.current;
+        const step = exercise.seq[currentSeqIndex];
+        const [firstDur, pauseDur, secondDur] = (step.value as number[] | undefined) ?? [1.5, 0.3, 1.5];
+
+        setLabel("inhale");
+        setSublabel("");
+
+        // Phase 0: first inhale — animate 0 → 0.7
+        exerciseScheduler.addJob(
+          0,
+          () => {
+            iBreath.value = withTiming(0.7, { duration: firstDur * 1000 });
+          },
+          { priority: 0 },
+        );
+
+        // Phase 1: pause
+        exerciseScheduler.addJob(
+          firstDur * 1000,
+          () => {
+            Vibration.vibrate(200);
+            setLabel("hold");
+          },
+          { priority: 1, label: "Double-inhale pause" },
+        );
+
+        // Phase 2: second inhale — animate 0.7 → 1.0
+        exerciseScheduler.addJob(
+          (firstDur + pauseDur) * 1000,
+          () => {
+            iBreath.value = withTiming(1, { duration: secondDur * 1000 });
+            setLabel("inhale");
+          },
+          { priority: 1, label: "Double-inhale second" },
+        );
+
+        // Completion
+        exerciseScheduler.addJob(
+          (firstDur + pauseDur + secondDur) * 1000,
+          () => {
+            triggerHaptics();
+          },
+          { priority: 2, label: "Double-inhale done" },
+        );
+      });
+
       emitter.current.on(Ops.PREV_SEQUENCE_STEP, () => {
         const currentIndex = seqIndex.current;
         const nextIndex = Math.max(seqIndex.current - 1, 0);
@@ -352,6 +399,12 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               Ops.START_BREATHING_PATTERN,
               currentIndex > -1,
             );
+            setBreathing(true);
+            setText(false);
+            break;
+
+          case "double-inhale":
+            emitter.current.emit(Ops.START_DOUBLE_INHALE);
             setBreathing(true);
             setText(false);
             break;
@@ -392,6 +445,12 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               Ops.START_BREATHING_PATTERN,
               currentIndex > -1,
             );
+            setBreathing(true);
+            setText(false);
+            break;
+
+          case "double-inhale":
+            emitter.current.emit(Ops.START_DOUBLE_INHALE);
             setBreathing(true);
             setText(false);
             break;
@@ -531,6 +590,19 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               <Text style={tw`text-xs font-inter text-white text-center`}>
                 {`${capitalize(currentType)} for ${currentCount} seconds`}
               </Text>
+            ) : currentType === "double-inhale" ? (
+              <>
+                <Text style={tw`text-xs font-inter text-white text-center`}>
+                  {currentValue
+                    ? `${currentValue[0]}s inhale · ${currentValue[1]}s pause · ${currentValue[2]}s inhale`
+                    : "Double inhale"}
+                </Text>
+                <Text
+                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
+                >
+                  Tap to continue
+                </Text>
+              </>
             ) : currentType === "text" ? (
               <>
                 <Text style={tw`text-xs font-inter text-white text-center`}>

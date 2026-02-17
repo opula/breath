@@ -37,6 +37,7 @@ export const AdjustStep = ({ route }: Props) => {
   const { type, value, count } = step || {};
 
   const isBreath = type === "breath";
+  const isDoubleInhale = type === "double-inhale";
   const isSingle = type === "exhale" || type === "hold" || type === "inhale";
 
   const totalDuration = useMemo(() => {
@@ -124,6 +125,59 @@ export const AdjustStep = ({ route }: Props) => {
                 At your discretion
               </Text>
             )}
+          </View>
+        </View>
+      </TrayScreen>
+    );
+  }
+
+  if (isDoubleInhale) {
+    const doubleVal = (value as number[] | undefined) ?? [1.5, 0.3, 1.5];
+    const doubleLabels = ["First Inhale", "Pause", "Second Inhale"];
+    const totalSec = doubleVal.reduce((a, v) => a + v, 0);
+
+    return (
+      <TrayScreen trayHeight={380 + bottom}>
+        <View style={tw`pt-4 px-2 pb-4`}>
+          <Text style={tw`text-base font-inter text-white text-center`}>
+            Double Inhale
+          </Text>
+
+          <View style={tw`gap-y-6 my-4`}>
+            {doubleLabels.map((label, index) => (
+              <View key={`di-${index}`}>
+                <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                  {label}
+                </Text>
+                <HorizontalDial
+                  min={0}
+                  max={10}
+                  step={0.1}
+                  suffix="s"
+                  defaultValue={doubleVal[index] ?? 0}
+                  onChange={(newValue: number) => {
+                    dispatch(
+                      updateExerciseStepValue({
+                        exerciseId,
+                        stepId,
+                        value: doubleVal.map((v, i) =>
+                          i === index
+                            ? new Decimal(newValue)
+                                .toDecimalPlaces(1)
+                                .toNumber()
+                            : v,
+                        ),
+                      }),
+                    );
+                  }}
+                />
+              </View>
+            ))}
+          </View>
+          <View style={tw`mt-3 items-center`}>
+            <Text style={tw`text-sm font-inter text-neutral-400`}>
+              {`${totalSec.toFixed(1)}s total`}
+            </Text>
           </View>
         </View>
       </TrayScreen>
