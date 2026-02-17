@@ -1,19 +1,10 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useRef, useState, useEffect } from "react";
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextStyle,
-  View,
-} from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { Dimensions, Text, TextStyle, View } from "react-native";
 import Animated, {
   clamp,
   interpolate,
   runOnJS,
   SharedValue,
-  useAnimatedProps,
   useAnimatedReaction,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -33,15 +24,19 @@ type RulerLineProps = {
   scrollX: SharedValue<number>;
 };
 
+const _fadeRange = 30;
+
 function RulerLine({ index, scrollX }: RulerLineProps) {
   const stylez = useAnimatedStyle(() => {
+    const dist = Math.abs(scrollX.value - index);
     return {
+      opacity: interpolate(dist, [0, _fadeRange], [0.4, 0], "clamp"),
       transform: [
         {
           scaleY: interpolate(
             scrollX.value,
             [index - 1, index, index + 1],
-            [0.98, 1, 0.98]
+            [0.98, 1, 0.98],
           ),
         },
       ],
@@ -57,55 +52,49 @@ function RulerLine({ index, scrollX }: RulerLineProps) {
           alignItems: "center",
         },
         stylez,
-      ]}>
+      ]}
+    >
       <View
         style={{
           width: _rulerWidth,
           height: "100%",
           backgroundColor: "white",
-          opacity: 0.3,
         }}
       />
     </Animated.View>
   );
 }
 
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 type AnimatedTextProps = {
   value: SharedValue<number>;
   style?: TextStyle;
   step: number;
-  isCount?: boolean;
+  suffix?: string;
 };
 
-function AnimatedText({ value, style = undefined, step, isCount = false }: AnimatedTextProps) {
+function AnimatedText({
+  value,
+  style = undefined,
+  step,
+  suffix = "min",
+}: AnimatedTextProps) {
   // Use a regular state value for rendering
   const [displayText, setDisplayText] = useState("0");
-  
+
   // Update the display text when the value changes
   useAnimatedReaction(
     () => value.value,
     (currentValue: number) => {
       const actualValue = Math.round(currentValue) * step;
-      const formattedValue = String(actualValue) + (isCount ? " count" : " min");
+      const formattedValue = String(actualValue) + " " + suffix;
       runOnJS(setDisplayText)(formattedValue);
     },
-    [step, isCount]
+    [step, suffix],
   );
 
   return (
     <Text
-      style={[
-        {
-          fontSize: 28,
-          fontWeight: "700",
-          textAlign: "center",
-          letterSpacing: -2,
-          fontVariant: ["tabular-nums"],
-          color: "white",
-        },
-        style,
-      ]}
+      style={[tw`text-sm font-medium text-right text-white`, style]}
     >
       {displayText}
     </Text>
@@ -116,7 +105,7 @@ interface HorizontalDialProps {
   min: number;
   max: number;
   step: number;
-  isCount?: boolean;
+  suffix?: string;
   defaultValue?: number;
   onChange?: (value: number) => void;
 }
@@ -125,7 +114,7 @@ export const HorizontalDial = ({
   min,
   max,
   step,
-  isCount = false,
+  suffix = "min",
   defaultValue,
   onChange,
 }: HorizontalDialProps) => {
@@ -136,34 +125,39 @@ export const HorizontalDial = ({
 
   // Calculate initial index based on defaultValue
   const initialIndex = useMemo(
-    () => (defaultValue !== undefined ? Math.round((defaultValue - min) / step) : 0),
-    [defaultValue, min, step]
+    () =>
+      defaultValue !== undefined ? Math.round((defaultValue - min) / step) : 0,
+    [defaultValue, min, step],
   );
 
   const data = useMemo(() => [...Array(ticks).keys()], [ticks]);
   const scrollX = useSharedValue(initialIndex);
-  
+
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   const debouncedOnChangeRef = useRef(
-    debounce((value: number) => onChange?.(min + value * step), 250)
+    debounce((value: number) => onChangeRef.current?.(value), 250),
   );
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
       scrollX.value = clamp(e.contentOffset.x / _itemSize, 0, data.length - 1);
     },
-    onMomentumEnd: (e) => {
+    onMomentumEnd: () => {
       if (onChange) {
-        runOnJS(debouncedOnChangeRef.current)(Math.floor(scrollX.value));
+        const actual = min + Math.floor(scrollX.value) * step;
+        runOnJS(debouncedOnChangeRef.current)(actual);
       }
     },
   });
 
   return (
-    <View style={tw`justify-center gap-2`}>
-      <View style={tw`justify-center items-center mb-2`}>
-        <AnimatedText value={scrollX} step={step} isCount={isCount} />
+    <View style={tw`flex-row items-center`}>
+      <View style={tw`w-20 items-end pr-4`}>
+        <AnimatedText value={scrollX} step={step} suffix={suffix} />
       </View>
-      <View>
+      <View style={tw`flex-1`}>
         <Animated.FlatList
           data={data}
           keyExtractor={(item) => String(item)}
@@ -178,7 +172,7 @@ export const HorizontalDial = ({
             return <RulerLine index={index} scrollX={scrollX} />;
           }}
           initialScrollIndex={initialIndex}
-          getItemLayout={(data, index) => ({
+          getItemLayout={(_data, index) => ({
             length: _itemSize,
             offset: _itemSize * index,
             index,
@@ -194,14 +188,6 @@ export const HorizontalDial = ({
             width: _rulerWidth,
             backgroundColor: "white",
           }}
-        />
-        <LinearGradient
-          style={[StyleSheet.absoluteFillObject]}
-          colors={["#000000", "#00000000", "#00000000", "#000000"]}
-          start={[0, 0.5]}
-          end={[1, 0.5]}
-          locations={[0, 0.3, 0.7, 1]}
-          pointerEvents="none"
         />
       </View>
     </View>

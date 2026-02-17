@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   Text,
   Pressable,
   FlatList,
-  useWindowDimensions,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,10 +15,8 @@ import {
   activeFileIdSelector,
 } from "../../state/musicLibrary.selectors";
 import { Icon } from "../../components/Icon";
-import { Slider } from "react-native-awesome-slider";
-import { useSharedValue } from "react-native-reanimated";
+import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
-import Decimal from "decimal.js";
 import SwipeableItem from "react-native-swipeable-item";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe/SwipeRightRemove";
 import { MusicTrackItem } from "./MusicTrackItem";
@@ -28,14 +25,11 @@ import { soundsEnabledSelector } from "../../state/configuration.selectors";
 import { toggleSounds } from "../../state/configuration.reducer";
 
 export const MusicControls = () => {
-  const { width } = useWindowDimensions();
-  const layoutWidth = Math.min(540, width);
   const navigation = useNavigation();
   const {
     isPlaying,
     volume,
     setVolume,
-    setLiveVolume,
     pickLocalFile,
     pasteUrl,
     playFile,
@@ -48,28 +42,9 @@ export const MusicControls = () => {
   const activeFileId = useSelector(activeFileIdSelector);
   const soundsEnabled = useSelector(soundsEnabledSelector);
 
-  // Create shared values for the slider
-  const progress = useSharedValue(
-    Decimal(volume).toDecimalPlaces(2).toNumber(),
-  );
-  const min = useSharedValue(0);
-  const max = useSharedValue(1);
-
-  // Keep shared value in sync with volume from context
-  useEffect(() => {
-    progress.value = volume;
-  }, [volume, progress]);
-
   const onVolumeChange = useCallback(
     (value: number) => {
-      setLiveVolume(value);
-    },
-    [setLiveVolume],
-  );
-
-  const onVolumeSet = useCallback(
-    (value: number) => {
-      setVolume(Decimal(value).toDecimalPlaces(2).toNumber());
+      setVolume(value / 100);
     },
     [setVolume],
   );
@@ -129,27 +104,6 @@ export const MusicControls = () => {
           </Pressable>
         </View>
 
-        {/* Volume slider */}
-        <View
-          style={tw`py-8 mb-2 items-center justify-center border-b border-neutral-800`}
-          key={`${layoutWidth}`}
-        >
-          <Slider
-            style={{ width: layoutWidth - 96 }}
-            progress={progress}
-            minimumValue={min}
-            maximumValue={max}
-            onValueChange={onVolumeChange}
-            onSlidingComplete={onVolumeSet}
-            theme={{
-              minimumTrackTintColor: "#e5e5e5",
-              maximumTrackTintColor: "#262626",
-              bubbleBackgroundColor: "#000000",
-            }}
-            disableTrackFollow
-          />
-        </View>
-
         {/* Library list */}
         {files.length === 0 ? (
           <View style={tw`flex-1 items-center justify-center`}>
@@ -158,19 +112,30 @@ export const MusicControls = () => {
             </Text>
           </View>
         ) : (
-          <>
+          <View style={tw`flex-1`}>
             <FlatList
               data={files}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
             />
-            <View style={tw`flex-1`} />
-          </>
+          </View>
         )}
+
+        {/* Volume dial */}
+        <View style={tw`py-6 border-t border-neutral-800`}>
+          <HorizontalDial
+            min={0}
+            max={100}
+            step={1}
+            suffix="%"
+            defaultValue={Math.round(volume * 100)}
+            onChange={onVolumeChange}
+          />
+        </View>
 
         {/* Action buttons */}
         <View
-          style={tw`flex-row items-center justify-start gap-3 pt-4 mt-2 mb-2 pr-4 pl-8 border-t border-neutral-800`}
+          style={tw`flex-row items-center justify-start gap-3 pt-4 mb-2 pr-4 pl-8 border-t border-neutral-800`}
         >
           <Text style={tw`text-white text-sm`}>Add music</Text>
           <Pressable
