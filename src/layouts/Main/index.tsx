@@ -142,10 +142,9 @@ export const Main = () => {
             exit={{ opacity: 0 }}
             transition={{ opacity: { type: "timing", duration: 300 } }}
             style={[
-              tw`absolute`,
+              tw`absolute top-0 bottom-0 justify-center`,
               {
                 left: Math.max(left, 16),
-                top: Math.max(osTop, 16),
               },
             ]}
           >
@@ -190,10 +189,9 @@ export const Main = () => {
             exit={{ opacity: 0 }}
             transition={{ opacity: { type: "timing", duration: 300 } }}
             style={[
-              tw`absolute`,
+              tw`absolute top-0 bottom-0 justify-center`,
               {
                 right: Math.max(left, 16),
-                top: Math.max(osTop, 16),
               },
             ]}
           >
@@ -203,7 +201,7 @@ export const Main = () => {
                 navigation.navigate("ExercisesList");
               }}
             >
-              <Icon name="unordered-list" size={24} color="white" />
+              <Icon name="book" size={24} color="white" />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
