@@ -7,6 +7,7 @@ export const backgrounds = [
   "Waves",
   "Wormhole",
   "DitherPulse",
+  "Particles",
 ] as const;
 
 export const TOTAL_BACKGROUNDS = backgrounds.length;
