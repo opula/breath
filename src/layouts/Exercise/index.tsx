@@ -28,6 +28,7 @@ import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { useDebouncedCallback } from "use-debounce";
 import { EditName } from "./EditName";
 import { useParametrizedAppSelector } from "../../utils/selectors";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const OVERSWIPE_DIST = 20;
 const SNAP_LEFT = [120];
@@ -107,7 +108,7 @@ export const Exercise = ({ navigation, route }: Props) => {
 
   return (
     <View style={tw`flex-1 bg-black`}>
-      <View style={tw`flex-1 px-4 py-4`}>
+      <SafeAreaView style={tw`flex-1 px-4`}>
         <View style={tw`flex-row px-4 justify-between items-center`}>
           <Pressable
             style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
@@ -175,7 +176,7 @@ export const Exercise = ({ navigation, route }: Props) => {
             )}
           />
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 };
