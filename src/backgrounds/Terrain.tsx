@@ -12,6 +12,7 @@ import {
   fract,
   mix,
   sin,
+  cos,
   dot,
   normalize,
   uniform,
@@ -31,16 +32,15 @@ const SCALE_X = 0.07;
 const SCALE_Y = 0.07;
 const DETAIL_HEIGHT = 3.34;
 const DETAIL_SCALE = 0.09163;
-const SURFACE_COLOR = 0x111111;
 const FOG_COLOR = 0x999999;
-const ROUGHNESS = 0.1;
-const METALNESS = 0.992;
+const ROUGHNESS = 0.2;
+const METALNESS = 0.5;
 const CAM_HEIGHT = 4.214;
 const CAM_DIST = 68.04;
-const FOV = 60;
-const SPOT_INTENSITY = 600;
+const FOV = 70;
+const SPOT_INTENSITY = 0;
 const PLANE_SIZE = 200;
-const SEGMENTS = 160;
+const SEGMENTS = 130;
 const EDGE_RADIUS = 90;
 const FOG_DENSITY = 0.015;
 
@@ -48,12 +48,13 @@ const STRIDE = SEGMENTS + 1;
 const VERT_COUNT = STRIDE * STRIDE;
 const CELL_SIZE = PLANE_SIZE / SEGMENTS;
 
-export const Terrain = ({
-  grayscale: _grayscale = false,
-}: {
-  grayscale?: boolean;
-}) => {
+// Echo-inspired cosine palette
+const TWO_PI = 6.2831853;
+
+export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
+  const grayscaleRef = useRef(grayscale);
+  grayscaleRef.current = grayscale;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -81,7 +82,6 @@ export const Terrain = ({
       SEGMENTS,
     );
     const templatePos = templateGeo.attributes.position.array as Float32Array;
-    const templateIndex = templateGeo.index!;
 
     // Build grid XY and smoothEdge LUT from the template's local positions
     // PlaneGeometry lies in XY with Z=0, and we'll rotate -PI/2 around X
@@ -90,6 +90,7 @@ export const Terrain = ({
     const smoothEdgeArray = new Float32Array(VERT_COUNT);
     const posArray = new Float32Array(VERT_COUNT * 3);
     const normArray = new Float32Array(VERT_COUNT * 3);
+    const colArray = new Float32Array(VERT_COUNT * 3);
 
     for (let i = 0; i < VERT_COUNT; i++) {
       const x = templatePos[i * 3];
@@ -108,6 +109,11 @@ export const Terrain = ({
       normArray[i * 3 + 1] = 0;
       normArray[i * 3 + 2] = 1;
 
+      // Initial color (overwritten by compute)
+      colArray[i * 3] = 1;
+      colArray[i * 3 + 1] = 1;
+      colArray[i * 3 + 2] = 1;
+
       // Pre-bake smoothEdge (grid positions never change)
       const dist = Math.sqrt(x * x + y * y);
       const edgeFactor = Math.max(0, (EDGE_RADIUS - dist) / EDGE_RADIUS);
@@ -120,11 +126,13 @@ export const Terrain = ({
 
     const positionAttr = new StorageBufferAttribute(posArray, 3);
     const normalAttr = new StorageBufferAttribute(normArray, 3);
+    const colorAttr = new StorageBufferAttribute(colArray, 3);
     const gridXYAttr = new StorageBufferAttribute(gridXYArray, 2);
     const smoothEdgeAttr = new StorageBufferAttribute(smoothEdgeArray, 1);
 
     const positionStorage = storage(positionAttr, "vec3", VERT_COUNT);
     const normalStorage = storage(normalAttr, "vec3", VERT_COUNT);
+    const colorStorage = storage(colorAttr, "vec3", VERT_COUNT);
     const gridXYStorage = storage(gridXYAttr, "vec2", VERT_COUNT);
     const smoothEdgeStorage = storage(smoothEdgeAttr, "float", VERT_COUNT);
 
@@ -211,12 +219,23 @@ export const Terrain = ({
       },
     );
 
+    // Echo-inspired cosine gradient palette
+    // Maps height → teal/cyan/deep blue color cycle
+    const palette = Fn(([t]: [ReturnType<typeof float>]) => {
+      const a = vec3(0.0, 0.5, 0.5);
+      const b = vec3(0.0, 0.5, 0.5);
+      const c = vec3(0.0, 0.5, 0.333);
+      const d = vec3(0.0, 0.5, 0.667);
+      return a.add(b.mul(cos(float(TWO_PI).mul(c.mul(t).add(d)))));
+    });
+
     // ================================================================
     // Uniforms
     // ================================================================
 
     const waveTimeU = uniform(float(0));
     const flightOffsetU = uniform(float(0));
+    const grayscaleU = uniform(float(0));
 
     // ================================================================
     // Helper: sample terrain height at a grid position
@@ -256,6 +275,7 @@ export const Terrain = ({
     const computePositions = Fn(() => {
       const idx = instanceIndex;
       const pos = positionStorage.element(idx);
+      const col = colorStorage.element(idx);
       const gridXY = gridXYStorage.element(idx);
       const smoothEdge = smoothEdgeStorage.element(idx);
 
@@ -264,10 +284,21 @@ export const Terrain = ({
 
       const z = sampleHeight(x, y, smoothEdge);
 
-      // Keep X and Y (plane local), set Z = height
+      // Write position
       pos.x.assign(x);
       pos.y.assign(y);
       pos.z.assign(z);
+
+      // Color: map normalized height to Echo palette
+      const normalizedZ = z.div(float(MAIN_HEIGHT)).mul(0.5).add(0.5);
+      const palInput = normalizedZ.add(waveTimeU.mul(0.3));
+      const palCol = palette(palInput).mul(0.7);
+
+      // Grayscale desaturation
+      const lum = dot(palCol, vec3(0.299, 0.587, 0.114));
+      const finalCol = mix(palCol, vec3(lum, lum, lum), grayscaleU);
+
+      col.assign(finalCol);
     })().compute(VERT_COUNT);
 
     // ================================================================
@@ -342,14 +373,16 @@ export const Terrain = ({
     geometry.setIndex(templateGeo.getIndex());
     geometry.setAttribute("position", positionAttr);
     geometry.setAttribute("normal", normalAttr);
+    geometry.setAttribute("color", colorAttr);
 
     // Done with template
     templateGeo.dispose();
 
     const material = new THREE.MeshStandardMaterial({
-      color: SURFACE_COLOR,
+      color: 0xffffff,
       roughness: ROUGHNESS,
       metalness: METALNESS,
+      vertexColors: true,
     });
 
     const plane = new THREE.Mesh(geometry, material);
@@ -374,8 +407,11 @@ export const Terrain = ({
 
       (waveTimeU as unknown as { value: number }).value = waveTime;
       (flightOffsetU as unknown as { value: number }).value = flightOffset;
+      (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
+        ? 1.0
+        : 0.0;
 
-      // Compute positions, then normals
+      // Compute positions + colors, then normals
       renderer.compute(computePositions);
       renderer.compute(computeNormals);
 

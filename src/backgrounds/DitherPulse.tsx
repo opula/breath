@@ -10,6 +10,7 @@ import {
   vec2,
   vec3,
   sin,
+  cos,
   fract,
   floor,
   min,
@@ -200,9 +201,14 @@ export const DitherPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
     const ring = expandingRing(uvRaw, center, aspectU, timeU, heightU);
     const border = borderBeam(uvRaw, timeU);
 
-    // Colors — matching original: color="#4599ff"
-    const ringColor = vec3(0.271, 0.6, 1.0);
-    const borderColor = vec3(0.1, 0.2, 0.6);
+    // Colors — time-varying cosine palette (blues → teals → purples)
+    const ringT = timeU.mul(0.08);
+    const ringColor = vec3(0.5, 0.5, 0.7).add(
+      vec3(0.3, 0.4, 0.3).mul(
+        cos(float(6.2831853).mul(vec3(1.0, 1.0, 1.0).mul(ringT).add(vec3(0.0, 0.1, 0.2)))),
+      ),
+    );
+    const borderColor = ringColor.mul(0.3);
     const bgColor = vec3(0.005, 0.005, 0.01);
 
     // Compose — original formula naturally saturates to white at core

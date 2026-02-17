@@ -210,9 +210,9 @@ export const Particles = ({ grayscale = false }: { grayscale?: boolean }) => {
     const twinkle = sin(timeU.mul(2.5).add(aPhase)).mul(0.3).add(0.7);
 
     // Boost color brightness (additive blending means brighter = more glow)
-    const boostedColor = baseColor.mul(1.5).mul(twinkle);
+    const boostedColor = baseColor.mul(2.5).mul(twinkle);
 
-    const finalAlpha = float(0.55).mul(twinkle);
+    const finalAlpha = float(0.75).mul(twinkle);
 
     const material = new PointsNodeMaterial({
       transparent: true,
