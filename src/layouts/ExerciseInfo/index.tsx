@@ -168,8 +168,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
         if (stepTime === 0) {
           if (
             stepIndex === 3 &&
-            totalPatterns !== 0 &&
-            completedPatterns + 1 >= totalPatterns
+            (totalPatterns === 0
+              ? breathPattern.current.every(v => v === 0)
+              : completedPatterns + 1 >= totalPatterns)
           ) {
             Vibration.vibrate(nextVibratePattern);
             return emitter.current.emit(Ops.NEXT_SEQUENCE_STEP);
@@ -550,16 +551,22 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
 
           <View style={tw`absolute inset-0 flex-row`}>
             <Pressable
-              style={tw`w-32 h-full`}
+              style={tw`w-32 h-full justify-center pl-4`}
               onPress={() => {
                 if (currentIndex) {
                   setCurrentIndex(currentIndex - 1);
                   runUserPrev();
                 }
               }}
-            />
+            >
+              <Icon
+                name="chevron-left"
+                color="rgba(255,255,255,.2)"
+                size={24}
+              />
+            </Pressable>
             <Pressable
-              style={tw`flex-1 h-full`}
+              style={tw`flex-1 h-full justify-center items-end pr-4`}
               onPress={() => {
                 if (currentIndex < exercise.seq.length - 1) {
                   setCurrentIndex(currentIndex + 1);
@@ -568,7 +575,13 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                   navigation.goBack();
                 }
               }}
-            />
+            >
+              <Icon
+                name="chevron-right"
+                color="rgba(255,255,255,.2)"
+                size={24}
+              />
+            </Pressable>
           </View>
         </View>
       </SafeAreaView>
