@@ -7,11 +7,7 @@ import { AnimatePresence } from "moti";
 import { runOnJS } from "react-native-reanimated";
 import { BreathRing } from "./BreathRing";
 import { Backdrop } from "./Backdrop";
-import {
-  Directions,
-  Gesture,
-  GestureDetector,
-} from "react-native-gesture-handler";
+import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
@@ -19,10 +15,8 @@ import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 
 export const DynamicExercise = memo(
   ({
-    onChangeSource,
     onPause,
   }: {
-    onChangeSource?: (value: number) => void;
     onPause?: (value: boolean) => void;
   }) => {
     const exercises = useAppSelector(exercisesSelector);
@@ -71,30 +65,6 @@ export const DynamicExercise = memo(
       [handleLongPress],
     );
 
-    const swipeLeft = useMemo(
-      () =>
-        Gesture.Fling()
-          .direction(Directions.LEFT)
-          .onEnd((_, success) => {
-            if (!success) return;
-            if (!onChangeSource) return;
-            runOnJS(onChangeSource)(-1);
-          }),
-      [onChangeSource],
-    );
-
-    const swipeRight = useMemo(
-      () =>
-        Gesture.Fling()
-          .direction(Directions.RIGHT)
-          .onEnd((_, success) => {
-            if (!success) return;
-            if (!onChangeSource) return;
-            runOnJS(onChangeSource)(1);
-          }),
-      [onChangeSource],
-    );
-
     const swipeUp = useMemo(
       () =>
         Gesture.Fling()
@@ -120,8 +90,6 @@ export const DynamicExercise = memo(
     return (
       <GestureDetector
         gesture={Gesture.Exclusive(
-          swipeRight,
-          swipeLeft,
           swipeUp,
           swipeDown,
           doubleTap,

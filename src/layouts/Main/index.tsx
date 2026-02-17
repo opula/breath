@@ -21,7 +21,6 @@ import {
   isPausedSelector,
   isTutorialSelector,
   isGrayscaleSelector,
-  sourceIndexSelector,
   soundsEnabledSelector,
   hapticsEnabledSelector,
 } from "../../state/configuration.selectors";
@@ -29,14 +28,11 @@ import {
   toggleGrayscale as toggleGrayscaleAction,
   togglePaused as togglePausedAction,
   setPause as setPauseAction,
-  updateSource as updateSourceAction,
   engagePaused as engagePausedAction,
   engageTutorial as engageTutorialAction,
   toggleSounds as toggleSoundsAction,
   toggleHaptics as toggleHapticsAction,
 } from "../../state/configuration.reducer";
-import { getSelectorSnapshot } from "../../utils/selectors";
-import { TOTAL_BACKGROUNDS } from "./sources";
 
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
@@ -72,15 +68,6 @@ export const Main = () => {
     toastTimer.current = setTimeout(() => setToastMessage(""), 2000);
   }, []);
 
-  const changeSource = useCallback(
-    (direction: number) => {
-      const sourceIndex = getSelectorSnapshot(sourceIndexSelector);
-      const nextIndex = (sourceIndex + direction) % TOTAL_BACKGROUNDS;
-      const newSourceIndex = nextIndex > -1 ? nextIndex : TOTAL_BACKGROUNDS - 1;
-      dispatch(updateSourceAction(newSourceIndex));
-    },
-    [dispatch],
-  );
   const togglePaused = useCallback(
     () => dispatch(togglePausedAction()),
     [dispatch],
@@ -130,7 +117,7 @@ export const Main = () => {
       </AnimatePresence>
 
       <View style={[tw`absolute inset-0`, { opacity: isTutorial ? 0 : 1 }]}>
-        <DynamicExercise onChangeSource={changeSource} onPause={setPause} />
+        <DynamicExercise onPause={setPause} />
       </View>
 
       <AnimatePresence>
@@ -210,6 +197,14 @@ export const Main = () => {
               }}
             >
               <Icon name="headphones" size={24} color="white" />
+            </Pressable>
+            <Pressable
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
+              onPress={() => {
+                navigation.navigate("Scenes");
+              }}
+            >
+              <Icon name="image" size={24} color="white" />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
