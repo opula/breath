@@ -142,6 +142,7 @@ export const AudioPlayerProvider = ({
 
     if (activeFile) {
       player.replace({uri: getMusicFileUri(activeFile.fileName)});
+      player.play();
     }
   }, [activeFile, activeFileId, player]);
 
