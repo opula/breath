@@ -14,3 +14,6 @@ export const sourceIndexSelector = (state: RootState) =>
 
 export const soundsEnabledSelector = (state: RootState) =>
   state.configuration.soundsEnabled;
+
+export const hapticsEnabledSelector = (state: RootState) =>
+  state.configuration.hapticsEnabled;

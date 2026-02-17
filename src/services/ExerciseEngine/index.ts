@@ -49,7 +49,7 @@ export class ExerciseEngine {
 
   pause(): void {
     if (this.destroyed) return;
-    this.callbacks.onHaptic();
+    if (this.isHapticsEnabled()) this.callbacks.onHaptic();
     this.scheduler.toggle();
     const isPaused = !this.scheduler.active();
 
@@ -73,7 +73,7 @@ export class ExerciseEngine {
     this.loopCount = 0;
     this.breathPattern = [0, 0, 0, 0];
 
-    this.callbacks.onHaptic();
+    if (this.isHapticsEnabled()) this.callbacks.onHaptic();
 
     if (andStop) {
       this.callbacks.onStateChange({
@@ -116,7 +116,7 @@ export class ExerciseEngine {
     if (count !== 0) return;
 
     this.scheduler.clearJobs();
-    this.callbacks.onHaptic();
+    if (this.isHapticsEnabled()) this.callbacks.onHaptic();
     this.callbacks.onAnimateBreath(0, 0);
     this.nextStep();
   }
@@ -245,7 +245,7 @@ export class ExerciseEngine {
       0,
       () => {
         this.callbacks.onAnimateBreath(1, stepTime);
-        if (isLooped) {
+        if (isLooped && this.isHapticsEnabled()) {
           this.callbacks.onVibrate(400);
         }
       },
@@ -255,7 +255,7 @@ export class ExerciseEngine {
     this.scheduler.addJob(
       stepTime * 1000,
       () => {
-        this.callbacks.onVibrate(400);
+        if (this.isHapticsEnabled()) this.callbacks.onVibrate(400);
         this.stepBreathPhase(1);
       },
       { priority: 1, label: 'Next seq' },
@@ -281,7 +281,7 @@ export class ExerciseEngine {
         totalPatterns !== 0 &&
         completedPatterns + 1 >= totalPatterns
       ) {
-        this.callbacks.onVibrate(nextVibratePattern);
+        if (this.isHapticsEnabled()) this.callbacks.onVibrate(nextVibratePattern);
         this.nextStep();
         return;
       }
@@ -320,11 +320,11 @@ export class ExerciseEngine {
           totalPatterns !== 0 &&
           completedPatterns + 1 >= totalPatterns
         ) {
-          this.callbacks.onVibrate(nextVibratePattern);
+          if (this.isHapticsEnabled()) this.callbacks.onVibrate(nextVibratePattern);
           this.nextStep();
           return;
         }
-        this.callbacks.onVibrate(400);
+        if (this.isHapticsEnabled()) this.callbacks.onVibrate(400);
         this.stepBreathPhase(step + 1);
       },
       { priority: 1, label: 'Next seq' },
@@ -363,7 +363,7 @@ export class ExerciseEngine {
         });
       },
       onComplete: () => {
-        this.callbacks.onHaptic();
+        if (this.isHapticsEnabled()) this.callbacks.onHaptic();
         this.nextStep();
       },
     });
@@ -390,7 +390,7 @@ export class ExerciseEngine {
         });
       },
       onComplete: () => {
-        this.callbacks.onHaptic();
+        if (this.isHapticsEnabled()) this.callbacks.onHaptic();
         this.nextStep();
       },
     });
@@ -400,5 +400,9 @@ export class ExerciseEngine {
 
   private isSoundEnabled(): boolean {
     return this.options.isSoundEnabled?.() ?? false;
+  }
+
+  private isHapticsEnabled(): boolean {
+    return this.options.isHapticsEnabled?.() ?? true;
   }
 }

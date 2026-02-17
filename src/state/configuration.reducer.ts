@@ -9,6 +9,7 @@ interface ConfigurationState {
   isGrayscale: boolean;
   bgSourceIndex: number;
   soundsEnabled: boolean;
+  hapticsEnabled: boolean;
 }
 
 const initialState: ConfigurationState = {
@@ -17,6 +18,7 @@ const initialState: ConfigurationState = {
   isGrayscale: false,
   bgSourceIndex: 0,
   soundsEnabled: false,
+  hapticsEnabled: true,
 };
 
 export const configurationSlice = createSlice({
@@ -46,6 +48,9 @@ export const configurationSlice = createSlice({
     toggleSounds(state) {
       state.soundsEnabled = !state.soundsEnabled;
     },
+    toggleHaptics(state) {
+      state.hapticsEnabled = !state.hapticsEnabled;
+    },
     updateSource(state, action: PayloadAction<number>) {
       state.bgSourceIndex = action.payload;
     },
@@ -68,6 +73,7 @@ export const {
   toggleTutorial,
   toggleGrayscale,
   toggleSounds,
+  toggleHaptics,
   updateSource,
   engagePaused,
   engageTutorial,

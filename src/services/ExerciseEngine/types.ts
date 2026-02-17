@@ -25,6 +25,7 @@ export interface ExerciseEngineOptions {
   getInitialExerciseIndex?: () => number;
   saveExerciseIndex?: (index: number) => void;
   isSoundEnabled?: () => boolean;
+  isHapticsEnabled?: () => boolean;
 }
 
 export interface SchedulerLike {

@@ -22,6 +22,7 @@ import {
   isTutorialSelector,
   sourceIndexSelector,
   soundsEnabledSelector,
+  hapticsEnabledSelector,
 } from "../../state/configuration.selectors";
 import {
   toggleGrayscale as toggleGrayscaleAction,
@@ -31,6 +32,7 @@ import {
   engagePaused as engagePausedAction,
   engageTutorial as engageTutorialAction,
   toggleSounds as toggleSoundsAction,
+  toggleHaptics as toggleHapticsAction,
 } from "../../state/configuration.reducer";
 import { getSelectorSnapshot } from "../../utils/selectors";
 import { TOTAL_BACKGROUNDS } from "./sources";
@@ -58,6 +60,7 @@ export const Main = () => {
   const isPaused = useAppSelector(isPausedSelector);
   const isTutorial = useAppSelector(isTutorialSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
+  const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
 
   const changeSource = useCallback(
     (direction: number) => {
@@ -87,6 +90,10 @@ export const Main = () => {
   );
   const toggleSounds = useCallback(
     () => dispatch(toggleSoundsAction()),
+    [dispatch],
+  );
+  const toggleHaptics = useCallback(
+    () => dispatch(toggleHapticsAction()),
     [dispatch],
   );
 
@@ -146,6 +153,16 @@ export const Main = () => {
                 name="volume-max"
                 size={24}
                 color={soundsEnabled ? "white" : "#737373"}
+              />
+            </Pressable>
+            <Pressable
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
+              onPress={toggleHaptics}
+            >
+              <Icon
+                name="bell-ring"
+                size={24}
+                color={hapticsEnabled ? "white" : "#737373"}
               />
             </Pressable>
           </MotiView>

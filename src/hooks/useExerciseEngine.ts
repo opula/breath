@@ -11,7 +11,7 @@ import type {
 import { exerciseEmitter, Ops } from '../components/DynamicExercise/emitter';
 import { exerciseScheduler } from '../services/ExerciseScheduler';
 import { playExerciseSound } from '../services/ExerciseSounds';
-import { soundsEnabledSelector } from '../state/configuration.selectors';
+import { soundsEnabledSelector, hapticsEnabledSelector } from '../state/configuration.selectors';
 import { store } from '../store';
 import { triggerHaptics } from '../utils/haptics';
 import { LAST_EXERCISE, storage } from '../utils/storage';
@@ -80,6 +80,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
         getInitialExerciseIndex: () => storage.getNumber(LAST_EXERCISE) ?? 0,
         saveExerciseIndex: (index) => storage.set(LAST_EXERCISE, index),
         isSoundEnabled: () => soundsEnabledSelector(store.getState()),
+        isHapticsEnabled: () => hapticsEnabledSelector(store.getState()),
       },
     );
   }
