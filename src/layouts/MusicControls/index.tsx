@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   musicFilesSelector,
   activeFileIdSelector,
@@ -21,8 +21,6 @@ import SwipeableItem from "react-native-swipeable-item";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe/SwipeRightRemove";
 import { MusicTrackItem } from "./MusicTrackItem";
 import { MusicFile } from "../../types/music";
-import { soundsEnabledSelector } from "../../state/configuration.selectors";
-import { toggleSounds } from "../../state/configuration.reducer";
 
 export const MusicControls = () => {
   const navigation = useNavigation();
@@ -37,10 +35,8 @@ export const MusicControls = () => {
     isDownloading,
   } = useAudioPlayer();
 
-  const dispatch = useDispatch();
   const files = useSelector(musicFilesSelector);
   const activeFileId = useSelector(activeFileIdSelector);
-  const soundsEnabled = useSelector(soundsEnabledSelector);
 
   const onVolumeChange = useCallback(
     (value: number) => {
@@ -92,16 +88,7 @@ export const MusicControls = () => {
           <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
             Music
           </Text>
-          <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
-            onPress={() => dispatch(toggleSounds())}
-          >
-            <Icon
-              name="headphones"
-              size={20}
-              color={soundsEnabled ? "white" : "#737373"}
-            />
-          </Pressable>
+          <View style={tw`h-10 w-10`} />
         </View>
 
         {/* Library list */}

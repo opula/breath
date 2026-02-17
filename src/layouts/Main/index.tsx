@@ -21,6 +21,7 @@ import {
   isPausedSelector,
   isTutorialSelector,
   sourceIndexSelector,
+  soundsEnabledSelector,
 } from "../../state/configuration.selectors";
 import {
   toggleGrayscale as toggleGrayscaleAction,
@@ -29,6 +30,7 @@ import {
   updateSource as updateSourceAction,
   engagePaused as engagePausedAction,
   engageTutorial as engageTutorialAction,
+  toggleSounds as toggleSoundsAction,
 } from "../../state/configuration.reducer";
 import { getSelectorSnapshot } from "../../utils/selectors";
 import { TOTAL_BACKGROUNDS } from "./sources";
@@ -55,6 +57,7 @@ export const Main = () => {
 
   const isPaused = useAppSelector(isPausedSelector);
   const isTutorial = useAppSelector(isTutorialSelector);
+  const soundsEnabled = useAppSelector(soundsEnabledSelector);
 
   const changeSource = useCallback(
     (direction: number) => {
@@ -81,6 +84,10 @@ export const Main = () => {
   const engageTutorial = useCallback(
     () => dispatch(engageTutorialAction()),
     [],
+  );
+  const toggleSounds = useCallback(
+    () => dispatch(toggleSoundsAction()),
+    [dispatch],
   );
 
   return (
@@ -130,6 +137,16 @@ export const Main = () => {
               onPress={toggleGrayscale}
             >
               <Icon name="moon" size={24} color="white" />
+            </Pressable>
+            <Pressable
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
+              onPress={toggleSounds}
+            >
+              <Icon
+                name="volume-max"
+                size={24}
+                color={soundsEnabled ? "white" : "#737373"}
+              />
             </Pressable>
           </MotiView>
         ) : null}
