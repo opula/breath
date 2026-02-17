@@ -1,6 +1,6 @@
 import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
-import React, { useCallback, useEffect } from "react";
-import { Platform, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Platform, Text, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
 
 import { Icon } from "../../components/Icon";
@@ -20,6 +20,7 @@ import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
   isPausedSelector,
   isTutorialSelector,
+  isGrayscaleSelector,
   sourceIndexSelector,
   soundsEnabledSelector,
   hapticsEnabledSelector,
@@ -54,13 +55,22 @@ export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const { top, left } = useSafeAreaInsets();
+  const { top, left, bottom } = useSafeAreaInsets();
   const osTop = top + (Platform.OS === "android" ? 16 : 0);
 
   const isPaused = useAppSelector(isPausedSelector);
   const isTutorial = useAppSelector(isTutorialSelector);
+  const isGrayscale = useAppSelector(isGrayscaleSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
+
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(""), 2000);
+  }, []);
 
   const changeSource = useCallback(
     (direction: number) => {
@@ -79,23 +89,23 @@ export const Main = () => {
     (status: boolean) => dispatch(setPauseAction(status)),
     [dispatch],
   );
-  const toggleGrayscale = useCallback(
-    () => dispatch(toggleGrayscaleAction()),
-    [dispatch],
-  );
+  const toggleGrayscale = useCallback(() => {
+    dispatch(toggleGrayscaleAction());
+    showToast(isGrayscale ? "Color mode" : "Grayscale mode");
+  }, [dispatch, showToast, isGrayscale]);
   const engagePaused = useCallback(() => dispatch(engagePausedAction()), []);
   const engageTutorial = useCallback(
     () => dispatch(engageTutorialAction()),
     [],
   );
-  const toggleSounds = useCallback(
-    () => dispatch(toggleSoundsAction()),
-    [dispatch],
-  );
-  const toggleHaptics = useCallback(
-    () => dispatch(toggleHapticsAction()),
-    [dispatch],
-  );
+  const toggleSounds = useCallback(() => {
+    dispatch(toggleSoundsAction());
+    showToast(soundsEnabled ? "Sounds off" : "Sounds on");
+  }, [dispatch, showToast, soundsEnabled]);
+  const toggleHaptics = useCallback(() => {
+    dispatch(toggleHapticsAction());
+    showToast(hapticsEnabled ? "Vibrations off" : "Vibrations on");
+  }, [dispatch, showToast, hapticsEnabled]);
 
   return (
     <>
@@ -143,7 +153,11 @@ export const Main = () => {
               style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={toggleGrayscale}
             >
-              <Icon name="moon" size={24} color="white" />
+              <Icon
+                name="moon"
+                size={24}
+                color={isGrayscale ? "white" : "#737373"}
+              />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
@@ -209,6 +223,28 @@ export const Main = () => {
         ) : null}
 
         {isTutorial ? <Tutorial onClose={engagePaused} /> : null}
+
+        <AnimatePresence>
+          {toastMessage ? (
+            <MotiView
+              key={toastMessage}
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ opacity: { type: "timing", duration: 500 } }}
+              style={[
+                tw`absolute left-0 right-0 justify-center items-center`,
+                { bottom: bottom + 16 },
+              ]}
+            >
+              <View style={tw`px-6 py-2 rounded-xl bg-black`}>
+                <Text style={tw`text-neutral-200 text-xs font-inter`}>
+                  {toastMessage}
+                </Text>
+              </View>
+            </MotiView>
+          ) : null}
+        </AnimatePresence>
       </AnimatePresence>
     </>
   );
