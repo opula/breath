@@ -4,6 +4,13 @@ import {Icon} from '../../components/Icon';
 import tw from '../../utils/tw';
 import {MusicFile} from '../../types/music';
 
+const formatTrackName = (filename: string) =>
+  filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+
 interface MusicTrackItemProps {
   item: MusicFile;
   isActive: boolean;
@@ -38,7 +45,7 @@ export const MusicTrackItem = ({
           isActive && {color: '#6FE7FF'},
         ]}
         numberOfLines={1}>
-        {item.name}
+        {formatTrackName(item.name)}
       </Text>
     </Pressable>
   );
