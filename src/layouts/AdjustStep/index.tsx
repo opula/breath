@@ -7,13 +7,12 @@ import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
-import { capitalize, isNumber } from "lodash";
+import { capitalize } from "lodash";
 import {
   updateExerciseStepCount,
   updateExerciseStepValue,
 } from "../../state/exercises.reducer";
 import Decimal from "decimal.js";
-import { NumberWheelPicker } from "../../components/NumberWheelPicker";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 
@@ -132,31 +131,36 @@ export const AdjustStep = ({ route }: Props) => {
   }
 
   return (
-    <TrayScreen trayHeight={240 + bottom}>
-      <View style={tw`pt-6 px-2 flex-1 items-center`}>
-        <Text style={tw`text-base font-inter text-white`}>
+    <TrayScreen trayHeight={180 + bottom}>
+      <View style={tw`pt-4 px-2`}>
+        <Text style={tw`text-base font-inter text-white text-center`}>
           {capitalize(type)}
         </Text>
 
         {isSingle ? (
-          <View style={tw`items-center justify-center`}>
-            <Text style={tw`text-base font-inter text-white mt-8`}>Count</Text>
-            <NumberWheelPicker
-              min={0}
-              max={1000}
-              step={1}
-              isCount
-              defaultValue={isNumber(count) ? count : 0}
-              onChange={(newValue: number) => {
-                dispatch(
-                  updateExerciseStepCount({
-                    exerciseId,
-                    stepId,
-                    count: new Decimal(newValue).toDecimalPlaces(0).toNumber(),
-                  }),
-                );
-              }}
-            />
+          <View style={tw`gap-y-6 my-4`}>
+            <View>
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Duration
+              </Text>
+              <HorizontalDial
+                min={0}
+                max={1000}
+                step={1}
+                suffix="s"
+                zeroLabel="∞"
+                defaultValue={count ?? 0}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepCount({
+                      exerciseId,
+                      stepId,
+                      count: Math.round(newValue),
+                    }),
+                  );
+                }}
+              />
+            </View>
           </View>
         ) : null}
       </View>
