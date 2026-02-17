@@ -1,16 +1,16 @@
 import {PayloadAction, createSlice} from '@reduxjs/toolkit';
-import exercises from '../../assets/json/default-exercises.json';
+import exercises from '../../assets/json/default-exercises-v2.json';
 import uuid from 'react-native-uuid';
 import {Exercise} from '../types/exercise';
 import {reduxStorage} from '../storage';
 import {persistReducer} from 'redux-persist';
 
 const defaultExercises = exercises.map(exercise => ({
-  id: uuid.v4(),
   ...exercise,
+  id: uuid.v4() as string,
   seq: exercise.seq.map(item => ({
-    id: uuid.v4(),
     ...item,
+    id: uuid.v4() as string,
   })),
 })) as Exercise[];
 

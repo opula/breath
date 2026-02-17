@@ -1,0 +1,1158 @@
+[
+  {
+    "id": "b10fb568-6c9e-4809-b738-4a241e95f60f",
+    "name": "Tummo",
+    "seq": [
+      {
+        "id": "53e19f7f-ea0a-47ec-9595-15da2d071e12",
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          1,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "4a3e65aa-aa87-4d1b-a5f0-e49a4ae1e826",
+        "type": "exhale",
+        "count": 5
+      },
+      {
+        "id": "3170e667-6e8a-47e9-8a9b-8e973401037a",
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "id": "e6563ada-3335-44ab-ada7-8c4c03918082",
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "id": "90ce616e-1042-4d2c-837e-703bc6bd11ee",
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "id": "4fa316d6-bb52-43c9-ae0b-426696437108",
+        "type": "exhale",
+        "count": 3
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "8d29efb3-4551-4556-949e-2d2e58031b4c",
+    "name": "6 & 6",
+    "seq": [
+      {
+        "id": "da7ee80b-2e66-4616-8bcd-3e17275e048a",
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "8c7fe201-1db9-4bf1-960c-869581665417",
+    "name": "8 & 8",
+    "seq": [
+      {
+        "id": "73ac2741-e49b-4aa4-b37b-5b722d64d6bc",
+        "type": "breath",
+        "count": 0,
+        "value": [
+          8,
+          0,
+          8,
+          0
+        ]
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "0c7a4a95-36aa-4060-842f-53bc2095f62d",
+    "name": "4 / 8",
+    "seq": [
+      {
+        "id": "3a042558-7f88-459e-b498-a179173c7f13",
+        "type": "breath",
+        "count": 0,
+        "value": [
+          4,
+          0,
+          8,
+          0
+        ]
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "040357c9-730c-4ec8-98f1-06c8d1965234",
+    "name": "Longer Holds",
+    "seq": [
+      {
+        "id": "70c5873b-3cee-41f3-88d5-39677b131ea5",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 12
+      },
+      {
+        "id": "e7d8fb05-a26e-4b9e-a1ff-42250927c17b",
+        "type": "breath",
+        "value": [
+          8,
+          0,
+          8,
+          0
+        ],
+        "count": 12
+      },
+      {
+        "id": "62c6d3dd-e4d4-422b-a8fa-8786b9a91507",
+        "type": "breath",
+        "value": [
+          10,
+          0,
+          10,
+          0
+        ],
+        "count": 12
+      },
+      {
+        "id": "d835eea2-52e8-4c16-a119-c9cc31541c48",
+        "type": "breath",
+        "value": [
+          12,
+          0,
+          12,
+          0
+        ],
+        "count": 12
+      },
+      {
+        "id": "391f9081-e1c3-4875-bfb9-4422151500fc",
+        "type": "breath",
+        "count": 12,
+        "value": [
+          14,
+          0,
+          14,
+          0
+        ]
+      },
+      {
+        "id": "40f19826-c742-4d87-87bc-2a5969a9ab24",
+        "type": "breath",
+        "count": 0,
+        "value": [
+          16,
+          0,
+          16,
+          0
+        ]
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "7efbeeee-043e-4499-aa39-a6d0fc2e3b73",
+    "name": "Tummo timed",
+    "seq": [
+      {
+        "id": "76ac2034-2ae0-4de7-bc94-05625853d8da",
+        "type": "breath",
+        "count": 40,
+        "value": [
+          1.3,
+          0,
+          0.7,
+          0
+        ]
+      },
+      {
+        "id": "525400c5-0990-46fb-ad06-f2ac20a1f09d",
+        "type": "inhale",
+        "count": 3
+      },
+      {
+        "id": "0d005093-0a07-4dc5-9a75-82a68a9b075a",
+        "type": "exhale",
+        "count": 5
+      },
+      {
+        "id": "2274c08f-282f-4342-9806-15ab4633aeea",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "5423f719-1275-41ee-b87f-f84f0c440639",
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "id": "ca38a9fa-43e5-4a89-b356-d686db489e24",
+        "type": "hold",
+        "count": 75
+      },
+      {
+        "id": "85e00773-0e9e-4a96-80b7-f521b4b972fb",
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "5a4c01e5-8542-484d-be43-fce245b5266d",
+    "name": "Rebalance",
+    "seq": [
+      {
+        "id": "4fb0d3a1-35e9-4e1d-8038-f4409faf2513",
+        "type": "breath",
+        "value": [
+          4,
+          7,
+          8,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "6b42e1ee-779d-49e5-b067-993b1abf3c25",
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "id": "9d9ca498-2ec9-438d-8c65-59c599c76816",
+        "type": "hold",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "d01af360-e825-4a9c-b5af-525ed672fd24",
+    "name": "Extended Rebalance",
+    "seq": [
+      {
+        "id": "65076020-8f3f-47b4-8c83-b4eafe7a985d",
+        "type": "breath",
+        "value": [
+          7,
+          11,
+          12,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "54f7d0e6-1884-4956-bda3-14c3be418fb7",
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "id": "59642b2a-78e4-4bb1-bb67-c5c19166dc01",
+        "type": "hold",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "ee71695a-edd0-4783-8de8-9764cce99ae9",
+    "name": "Box",
+    "seq": [
+      {
+        "id": "b56d1317-1c48-4e67-9907-2fbd2e9397f0",
+        "type": "breath",
+        "value": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "count": 0
+      },
+      {
+        "id": "059b9ebd-bc40-4897-9b12-ce1a09013dae",
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "id": "33341501-fc63-4ded-bcc5-f247b359a23b",
+        "type": "hold",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "87d89035-0873-49da-9ebb-17b3ff46b29a",
+    "name": "Brown activation",
+    "seq": [
+      {
+        "id": "800ece9d-acc5-49eb-9adb-7ae99f338bd5",
+        "type": "breath",
+        "value": [
+          3.5,
+          0,
+          1.5,
+          0
+        ],
+        "count": 10
+      },
+      {
+        "id": "83807b99-e0f2-40d6-a0a2-3e0dafa4aa72",
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "id": "49537676-7b9f-4f3a-9f3e-34f82e7816be",
+        "type": "hold",
+        "count": 30
+      },
+      {
+        "id": "573a4277-9e10-4f6a-b758-5cfe65dfdaf7",
+        "type": "exhale",
+        "count": 5
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "a5f29014-e5ec-46e0-af0a-dd5af00394a1",
+    "name": "Five Whys",
+    "seq": [
+      {
+        "id": "b686137a-47b9-46c9-b5d2-3cb9ba3f0ae9",
+        "type": "text",
+        "text": "Imagine a problem or a desire you have.",
+        "count": 0
+      },
+      {
+        "id": "7583f1b4-412f-4185-928d-f79049bdd257",
+        "type": "text",
+        "text": "Focus on the driving force behind it.",
+        "count": 0
+      },
+      {
+        "id": "c3db6427-c994-4915-9ccc-edb80d3354a0",
+        "type": "text",
+        "text": "Could you let that go?",
+        "count": 0
+      },
+      {
+        "id": "5798edbb-4e6c-43e1-a745-80b099cf54b7",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "ea9fce00-be06-4b33-a9d3-1216f8619516",
+        "type": "text",
+        "text": "Identify a reason behind the driving force.",
+        "count": 0
+      },
+      {
+        "id": "b9548de4-5c86-45de-a8dd-f4514d7dab60",
+        "type": "text",
+        "text": "Could you let that go?",
+        "count": 0
+      },
+      {
+        "id": "7e6e16f6-99de-46ad-821c-dfe56f8746b0",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "8e796525-4fb5-4391-9813-b0548b048148",
+        "type": "text",
+        "text": "And a reason behind that.",
+        "count": 0
+      },
+      {
+        "id": "70ee7f44-3f23-420c-aab7-27ffebc3ecf3",
+        "type": "text",
+        "text": "Could you let that go?",
+        "count": 0
+      },
+      {
+        "id": "79577ff8-2dd5-4559-bcbf-2bfc1e0fc3a7",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "479ba537-35c6-4c3f-a48d-6a4ceccf19d3",
+        "type": "text",
+        "text": "And a reason behind that.",
+        "count": 0
+      },
+      {
+        "id": "bbc6ff5b-8826-4539-9f14-19a29fb95a8b",
+        "type": "text",
+        "text": "Could you let that go?",
+        "count": 0
+      },
+      {
+        "id": "e2752800-1d48-4700-a502-83c783e3f156",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "60dda8c6-f17d-49d8-a597-0651ff340ea2",
+        "type": "text",
+        "text": "And a reason behind that.",
+        "count": 0
+      },
+      {
+        "id": "424040d2-4d8f-45dc-98b5-c76dda532215",
+        "type": "text",
+        "text": "Could you let that go?",
+        "count": 0
+      },
+      {
+        "id": "216c45c1-a8e5-4a94-8fd3-6803ff837974",
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 3
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "a3be18c3-99ae-492c-8a7c-2f77bfc0d643",
+    "name": "Shamanic",
+    "seq": [
+      {
+        "id": "6089c368-cb6c-4830-8b43-6f07cd190c56",
+        "type": "breath",
+        "value": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "count": 12
+      },
+      {
+        "id": "3d0ae859-5d40-470c-8aa0-b9712594c545",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "99f81dfb-8b74-48e8-b2c6-b6e2a2b762c6",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "df7c9709-cc80-432c-b42b-a55bf80215fa",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "fb0eda1a-9a96-4333-8e04-ab5156a1a270",
+        "type": "breath",
+        "value": [
+          5,
+          5,
+          5,
+          5
+        ],
+        "count": 12
+      },
+      {
+        "id": "3e645d35-a6e4-4ad9-baca-74e760f4d0c7",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "081f6a31-2fcf-4118-bf3a-a5679c41514b",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "dbf76e0e-e843-4561-80ed-8adff62d7b0d",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "3c1ac391-ea89-4d4c-86c5-ba69543a87be",
+        "type": "breath",
+        "value": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "count": 12
+      },
+      {
+        "id": "d417c5ee-5a31-46f1-9c46-992b80cc72ec",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "a686b6b7-1184-4fbe-b78a-1aa4fa166405",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "893efc2f-5495-4b3c-82b9-d30bc7ce401c",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "44af0a6a-4b33-4043-bc1c-49fe21c05922",
+        "type": "breath",
+        "value": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "count": 12
+      },
+      {
+        "id": "7bf23fa2-ba8f-473f-9329-5df984142930",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "0fe28cf9-e6af-4d45-9c3f-ec47928088e9",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "2f904913-dda5-4cc1-9fe9-61d865a028ce",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "f9df3802-ae02-49e5-917c-269071070d89",
+        "type": "breath",
+        "value": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "count": 12
+      },
+      {
+        "id": "85aca1ff-0bf8-43b6-9db5-887c8c841ce3",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "fe880477-a434-48b4-9391-c65e28a2d1eb",
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "id": "5fe8cd8e-8b1a-45dd-abed-02cf6c8c2589",
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "id": "22011ce9-f6f3-4c73-b02f-4dd9f5784850",
+    "name": "Altered State",
+    "seq": [
+      {
+        "id": "6d1c168d-1c3b-4f33-a49c-50e4d82f3e6e",
+        "type": "breath",
+        "value": [
+          1.7,
+          0,
+          0.8,
+          0
+        ],
+        "count": 48
+      },
+      {
+        "id": "609385e4-f2cd-4305-9a9c-4cedf12e64f1",
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "id": "c28196e0-2670-419d-b5f9-6a042ab1d291",
+        "type": "hold",
+        "count": 80
+      },
+      {
+        "id": "14f42bdb-ab99-486d-8192-07f36c741516",
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "07e2021d-db43-45f3-9984-5bb553a6df13",
+    "name": "Dopamine Light",
+    "seq": [
+      {
+        "id": "7c9ab1cb-5aaf-4b23-9a9d-2946ce473d27",
+        "type": "breath",
+        "value": [
+          2.4,
+          0,
+          0.6,
+          0
+        ],
+        "count": 20
+      },
+      {
+        "id": "6455f116-ce8a-48a1-84ba-51ff8564bc34",
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          0.6,
+          0
+        ],
+        "count": 24
+      },
+      {
+        "id": "9308712f-a857-41fd-8eca-ae5034b971c0",
+        "type": "breath",
+        "value": [
+          1.6,
+          0,
+          0.6,
+          0
+        ],
+        "count": 28
+      },
+      {
+        "id": "fbdf3209-cf82-42ac-a96e-6abf34ca69ec",
+        "type": "breath",
+        "value": [
+          1.1,
+          0,
+          0.6,
+          0
+        ],
+        "count": 36
+      },
+      {
+        "id": "0f563470-50c0-41c6-9a25-b3a7e8b60567",
+        "type": "breath",
+        "value": [
+          0.6,
+          0,
+          0.6,
+          0
+        ],
+        "count": 50
+      },
+      {
+        "id": "07d46f80-1f56-49e3-a78f-ebaf71e6dad1",
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "a6f9f91e-e60a-4414-94ce-dac173a58b6a",
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "id": "16d3583d-144e-4e72-9c68-3728595541d0",
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "id": "a3a190dc-db94-46e7-8702-68d01a48ff69",
+        "type": "exhale",
+        "count": 6
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "ce4b5d40-0eef-4b80-bda6-d95db63e156f",
+    "name": "Cup Hands",
+    "seq": [
+      {
+        "id": "6d3c78b7-43c0-4e89-9dd0-1e93731c0095",
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          2,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "bdf6790a-50d0-4d5b-a9ad-476c2580f136",
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 3
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "fc25558d-7320-40ad-90cf-6d658c786dd2",
+    "name": "Holotropic",
+    "seq": [
+      {
+        "id": "306622ca-5f88-448f-958b-b605a2d3d898",
+        "type": "breath",
+        "value": [
+          1.4,
+          0,
+          0.8,
+          0
+        ],
+        "count": 48
+      },
+      {
+        "id": "7aba3842-c4a3-4b52-ab6c-ac4e96472e57",
+        "type": "exhale",
+        "count": 3
+      },
+      {
+        "id": "17ed6190-896e-4994-9554-6d9b141e8064",
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "id": "141026f4-76e1-4542-a046-5ff7cbab56a8",
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "id": "dfaedc26-1a7a-4428-8353-19c5ef184450",
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "id": "927f822f-280b-4ec5-a603-287c63321f0d",
+        "type": "exhale",
+        "count": 5
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "id": "d5a6a5b4-9c3a-4780-a7bc-48e3f5bc252e",
+    "name": "Apnea",
+    "seq": [
+      {
+        "id": "e3804e04-cfda-43e8-8327-31911780baee",
+        "type": "breath",
+        "value": [
+          6,
+          12,
+          6,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "d34c3bd6-98b9-4954-858b-dfa53589a625",
+        "type": "breath",
+        "value": [
+          6,
+          18,
+          12,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "id": "e9c02e8f-69da-43b9-9f7b-6a2ca05f6832",
+        "type": "breath",
+        "value": [
+          6,
+          24,
+          12,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "id": "c28f57e0-d256-48bf-a078-7d961e83a696",
+    "name": "Retention",
+    "seq": [
+      {
+        "id": "26edef86-ac0d-463e-bac2-ec3692ff905b",
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          12
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "id": "da10f023-ae07-4333-aa7c-dc488ea71044",
+    "name": "CO2 Tolerance",
+    "seq": [
+      {
+        "id": "b02d2e4c-1205-46a9-a8b5-3582bc4c9587",
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          4,
+          0
+        ],
+        "count": 30
+      },
+      {
+        "id": "d8741369-97a7-4869-a275-69c7bbe03c2c",
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          8,
+          0
+        ],
+        "count": 20
+      },
+      {
+        "id": "ab7ef994-0837-4ac8-bd1e-fad10010b2c1",
+        "type": "breath",
+        "value": [
+          8,
+          0,
+          16,
+          0
+        ],
+        "count": 10
+      },
+      {
+        "id": "5573bfd8-190b-47d4-9817-2b8e63f476a8",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "d43c938f-65aa-4e17-8fcc-fcafa36bc676",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "704be05d-cf8d-45c0-ad61-390711c2e7a3",
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "id": "075ce6a1-94c1-4b64-b5db-d8ae9f3ce755",
+        "type": "text",
+        "text": "Breath normally before beginning again",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "a9aabcba-ce7b-4fae-8aa8-fa2f8c4cc8fb",
+    "name": "Euphoric Release",
+    "seq": [
+      {
+        "id": "45febd5e-9a9f-4cbf-ba57-0ea803cacac1",
+        "type": "breath",
+        "value": [
+          2.4,
+          0,
+          0.8,
+          0
+        ],
+        "count": 11
+      },
+      {
+        "id": "0e2bc3a8-3026-49ac-ad1d-e0f9468626d4",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "2a6832cd-53a2-4b80-a91e-513b35b96e71",
+        "type": "text",
+        "count": 12,
+        "text": "Tightly squeeze your body"
+      },
+      {
+        "id": "6a58239c-271e-4f78-88d7-8fc5db634dca",
+        "type": "text",
+        "count": 12,
+        "text": "Relax while continuing to hold"
+      },
+      {
+        "id": "b2f8059e-04a5-4dec-907e-b0729340c591",
+        "type": "exhale",
+        "count": 6
+      }
+    ]
+  },
+  {
+    "id": "16a8077f-eb48-4c63-b04e-835aa7a9b9b0",
+    "name": "Breath of fire",
+    "seq": [
+      {
+        "id": "84c75484-82b7-4637-be6c-68b92f4ac58f",
+        "type": "breath",
+        "count": 120,
+        "value": [
+          0.6,
+          0,
+          0.6,
+          0
+        ]
+      },
+      {
+        "id": "9c9c7a76-0a30-4bf3-b112-7bdaa42904ae",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "d520fc37-2fd8-4fbd-837e-e49a1fa3e0be",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "47960a56-e15f-42b9-9468-3b8e040ffb0d",
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "id": "784a8df6-8cfd-445b-a9a2-9b77a5107996",
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "id": "d1f54d40-68eb-46ab-9677-7b0e48698539",
+        "type": "hold",
+        "count": 120
+      },
+      {
+        "id": "22822fda-ffdd-47dc-818f-3d08a3334356",
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "d24f225d-85b6-4c8a-8b31-f49ddbaa7518",
+    "name": "Study",
+    "seq": [
+      {
+        "id": "9b8fe7db-2059-4b5b-bb16-8bc4694c68ac",
+        "type": "breath",
+        "count": 150,
+        "value": [
+          4,
+          0,
+          4,
+          0
+        ]
+      },
+      {
+        "id": "78bf232c-264a-4929-818d-f74540609240",
+        "type": "breath",
+        "count": 20,
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "id": "294bbbfa-88a5-4080-8b7a-7a905008b18d",
+        "type": "breath",
+        "count": 24,
+        "value": [
+          2.5,
+          0,
+          2.5,
+          0
+        ]
+      },
+      {
+        "id": "02af902f-e7f5-49d1-8d15-a1a30d0920c5",
+        "type": "breath",
+        "count": 30,
+        "value": [
+          2,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "id": "5879890a-11ad-4417-a122-5b0426d7c98b",
+        "type": "breath",
+        "count": 400,
+        "value": [
+          1.6,
+          0,
+          1.6,
+          0
+        ]
+      },
+      {
+        "id": "8b9d52be-ae0a-4f4d-857d-bd8f3e87a030",
+        "type": "breath",
+        "count": 40,
+        "value": [
+          4,
+          0,
+          4,
+          0
+        ]
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "id": "3445a438-e485-41fc-b2a7-cdbaaad51421",
+    "name": "Vortex",
+    "seq": [
+      {
+        "id": "004a92c9-a08d-405d-947e-7c1cd262b14b",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          13,
+          0,
+          13,
+          0
+        ]
+      },
+      {
+        "id": "d053a554-00ba-4a2c-8ba8-4812c8bafeea",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          8,
+          0,
+          8,
+          0
+        ]
+      },
+      {
+        "id": "dc8e9fd6-3141-46fc-9d60-ee80cb09bf83",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          5,
+          0,
+          5,
+          0
+        ]
+      },
+      {
+        "id": "caba8174-eee2-4fc7-a48a-2e74c95e0d4f",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "id": "df4a6eef-9806-4a71-9fcf-4d8661aa5181",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          2,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "id": "80320117-8b0d-48ca-953e-528b45039b82",
+        "type": "breath",
+        "count": 1,
+        "value": [
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "id": "141000be-0c9a-4bbb-a868-0865c853f470",
+        "type": "hold",
+        "count": 21
+      }
+    ],
+    "loopable": true
+  }
+]
