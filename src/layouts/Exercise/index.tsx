@@ -20,6 +20,7 @@ import SwipeableItem, {
 } from "react-native-swipeable-item";
 import {
   editExerciseName,
+  removeExercise,
   updateExercise,
 } from "../../state/exercises.reducer";
 import { type Exercise as ExerciseItem } from "../../types/exercise";
@@ -42,6 +43,17 @@ export const Exercise = ({ navigation, route }: Props) => {
   } = route;
   const exercise = useParametrizedAppSelector(exerciseByIdSelector, id);
   const dispatch = useAppDispatch();
+
+  const seqRef = useRef(exercise.seq);
+  seqRef.current = exercise.seq;
+
+  useEffect(() => {
+    return () => {
+      if (seqRef.current.length === 0) {
+        dispatch(removeExercise({ exerciseId: id }));
+      }
+    };
+  }, []);
 
   const itemRefs = useRef(new Map());
 

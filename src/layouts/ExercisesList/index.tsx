@@ -3,8 +3,18 @@ import { NavigationProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
-import { LayoutAnimation, View, Text, Pressable } from "react-native";
+import {
+  Alert,
+  LayoutAnimation,
+  Share,
+  View,
+  Text,
+  Pressable,
+} from "react-native";
 import tw from "../../utils/tw";
+import * as Clipboard from "expo-clipboard";
+import uuid from "react-native-uuid";
+import { Exercise } from "../../types/exercise";
 import {
   updateExercises,
   resetExercises,
@@ -19,7 +29,6 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import SwipeableItem, { OpenDirection } from "react-native-swipeable-item";
 import type { SwipeableItemImperativeRef } from "react-native-swipeable-item";
-import { Exercise } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { ExerciseItem } from "./ExerciseItem";
 import { Header } from "./Header";
@@ -31,6 +40,30 @@ const SNAP_LEFT = [120];
 interface Props {
   navigation: NavigationProp<MainStackParams, "ExercisesList">;
 }
+
+const VALID_STEP_TYPES = ["inhale", "exhale", "hold", "breath", "text"];
+
+const isValidExercise = (e: unknown): e is Exercise => {
+  if (!e || typeof e !== "object") return false;
+  const obj = e as Record<string, unknown>;
+  if (typeof obj.name !== "string" || !Array.isArray(obj.seq)) return false;
+  return obj.seq.every((s: unknown) => {
+    if (!s || typeof s !== "object") return false;
+    const step = s as Record<string, unknown>;
+    return (
+      typeof step.type === "string" &&
+      VALID_STEP_TYPES.includes(step.type) &&
+      typeof step.count === "number"
+    );
+  });
+};
+
+const assignIds = (exercises: Exercise[]): Exercise[] =>
+  exercises.map((e) => ({
+    ...e,
+    id: uuid.v4() as string,
+    seq: e.seq.map((s) => ({ ...s, id: uuid.v4() as string })),
+  }));
 
 export const ExercisesList = ({ navigation }: Props) => {
   const exercises = useAppSelector(exercisesSelector);
@@ -52,6 +85,49 @@ export const ExercisesList = ({ navigation }: Props) => {
     },
     [dispatch],
   );
+
+  const handleExport = useCallback(async () => {
+    const json = JSON.stringify(exercises, null, 2);
+    await Share.share({ message: json });
+  }, [exercises]);
+
+  const handleImport = useCallback(async () => {
+    const text = await Clipboard.getStringAsync();
+    if (!text.trim()) {
+      Alert.alert("Nothing to import", "Your clipboard is empty.");
+      return;
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      Alert.alert("Invalid JSON", "The clipboard content is not valid JSON.");
+      return;
+    }
+
+    const arr = Array.isArray(parsed) ? parsed : [parsed];
+    if (!arr.every(isValidExercise)) {
+      Alert.alert(
+        "Invalid format",
+        "The JSON does not match the expected exercise format.",
+      );
+      return;
+    }
+
+    const withIds = assignIds(arr);
+    Alert.alert(
+      "Import exercises",
+      `Replace all exercises with ${withIds.length} imported exercise${withIds.length === 1 ? "" : "s"}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Import",
+          onPress: () => dispatch(updateExercises({ exercises: withIds })),
+        },
+      ],
+    );
+  }, [dispatch]);
 
   const renderItem = useCallback(
     (params: RenderItemParams<Exercise>) => {
@@ -111,22 +187,47 @@ export const ExercisesList = ({ navigation }: Props) => {
 
   const listFooter = useMemo(
     () => (
-      <View style={tw`py-4 mb-8`}>
-        <Pressable
-          style={tw`items-center justify-center active:opacity-80`}
-          onPress={() => dispatch(resetExercises())}
+      <View style={tw`py-6 mb-8 gap-3`}>
+        <Text
+          style={tw`text-xs font-inter text-neutral-600 text-center`}
         >
-          <Text style={tw`text-base font-inter`}>Reset exercises</Text>
-        </Pressable>
+          Long press to reorder. Swipe left to delete.
+        </Text>
+        <View style={tw`flex-row justify-center gap-6 mt-2`}>
+          <Pressable
+            style={tw`active:opacity-80`}
+            onPress={handleExport}
+          >
+            <Text style={tw`text-sm font-inter text-neutral-400`}>
+              Export
+            </Text>
+          </Pressable>
+          <Pressable
+            style={tw`active:opacity-80`}
+            onPress={handleImport}
+          >
+            <Text style={tw`text-sm font-inter text-neutral-400`}>
+              Import
+            </Text>
+          </Pressable>
+          <Pressable
+            style={tw`active:opacity-80`}
+            onPress={() => dispatch(resetExercises())}
+          >
+            <Text style={tw`text-sm font-inter text-neutral-400`}>
+              Reset
+            </Text>
+          </Pressable>
+        </View>
       </View>
     ),
-    [dispatch],
+    [dispatch, handleExport, handleImport],
   );
 
   return (
     <View style={tw`flex-1 bg-black bg-opacity-50`}>
-      <SafeAreaView>
-        <View style={tw`px-0 pb-4`}>
+      <SafeAreaView style={tw`flex-1`}>
+        <View style={tw`flex-1`}>
           <Header navigation={navigation} />
 
           <DraggableFlatList
