@@ -10,6 +10,7 @@ import { Circular } from "../../backgrounds/Circular";
 import { Echo } from "../../backgrounds/Echo";
 import { DitherPulse } from "../../backgrounds/DitherPulse";
 import { Particles } from "../../backgrounds/Particles";
+import { Terrain } from "../../backgrounds/Terrain";
 import { useAppSelector } from "../../hooks/store";
 import {
   isGrayscaleSelector,
@@ -26,6 +27,7 @@ const BackgroundComponents = [
   Wormhole,
   DitherPulse,
   Particles,
+  Terrain,
 ] as const;
 
 export const Background = memo(() => {
