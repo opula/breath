@@ -27,6 +27,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const [sublabel, setSublabel] = useState('');
   const [isBreathing, setBreathing] = useState(false);
   const [isText, setText] = useState(false);
+  const [isHIE, setHIE] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
 
   const iBreath = useSharedValue(0);
@@ -52,6 +53,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
         setSublabel(state.sublabel);
         setBreathing(state.isBreathing);
         setText(state.isText);
+        setHIE(state.isHIE);
       },
       onPlaySound(type) {
         playExerciseSound(type);
@@ -137,6 +139,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     sublabel,
     isBreathing,
     isText,
+    isHIE,
     exerciseName,
     iBreath,
     handleTap,

@@ -81,6 +81,7 @@ export class ExerciseEngine {
         sublabel: '',
         isBreathing: false,
         isText: false,
+        isHIE: false,
       });
       this.scheduler.stop();
       this.callbacks.onPauseChange(true);
@@ -206,6 +207,7 @@ export class ExerciseEngine {
           sublabel: `n° ${step.count ? step.count : 1}`,
           isBreathing: true,
           isText: false,
+          isHIE: false,
         });
         break;
 
@@ -216,6 +218,7 @@ export class ExerciseEngine {
           sublabel: '',
           isBreathing: false,
           isText: true,
+          isHIE: false,
         });
         break;
 
@@ -305,6 +308,7 @@ export class ExerciseEngine {
       sublabel,
       isBreathing: true,
       isText: false,
+      isHIE: false,
     });
 
     // Schedule next step
@@ -343,6 +347,7 @@ export class ExerciseEngine {
       sublabel: '',
       isBreathing: false,
       isText: false,
+      isHIE: true,
     });
 
     this.timedStep.execute({
@@ -354,6 +359,7 @@ export class ExerciseEngine {
           sublabel,
           isBreathing: false,
           isText: false,
+          isHIE: true,
         });
       },
       onComplete: () => {
@@ -380,6 +386,7 @@ export class ExerciseEngine {
           sublabel,
           isBreathing: false,
           isText: true,
+          isHIE: false,
         });
       },
       onComplete: () => {

@@ -9,6 +9,7 @@ export interface EngineState {
   sublabel: string;
   isBreathing: boolean;
   isText: boolean;
+  isHIE: boolean;
 }
 
 export interface ExerciseEngineCallbacks {

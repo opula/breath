@@ -86,7 +86,14 @@ export const MainStack = () => {
           // gestureResponseDistance: 300,
         }}
       />
-      <Stack.Screen name="Exercise" component={Exercise} />
+      <Stack.Screen
+        name="Exercise"
+        component={Exercise}
+        options={{
+          ...modalScreenOptions,
+          gestureEnabled: false,
+        }}
+      />
       <Stack.Screen
         name="ExerciseInfo"
         component={ExerciseInfo}

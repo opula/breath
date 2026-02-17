@@ -6,6 +6,7 @@ import tw from "../../utils/tw";
 import { AnimatePresence } from "moti";
 import { runOnJS } from "react-native-reanimated";
 import { BreathRing } from "./BreathRing";
+import { Backdrop } from "./Backdrop";
 import {
   Directions,
   Gesture,
@@ -32,6 +33,7 @@ export const DynamicExercise = memo(
       sublabel,
       isBreathing,
       isText,
+      isHIE,
       exerciseName,
       iBreath,
       handleTap,
@@ -46,7 +48,7 @@ export const DynamicExercise = memo(
           if (!success) return;
           runOnJS(handleTap)();
         }),
-      [handleTap]
+      [handleTap],
     );
 
     const doubleTap = useMemo(
@@ -57,7 +59,7 @@ export const DynamicExercise = memo(
             if (!success) return;
             runOnJS(handleDoubleTap)();
           }),
-      [handleDoubleTap]
+      [handleDoubleTap],
     );
 
     const longPress = useMemo(
@@ -66,7 +68,7 @@ export const DynamicExercise = memo(
           if (!success) return;
           runOnJS(handleLongPress)();
         }),
-      [handleLongPress]
+      [handleLongPress],
     );
 
     const swipeLeft = useMemo(
@@ -78,7 +80,7 @@ export const DynamicExercise = memo(
             if (!onChangeSource) return;
             runOnJS(onChangeSource)(-1);
           }),
-      [onChangeSource]
+      [onChangeSource],
     );
 
     const swipeRight = useMemo(
@@ -90,7 +92,7 @@ export const DynamicExercise = memo(
             if (!onChangeSource) return;
             runOnJS(onChangeSource)(1);
           }),
-      [onChangeSource]
+      [onChangeSource],
     );
 
     const swipeUp = useMemo(
@@ -101,7 +103,7 @@ export const DynamicExercise = memo(
             if (!success) return;
             runOnJS(handleNextExercise)(1);
           }),
-      [handleNextExercise]
+      [handleNextExercise],
     );
 
     const swipeDown = useMemo(
@@ -112,7 +114,7 @@ export const DynamicExercise = memo(
             if (!success) return;
             runOnJS(handleNextExercise)(-1);
           }),
-      [handleNextExercise]
+      [handleNextExercise],
     );
 
     return (
@@ -124,12 +126,13 @@ export const DynamicExercise = memo(
           swipeDown,
           doubleTap,
           longPress,
-          singleTap
+          singleTap,
         )}
       >
         <Animated.View style={tw`absolute inset-0 bg-transparent`}>
           <View style={tw`absolute inset-0 justify-center items-center z-0`}>
-            {isBreathing ? <BreathRing breath={iBreath} /> : null}
+            {isHIE && <Backdrop />}
+            {isBreathing && <BreathRing breath={iBreath} />}
           </View>
           <View style={tw`absolute inset-0 items-center justify-center`}>
             <AnimatePresence exitBeforeEnter>
@@ -194,5 +197,5 @@ export const DynamicExercise = memo(
         </Animated.View>
       </GestureDetector>
     );
-  }
+  },
 );
