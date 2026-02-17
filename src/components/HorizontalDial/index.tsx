@@ -69,6 +69,7 @@ type AnimatedTextProps = {
   style?: TextStyle;
   step: number;
   suffix?: string;
+  zeroLabel?: string;
 };
 
 function AnimatedText({
@@ -76,25 +77,30 @@ function AnimatedText({
   style = undefined,
   step,
   suffix = "min",
+  zeroLabel,
 }: AnimatedTextProps) {
   // Use a regular state value for rendering
-  const [displayText, setDisplayText] = useState("0");
+  const [displayText, setDisplayText] = useState(zeroLabel ?? "0");
 
   // Update the display text when the value changes
   useAnimatedReaction(
     () => value.value,
     (currentValue: number) => {
       const actualValue = Math.round(currentValue) * step;
-      const formattedValue = String(actualValue) + " " + suffix;
+      if (zeroLabel && actualValue === 0) {
+        runOnJS(setDisplayText)(zeroLabel);
+        return;
+      }
+      const display =
+        step < 1 ? actualValue.toFixed(1) : String(Math.round(actualValue));
+      const formattedValue = display + " " + suffix;
       runOnJS(setDisplayText)(formattedValue);
     },
-    [step, suffix],
+    [step, suffix, zeroLabel],
   );
 
   return (
-    <Text
-      style={[tw`text-sm font-medium text-right text-white`, style]}
-    >
+    <Text style={[tw`text-sm font-medium text-right text-white`, style]}>
       {displayText}
     </Text>
   );
@@ -107,6 +113,7 @@ interface HorizontalDialProps {
   suffix?: string;
   defaultValue?: number;
   onChange?: (value: number) => void;
+  zeroLabel?: string;
 }
 
 export const HorizontalDial = ({
@@ -116,6 +123,7 @@ export const HorizontalDial = ({
   suffix = "min",
   defaultValue,
   onChange,
+  zeroLabel,
 }: HorizontalDialProps) => {
   // Calculate the number of ticks needed based on min, max, and step
   const ticks = useMemo(() => {
@@ -150,7 +158,8 @@ export const HorizontalDial = ({
     },
     onMomentumEnd: () => {
       if (onChange) {
-        const actual = min + Math.floor(scrollX.value) * step;
+        const raw = min + Math.round(scrollX.value) * step;
+        const actual = step < 1 ? parseFloat(raw.toFixed(1)) : Math.round(raw);
         runOnJS(debouncedOnChangeRef.current)(actual);
       }
     },
@@ -158,33 +167,38 @@ export const HorizontalDial = ({
 
   return (
     <View style={tw`flex-row items-center`}>
-      <View style={tw`w-20 items-end pr-4`}>
-        <AnimatedText value={scrollX} step={step} suffix={suffix} />
+      <View style={tw`items-end pr-4`}>
+        <AnimatedText
+          value={scrollX}
+          step={step}
+          suffix={suffix}
+          zeroLabel={zeroLabel}
+        />
       </View>
       <View style={tw`flex-1`} onLayout={onLayout}>
         {containerWidth > 0 && (
-        <Animated.FlatList
-          data={data}
-          keyExtractor={(item) => String(item)}
-          horizontal
-          decelerationRate={"fast"}
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={_itemSize}
-          contentContainerStyle={{
-            paddingHorizontal: containerWidth / 2 - _itemSize / 2,
-          }}
-          renderItem={({ index }) => {
-            return <RulerLine index={index} scrollX={scrollX} />;
-          }}
-          initialScrollIndex={initialIndex}
-          getItemLayout={(_data, index) => ({
-            length: _itemSize,
-            offset: _itemSize * index,
-            index,
-          })}
-          onScroll={onScroll}
-          scrollEventThrottle={16} // ~60fps
-        />
+          <Animated.FlatList
+            data={data}
+            keyExtractor={(item) => String(item)}
+            horizontal
+            decelerationRate={"fast"}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={_itemSize}
+            contentContainerStyle={{
+              paddingHorizontal: containerWidth / 2 - _itemSize / 2,
+            }}
+            renderItem={({ index }) => {
+              return <RulerLine index={index} scrollX={scrollX} />;
+            }}
+            initialScrollIndex={initialIndex}
+            getItemLayout={(_data, index) => ({
+              length: _itemSize,
+              offset: _itemSize * index,
+              index,
+            })}
+            onScroll={onScroll}
+            scrollEventThrottle={16} // ~60fps
+          />
         )}
         <View
           style={{
