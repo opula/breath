@@ -25,15 +25,18 @@ export const MusicTrackItem = ({
         {isActive && (
           <Icon
             name={isPlaying ? 'pause' : 'play'}
-            color="white"
+            color="#6FE7FF"
             size={14}
           />
         )}
       </View>
       <Text
-        style={tw`flex-1 ml-2 text-sm font-inter ${
-          isActive ? 'text-white' : 'text-neutral-400'
-        }`}
+        style={[
+          tw`flex-1 ml-2 text-sm font-inter ${
+            isActive ? 'text-white' : 'text-neutral-400'
+          }`,
+          isActive && {color: '#6FE7FF'},
+        ]}
         numberOfLines={1}>
         {item.name}
       </Text>

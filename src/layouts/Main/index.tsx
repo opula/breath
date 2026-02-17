@@ -38,7 +38,10 @@ const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 export const Main = () => {
   useEffect(() => {
     activateKeepAwake();
-    const timer = setTimeout(() => deactivateKeepAwake(), KEEP_AWAKE_TIMEOUT_MS);
+    const timer = setTimeout(
+      () => deactivateKeepAwake(),
+      KEEP_AWAKE_TIMEOUT_MS,
+    );
     return () => {
       clearTimeout(timer);
       deactivateKeepAwake();
@@ -128,20 +131,6 @@ export const Main = () => {
             >
               <Icon name="moon" size={24} color="white" />
             </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={() => {
-                navigation.navigate("MusicControls");
-              }}
-            >
-              <Icon name="headphones" size={24} color="white" />
-            </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={engageTutorial}
-            >
-              <Icon name="help" size={24} color="white" />
-            </Pressable>
           </MotiView>
         ) : null}
 
@@ -167,6 +156,20 @@ export const Main = () => {
               }}
             >
               <Icon name="unordered-list" size={24} color="white" />
+            </Pressable>
+            <Pressable
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
+              onPress={() => {
+                navigation.navigate("MusicControls");
+              }}
+            >
+              <Icon name="headphones" size={24} color="white" />
+            </Pressable>
+            <Pressable
+              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
+              onPress={engageTutorial}
+            >
+              <Icon name="help" size={24} color="white" />
             </Pressable>
           </MotiView>
         ) : null}
