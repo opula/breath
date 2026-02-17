@@ -4,13 +4,7 @@ import { MainStackParams } from "../../navigation";
 import { Icon } from "../../components/Icon";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
-import {
-  FlatList,
-  LayoutAnimation,
-  View,
-  Text,
-  Pressable,
-} from "react-native";
+import { FlatList, LayoutAnimation, View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { StepCard } from "./StepCard";
 
@@ -96,7 +90,7 @@ export const Exercise = ({ navigation, route }: Props) => {
         </ShadowDecorator>
       );
     },
-    [exercise]
+    [exercise],
   );
 
   return (
@@ -115,7 +109,7 @@ export const Exercise = ({ navigation, route }: Props) => {
           <View style={tw`h-10 w-10 items-center justify-center`}></View>
         </View>
 
-        <View style={tw`py-4 mb-2 px-4`}>
+        <View style={tw`py-4 px-2`}>
           <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
             Edit name
           </Text>
@@ -136,14 +130,16 @@ export const Exercise = ({ navigation, route }: Props) => {
                     ...exercise,
                     seq: data.data,
                   },
-                })
+                }),
               )
             }
             ListHeaderComponent={() => (
-              <View style={tw`mt-6 px-4 border-b border-neutral-800`}>
-                <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                  Steps
-                </Text>
+              <View style={tw`mt-6 px-2`}>
+                <View style={tw`border-b border-neutral-800`}>
+                  <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                    Steps
+                  </Text>
+                </View>
               </View>
             )}
             ListFooterComponent={() => (
@@ -158,6 +154,11 @@ export const Exercise = ({ navigation, route }: Props) => {
                     Add step
                   </Text>
                 </Pressable>
+                <Text
+                  style={tw`text-xs font-inter text-neutral-600 text-center mt-1`}
+                >
+                  Long press to reorder. Swipe left to delete.
+                </Text>
               </View>
             )}
           />
