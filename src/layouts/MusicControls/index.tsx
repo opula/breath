@@ -122,7 +122,7 @@ export const MusicControls = () => {
         )}
 
         {/* Volume dial */}
-        <View style={tw`py-6 border-t border-neutral-800`}>
+        <View style={tw`py-6 border-t border-neutral-800 pl-8`}>
           <HorizontalDial
             min={0}
             max={100}
