@@ -8,6 +8,7 @@ import { Rorschach } from "../../backgrounds/Rorschach";
 import { Waves } from "../../backgrounds/Waves";
 import { Circular } from "../../backgrounds/Circular";
 import { Echo } from "../../backgrounds/Echo";
+import { DitherPulse } from "../../backgrounds/DitherPulse";
 import { useAppSelector } from "../../hooks/store";
 import {
   isGrayscaleSelector,
@@ -22,6 +23,7 @@ const BackgroundComponents = [
   Starfield,
   Waves,
   Wormhole,
+  DitherPulse,
 ] as const;
 
 export const Background = memo(() => {
