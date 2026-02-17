@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from "react";
-import { Dimensions, Text, TextStyle, View } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { LayoutChangeEvent, Text, TextStyle, View } from "react-native";
 import Animated, {
   clamp,
   interpolate,
@@ -17,7 +17,6 @@ const _spacing = 8;
 const _rulerHeight = 24;
 const _rulerWidth = 2;
 const _itemSize = _spacing;
-const { width } = Dimensions.get("window");
 
 type RulerLineProps = {
   index: number;
@@ -130,6 +129,11 @@ export const HorizontalDial = ({
     [defaultValue, min, step],
   );
 
+  const [containerWidth, setContainerWidth] = useState(0);
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  }, []);
+
   const data = useMemo(() => [...Array(ticks).keys()], [ticks]);
   const scrollX = useSharedValue(initialIndex);
 
@@ -157,7 +161,8 @@ export const HorizontalDial = ({
       <View style={tw`w-20 items-end pr-4`}>
         <AnimatedText value={scrollX} step={step} suffix={suffix} />
       </View>
-      <View style={tw`flex-1`}>
+      <View style={tw`flex-1`} onLayout={onLayout}>
+        {containerWidth > 0 && (
         <Animated.FlatList
           data={data}
           keyExtractor={(item) => String(item)}
@@ -166,7 +171,7 @@ export const HorizontalDial = ({
           showsHorizontalScrollIndicator={false}
           snapToInterval={_itemSize}
           contentContainerStyle={{
-            paddingHorizontal: width / 2 - _itemSize / 2,
+            paddingHorizontal: containerWidth / 2 - _itemSize / 2,
           }}
           renderItem={({ index }) => {
             return <RulerLine index={index} scrollX={scrollX} />;
@@ -180,6 +185,7 @@ export const HorizontalDial = ({
           onScroll={onScroll}
           scrollEventThrottle={16} // ~60fps
         />
+        )}
         <View
           style={{
             alignSelf: "center",
