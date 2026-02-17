@@ -29,8 +29,6 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { HAS_COMPLETED_WELCOME, storage } from "../../utils/storage";
 import { Pagination } from "./Pagination";
-import { useAppDispatch } from "../../hooks/store";
-import { engageTutorial } from "../../state/configuration.reducer";
 import tw from "../../utils/tw";
 
 const seed = 5000 * Math.random();
@@ -63,7 +61,6 @@ interface Props {
 }
 
 export const Welcome = ({ navigation }: Props) => {
-  const dispatch = useAppDispatch();
   const { height, width } = useWindowDimensions();
   const { top, bottom } = useSafeAreaInsets();
   const PAGE_HEIGHT = height - top - bottom;
@@ -151,7 +148,6 @@ export const Welcome = ({ navigation }: Props) => {
             <Pressable
               style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
               onPress={() => {
-                dispatch(engageTutorial());
                 navigation.navigate("Main");
                 storage.set(HAS_COMPLETED_WELCOME, true);
               }}

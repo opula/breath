@@ -20,12 +20,14 @@ import { AdjustStep } from "../layouts/AdjustStep";
 import { NewStepMenu } from "../layouts/NewStepMenu";
 import { ExerciseInfo } from "../layouts/ExerciseInfo";
 import { Scenes } from "../layouts/Scenes";
+import { Help } from "../layouts/Help";
 
 export type MainStackParams = {
   Welcome: undefined;
   Main: undefined;
   MusicControls: undefined;
   Scenes: undefined;
+  Help: undefined;
   ExercisesList: undefined;
   Exercise: { id: string };
   ExerciseInfo: { id: string };
@@ -110,6 +112,7 @@ export const MainStack = () => {
       >
         <Stack.Screen name="MusicControls" component={MusicControls} />
         <Stack.Screen name="Scenes" component={Scenes} />
+        <Stack.Screen name="Help" component={Help} />
         <Stack.Screen name="AdjustStep" component={AdjustStep} />
         <Stack.Screen name="NewStepMenu" component={NewStepMenu} />
       </Stack.Group>

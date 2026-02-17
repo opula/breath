@@ -1,6 +1,6 @@
 import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Platform, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
 
 import { Icon } from "../../components/Icon";
@@ -14,12 +14,10 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { Tutorial } from "./Tutorial";
 import { Background } from "./Background";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
   isPausedSelector,
-  isTutorialSelector,
   isGrayscaleSelector,
   soundsEnabledSelector,
   hapticsEnabledSelector,
@@ -28,8 +26,6 @@ import {
   toggleGrayscale as toggleGrayscaleAction,
   togglePaused as togglePausedAction,
   setPause as setPauseAction,
-  engagePaused as engagePausedAction,
-  engageTutorial as engageTutorialAction,
   toggleSounds as toggleSoundsAction,
   toggleHaptics as toggleHapticsAction,
 } from "../../state/configuration.reducer";
@@ -51,11 +47,9 @@ export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const { top, left, bottom } = useSafeAreaInsets();
-  const osTop = top + (Platform.OS === "android" ? 16 : 0);
+  const { left, bottom } = useSafeAreaInsets();
 
   const isPaused = useAppSelector(isPausedSelector);
-  const isTutorial = useAppSelector(isTutorialSelector);
   const isGrayscale = useAppSelector(isGrayscaleSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
@@ -80,11 +74,6 @@ export const Main = () => {
     dispatch(toggleGrayscaleAction());
     showToast(isGrayscale ? "Color mode" : "Grayscale mode");
   }, [dispatch, showToast, isGrayscale]);
-  const engagePaused = useCallback(() => dispatch(engagePausedAction()), []);
-  const engageTutorial = useCallback(
-    () => dispatch(engageTutorialAction()),
-    [],
-  );
   const toggleSounds = useCallback(() => {
     dispatch(toggleSoundsAction());
     showToast(soundsEnabled ? "Sounds off" : "Sounds on");
@@ -104,10 +93,10 @@ export const Main = () => {
       </View>
 
       <AnimatePresence>
-        {isPaused || isTutorial ? (
+        {isPaused ? (
           <MotiView
             from={{ opacity: 0 }}
-            animate={{ opacity: isTutorial ? 0.75 : 0.45 }}
+            animate={{ opacity: 0.45 }}
             exit={{ opacity: 0 }}
             transition={{ opacity: { type: "timing", duration: 300 } }}
             style={tw`absolute inset-0 bg-black`}
@@ -116,7 +105,7 @@ export const Main = () => {
         ) : null}
       </AnimatePresence>
 
-      <View style={[tw`absolute inset-0`, { opacity: isTutorial ? 0 : 1 }]}>
+      <View style={tw`absolute inset-0`}>
         <DynamicExercise onPause={setPause} />
       </View>
 
@@ -208,14 +197,12 @@ export const Main = () => {
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={engageTutorial}
+              onPress={() => navigation.navigate("Help")}
             >
               <Icon name="help" size={24} color="white" />
             </Pressable>
           </MotiView>
         ) : null}
-
-        {isTutorial ? <Tutorial onClose={engagePaused} /> : null}
 
         <AnimatePresence>
           {toastMessage ? (

@@ -1,11 +1,8 @@
 import {PayloadAction, createSlice} from '@reduxjs/toolkit';
 import {reduxStorage} from '../storage';
 import {PersistConfig, persistReducer} from 'redux-persist';
-import {HAS_SEEN_TUTORIAL, storage} from '../utils/storage';
-
 interface ConfigurationState {
   isPaused: boolean;
-  isTutorial: boolean;
   isGrayscale: boolean;
   bgSourceIndex: number;
   soundsEnabled: boolean;
@@ -14,7 +11,6 @@ interface ConfigurationState {
 
 const initialState: ConfigurationState = {
   isPaused: true,
-  isTutorial: false,
   isGrayscale: false,
   bgSourceIndex: 0,
   soundsEnabled: false,
@@ -30,17 +26,6 @@ export const configurationSlice = createSlice({
     },
     togglePaused(state) {
       state.isPaused = !state.isPaused;
-    },
-    toggleTutorial(state) {
-      state.isTutorial = !state.isTutorial;
-    },
-    engageTutorial(state) {
-      state.isTutorial = true;
-      state.isPaused = false;
-    },
-    engagePaused(state) {
-      state.isTutorial = false;
-      state.isPaused = true;
     },
     toggleGrayscale(state) {
       state.isGrayscale = !state.isGrayscale;
@@ -70,11 +55,8 @@ export const configurationReducer = persistReducer(
 export const {
   setPause,
   togglePaused,
-  toggleTutorial,
   toggleGrayscale,
   toggleSounds,
   toggleHaptics,
   updateSource,
-  engagePaused,
-  engageTutorial,
 } = configurationSlice.actions;
