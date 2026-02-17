@@ -11,6 +11,9 @@ import { updateSource } from "../../state/configuration.reducer";
 
 const MINT_BLUE = "#6FE7FF";
 
+const formatSceneName = (name: string) =>
+  name.replace(/([a-z])([A-Z])/g, "$1 $2");
+
 export const Scenes = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
@@ -30,7 +33,7 @@ export const Scenes = () => {
               { color: isActive ? MINT_BLUE : "#a3a3a3" },
             ]}
           >
-            {item}
+            {formatSceneName(item)}
           </Text>
         </Pressable>
       );
