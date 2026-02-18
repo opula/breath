@@ -12,6 +12,7 @@ import { DitherPulse } from "../../backgrounds/DitherPulse";
 import { Particles } from "../../backgrounds/Particles";
 import { Terrain } from "../../backgrounds/Terrain";
 import { DotGrid } from "../../backgrounds/DotGrid";
+import { GameOfLife } from "../../backgrounds/GameOfLife";
 import { useAppSelector } from "../../hooks/store";
 import {
   isGrayscaleSelector,
@@ -30,6 +31,7 @@ const BackgroundComponents = [
   Particles,
   Terrain,
   DotGrid,
+  GameOfLife,
 ] as const;
 
 export const Background = memo(() => {

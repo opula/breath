@@ -10,6 +10,7 @@ export const backgrounds = [
   "Particles",
   "Terrain",
   "DotGrid",
+  "GameOfLife",
 ] as const;
 
 export const TOTAL_BACKGROUNDS = backgrounds.length;
