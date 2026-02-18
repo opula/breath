@@ -683,10 +683,6 @@
         "count": 48
       },
       {
-        "type": "exhale",
-        "count": 3
-      },
-      {
         "type": "breath",
         "value": [3, 0, 3, 0],
         "count": 3

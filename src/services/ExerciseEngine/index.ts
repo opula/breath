@@ -366,12 +366,16 @@ export class ExerciseEngine {
       this.callbacks.onPlaySound(type as SoundType);
     }
 
+    const showRing = type === 'inhale' || type === 'exhale';
+    if (type === 'exhale') this.callbacks.onAnimateBreath(0, count || 1);
+    else if (type === 'inhale') this.callbacks.onAnimateBreath(1, count || 1);
+
     this.callbacks.onStateChange({
       label: type,
       sublabel: '',
-      isBreathing: false,
+      isBreathing: showRing,
       isText: false,
-      isHIE: true,
+      isHIE: !showRing,
     });
 
     this.timedStep.execute({
@@ -381,9 +385,9 @@ export class ExerciseEngine {
         this.callbacks.onStateChange({
           label: type,
           sublabel,
-          isBreathing: false,
+          isBreathing: showRing,
           isText: false,
-          isHIE: true,
+          isHIE: !showRing,
         });
       },
       onComplete: () => {
@@ -398,7 +402,6 @@ export class ExerciseEngine {
   private startDoubleInhaleStep(): void {
     const exercise = this.currentExercise();
     const step = exercise.seq[this.seqIndex];
-    const { count } = step;
     const [firstDur, pauseDur, secondDur] = (step.value as number[] | undefined) ?? [1.5, 0.3, 1.5];
 
     this.callbacks.onStateChange({
