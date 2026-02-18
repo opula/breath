@@ -130,7 +130,7 @@ export const Main = () => {
             >
               <Icon
                 name="moon"
-                size={24}
+                size={22}
                 color={isGrayscale ? "white" : "#737373"}
               />
             </Pressable>
@@ -140,7 +140,7 @@ export const Main = () => {
             >
               <Icon
                 name="volume-max"
-                size={24}
+                size={22}
                 color={soundsEnabled ? "white" : "#737373"}
               />
             </Pressable>
@@ -150,7 +150,7 @@ export const Main = () => {
             >
               <Icon
                 name="bell-ring"
-                size={24}
+                size={22}
                 color={hapticsEnabled ? "white" : "#737373"}
               />
             </Pressable>
@@ -177,7 +177,7 @@ export const Main = () => {
                 navigation.navigate("ExercisesList");
               }}
             >
-              <Icon name="book" size={24} color="white" />
+              <Icon name="book" size={22} color="white" />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
@@ -185,7 +185,7 @@ export const Main = () => {
                 navigation.navigate("MusicControls");
               }}
             >
-              <Icon name="headphones" size={24} color="white" />
+              <Icon name="headphones" size={22} color="white" />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
@@ -193,13 +193,13 @@ export const Main = () => {
                 navigation.navigate("Scenes");
               }}
             >
-              <Icon name="image" size={24} color="white" />
+              <Icon name="image" size={22} color="white" />
             </Pressable>
             <Pressable
               style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
               onPress={() => navigation.navigate("Help")}
             >
-              <Icon name="help" size={24} color="white" />
+              <Icon name="help" size={22} color="white" />
             </Pressable>
           </MotiView>
         ) : null}
