@@ -126,7 +126,7 @@ export const MusicHelp = () => {
                 style={tw`flex-row items-center py-3 justify-between`}
               >
                 <Text
-                  style={tw`text-sm font-inter text-neutral-200 flex-1 mr-4`}
+                  style={[tw`text-sm font-inter flex-1 mr-4`, { color: '#6FE7FF' }]}
                   numberOfLines={1}
                 >
                   {track.name}
