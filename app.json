@@ -2,7 +2,7 @@
   "expo": {
     "name": "MDNT BRWK",
     "slug": "midnight-breath",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -18,9 +18,11 @@
     "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
-      "bundleIdentifier": "com.midnight.breathapp",
+      "bundleIdentifier": "com.mdnt.brwk",
+      "buildNumber": "1",
       "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
           "NSAllowsLocalNetworking": true
@@ -33,7 +35,7 @@
         "backgroundColor": "#000000"
       },
       "newArchEnabled": true,
-      "package": "com.midnight.breathapp"
+      "package": "com.mdnt.brwk"
     },
     "web": {
       "favicon": "./assets/favicon.png"
