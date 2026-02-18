@@ -88,7 +88,12 @@ export const MusicControls = () => {
           <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
             Music
           </Text>
-          <View style={tw`h-10 w-10`} />
+          <Pressable
+            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
+            onPress={() => navigation.navigate("MusicHelp" as never)}
+          >
+            <Icon name="help" size={20} color="white" />
+          </Pressable>
         </View>
 
         {/* Library list */}

@@ -212,6 +212,21 @@
     "loopable": true
   },
   {
+    "name": "Bellow Breathing",
+    "seq": [
+      {
+        "type": "double-inhale",
+        "value": [1.2, 0.1, 1.2],
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 2
+      }
+    ],
+    "loopable": true
+  },
+  {
     "name": "Brown Fat Activation",
     "seq": [
       {

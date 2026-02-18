@@ -21,11 +21,13 @@ import { NewStepMenu } from "../layouts/NewStepMenu";
 import { ExerciseInfo } from "../layouts/ExerciseInfo";
 import { Scenes } from "../layouts/Scenes";
 import { Help } from "../layouts/Help";
+import { MusicHelp } from "../layouts/MusicHelp";
 
 export type MainStackParams = {
   Welcome: undefined;
   Main: undefined;
   MusicControls: undefined;
+  MusicHelp: undefined;
   Scenes: undefined;
   Help: undefined;
   ExercisesList: undefined;
@@ -112,6 +114,7 @@ export const MainStack = () => {
         }}
       >
         <Stack.Screen name="MusicControls" component={MusicControls} />
+        <Stack.Screen name="MusicHelp" component={MusicHelp} />
         <Stack.Screen name="Scenes" component={Scenes} />
         <Stack.Screen name="Help" component={Help} />
         <Stack.Screen name="AdjustStep" component={AdjustStep} />
