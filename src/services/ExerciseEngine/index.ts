@@ -142,6 +142,7 @@ export class ExerciseEngine {
   setExercise(index: number): void {
     if (this.destroyed) return;
     this.exerciseIndex = index;
+    this.options.saveExerciseIndex?.(index);
     this.reset();
   }
 

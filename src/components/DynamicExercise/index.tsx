@@ -7,6 +7,7 @@ import { AnimatePresence } from "moti";
 import { runOnJS } from "react-native-reanimated";
 import { BreathRing } from "./BreathRing";
 import { Backdrop } from "./Backdrop";
+import { TextBackdrop } from "./TextBackdrop";
 import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "../../hooks/store";
@@ -100,6 +101,7 @@ export const DynamicExercise = memo(
         <Animated.View style={tw`absolute inset-0 bg-transparent`}>
           <View style={tw`absolute inset-0 justify-center items-center z-0`}>
             {isHIE && <Backdrop />}
+            {isText && <TextBackdrop />}
             {isBreathing && <BreathRing breath={iBreath} />}
           </View>
           <View style={tw`absolute inset-0 items-center justify-center`}>
