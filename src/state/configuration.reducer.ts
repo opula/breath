@@ -13,7 +13,7 @@ const initialState: ConfigurationState = {
   isPaused: true,
   isGrayscale: false,
   bgSourceIndex: 12,
-  soundsEnabled: false,
+  soundsEnabled: true,
   hapticsEnabled: true,
 };
 
