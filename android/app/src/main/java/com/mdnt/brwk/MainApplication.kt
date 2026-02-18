@@ -1,4 +1,4 @@
-package com.midnight.breathapp
+package com.mdnt.brwk
 
 import android.app.Application
 import android.content.res.Configuration

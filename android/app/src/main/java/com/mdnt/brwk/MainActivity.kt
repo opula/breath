@@ -1,4 +1,4 @@
-package com.midnight.breathapp
+package com.mdnt.brwk
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
