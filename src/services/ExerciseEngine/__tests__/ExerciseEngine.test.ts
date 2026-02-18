@@ -581,6 +581,172 @@ describe('ExerciseEngine', () => {
     });
   });
 
+  describe('ramp', () => {
+    const breathWithRamp: Exercise = {
+      id: 'test-breath-ramp',
+      name: 'Breath Ramp',
+      seq: [
+        { id: 's1', type: 'breath', value: [1, 0, 1, 0], count: 2, ramp: 1.5 },
+      ],
+      loopable: true,
+    };
+
+    const hieWithRamp: Exercise = {
+      id: 'test-hie-ramp',
+      name: 'HIE Ramp',
+      seq: [
+        { id: 's1', type: 'hold', count: 10, ramp: 1.1 },
+      ],
+      loopable: true,
+    };
+
+    const infiniteWithRamp: Exercise = {
+      id: 'test-inf-ramp',
+      name: 'Infinite Ramp',
+      seq: [
+        { id: 's1', type: 'hold', count: 0, ramp: 2.0 },
+      ],
+      loopable: true,
+    };
+
+    const rampOne: Exercise = {
+      id: 'test-ramp-one',
+      name: 'Ramp One',
+      seq: [
+        { id: 's1', type: 'hold', count: 10, ramp: 1.0 },
+      ],
+      loopable: true,
+    };
+
+    const nonLoopableRamp: Exercise = {
+      id: 'test-noloop-ramp',
+      name: 'Non-Loopable Ramp',
+      seq: [
+        { id: 's1', type: 'hold', count: 10, ramp: 1.5 },
+      ],
+      loopable: false,
+    };
+
+    it('breath step with ramp > 1 uses increased count on second loop', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([breathWithRamp], scheduler, callbacks);
+
+      engine.start();
+      expect(engine.getSequenceLoop()).toBe(0);
+
+      // First loop: count = Math.round(2 * (1 + 0 * 0.5)) = 2
+      const firstSublabel = callbacks.states.find((s) => s.isBreathing)?.sublabel;
+      expect(firstSublabel).toBe('n° 2');
+
+      // Run until exactly one wrap occurs
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      expect(engine.getSequenceLoop()).toBe(1);
+
+      // Second loop: count = Math.round(2 * (1 + 1 * 0.5)) = 3
+      const secondLoopStates = callbacks.states.filter((s) => s.isBreathing);
+      const lastBreathStart = secondLoopStates[secondLoopStates.length - 1];
+      expect(lastBreathStart?.sublabel).toMatch(/n° 3/);
+    });
+
+    it('HIE step with ramp > 1 uses increased count on second loop', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([hieWithRamp], scheduler, callbacks);
+
+      engine.start();
+
+      // First loop: effectiveCount = Math.round(10 * (1 + 0 * 0.1)) = 10
+      // First tick sets sublabel to padded count
+      const firstHIETick = callbacks.states.find((s) => s.isHIE && s.sublabel !== '');
+      expect(firstHIETick).toBeDefined();
+      expect(firstHIETick!.sublabel).toBe('10');
+
+      // Run until exactly one wrap occurs
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      expect(engine.getSequenceLoop()).toBe(1);
+
+      // Second loop: effectiveCount = Math.round(10 * (1 + 1 * 0.1)) = 11
+      const allHIE = callbacks.states.filter((s) => s.isHIE);
+      const secondLoopSublabels = allHIE.filter((s) => s.sublabel === '11');
+      expect(secondLoopSublabels.length).toBeGreaterThan(0);
+    });
+
+    it('step with count=0 ignores ramp', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([infiniteWithRamp], scheduler, callbacks);
+
+      engine.start();
+
+      // count=0 means infinite — ramp should not change it
+      expect(engine.canAdvance()).toBe(true);
+    });
+
+    it('ramp=1.0 has no effect', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([rampOne], scheduler, callbacks);
+
+      engine.start();
+
+      // First loop: effectiveCount should still be 10
+      const firstHIETick = callbacks.states.find((s) => s.isHIE && s.sublabel !== '');
+      expect(firstHIETick!.sublabel).toBe('10');
+
+      // Run until one wrap
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      // Second loop sublabel should still start at 10 (ramp=1.0 has no effect)
+      const allHIE = callbacks.states.filter((s) => s.isHIE);
+      const lastHIE = allHIE[allHIE.length - 1];
+      expect(lastHIE.sublabel).toBe('10');
+    });
+
+    it('reset(true) resets sequenceLoop, natural wrap preserves it', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([hieWithRamp], scheduler, callbacks);
+
+      engine.start();
+
+      // Run until one wrap occurs
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      expect(engine.getSequenceLoop()).toBeGreaterThan(0);
+
+      // reset(true) should zero it out
+      engine.reset(true);
+      expect(engine.getSequenceLoop()).toBe(0);
+    });
+
+    it('non-loopable exercise preserves sequenceLoop on natural wrap', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([nonLoopableRamp], scheduler, callbacks);
+
+      engine.start();
+
+      // Run until one wrap occurs (non-loopable calls reset() without andStop)
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      // sequenceLoop should be preserved (incremented on wrap, not reset by reset())
+      expect(engine.getSequenceLoop()).toBeGreaterThan(0);
+    });
+  });
+
   describe('queries', () => {
     it('isActive reflects scheduler state', () => {
       const scheduler = createMockScheduler();

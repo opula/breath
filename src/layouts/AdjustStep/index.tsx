@@ -10,6 +10,7 @@ import { exerciseByIdSelector } from "../../state/exercises.selectors";
 import { capitalize } from "lodash";
 import {
   updateExerciseStepCount,
+  updateExerciseStepRamp,
   updateExerciseStepValue,
 } from "../../state/exercises.reducer";
 import Decimal from "decimal.js";
@@ -48,7 +49,7 @@ export const AdjustStep = ({ route }: Props) => {
 
   if (isBreath) {
     return (
-      <TrayScreen trayHeight={500 + bottom}>
+      <TrayScreen trayHeight={570 + bottom}>
         <View style={tw`pt-4 px-2 pb-4`}>
           <Text style={tw`text-base font-inter text-white text-center`}>
             {capitalize(type)}
@@ -102,6 +103,33 @@ export const AdjustStep = ({ route }: Props) => {
                       exerciseId,
                       stepId,
                       count: Math.round(newValue),
+                    }),
+                  );
+                }}
+              />
+            </View>
+
+            <View
+              style={!count ? tw`opacity-50` : undefined}
+              pointerEvents={!count ? "none" : "auto"}
+            >
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Ramp
+              </Text>
+              <HorizontalDial
+                min={1}
+                max={3}
+                step={0.1}
+                suffix="x"
+                defaultValue={step?.ramp ?? 1}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepRamp({
+                      exerciseId,
+                      stepId,
+                      ramp: new Decimal(newValue)
+                        .toDecimalPlaces(1)
+                        .toNumber(),
                     }),
                   );
                 }}
@@ -185,7 +213,7 @@ export const AdjustStep = ({ route }: Props) => {
   }
 
   return (
-    <TrayScreen trayHeight={180 + bottom}>
+    <TrayScreen trayHeight={250 + bottom}>
       <View style={tw`pt-4 px-2`}>
         <Text style={tw`text-base font-inter text-white text-center`}>
           {capitalize(type)}
@@ -210,6 +238,33 @@ export const AdjustStep = ({ route }: Props) => {
                       exerciseId,
                       stepId,
                       count: Math.round(newValue),
+                    }),
+                  );
+                }}
+              />
+            </View>
+
+            <View
+              style={!count ? tw`opacity-50` : undefined}
+              pointerEvents={!count ? "none" : "auto"}
+            >
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Ramp
+              </Text>
+              <HorizontalDial
+                min={1}
+                max={3}
+                step={0.1}
+                suffix="x"
+                defaultValue={step?.ramp ?? 1}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepRamp({
+                      exerciseId,
+                      stepId,
+                      ramp: new Decimal(newValue)
+                        .toDecimalPlaces(1)
+                        .toNumber(),
                     }),
                   );
                 }}

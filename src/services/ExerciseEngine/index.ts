@@ -20,7 +20,7 @@ export class ExerciseEngine {
 
   private exerciseIndex: number;
   private seqIndex = -1;
-  private loopCount = 0;
+  private sequenceLoop = 0;
   private breathPattern = [0, 0, 0, 0];
   private destroyed = false;
 
@@ -70,8 +70,11 @@ export class ExerciseEngine {
 
     this.callbacks.onAnimateBreath(0, 0);
     this.seqIndex = -1;
-    this.loopCount = 0;
     this.breathPattern = [0, 0, 0, 0];
+
+    if (andStop) {
+      this.sequenceLoop = 0;
+    }
 
     if (this.isHapticsEnabled()) this.callbacks.onHaptic();
 
@@ -183,10 +186,25 @@ export class ExerciseEngine {
     return this.exercises[this.exerciseIndex];
   }
 
+  private getEffectiveCount(step: Exercise['seq'][number]): number {
+    const { count, ramp } = step;
+    if (!count || !ramp || ramp <= 1) return count;
+    return Math.round(count * (1 + this.sequenceLoop * (ramp - 1)));
+  }
+
+  getSequenceLoop(): number {
+    return this.sequenceLoop;
+  }
+
   private nextStep(): void {
     const exercise = this.currentExercise();
     const currentIndex = this.seqIndex;
     const nextIndex = (this.seqIndex + 1) % exercise.seq.length;
+
+    // Sequence wrapped — increment sequenceLoop
+    if (nextIndex === 0 && currentIndex > -1) {
+      this.sequenceLoop++;
+    }
 
     // Non-loopable exercise that wrapped around — reset and restart
     if (!exercise.loopable && nextIndex < currentIndex) {
@@ -198,18 +216,19 @@ export class ExerciseEngine {
     this.seqIndex = nextIndex;
 
     switch (step.type) {
-      case 'breath':
+      case 'breath': {
+        const effectiveCount = this.getEffectiveCount(step);
         this.breathPattern = (step.value as number[]).slice();
-        this.loopCount = 0;
         this.startBreathPhase(currentIndex > -1);
         this.callbacks.onStateChange({
           label: BREATH_LABELS[0],
-          sublabel: `n° ${step.count ? step.count : 1}`,
+          sublabel: `n° ${effectiveCount ? effectiveCount : 1}`,
           isBreathing: true,
           isText: false,
           isHIE: false,
         });
         break;
+      }
 
       case 'text':
         this.startTextStep();
@@ -237,9 +256,7 @@ export class ExerciseEngine {
   // --- Internal: Breathing pattern ---
 
   private startBreathPhase(isLooped: boolean): void {
-    const exercise = this.currentExercise();
     const stepTime = this.breathPattern[0];
-    const { count } = exercise.seq[this.seqIndex];
 
     if (this.isSoundEnabled()) {
       this.callbacks.onPlaySound('inhale');
@@ -272,11 +289,13 @@ export class ExerciseEngine {
     const stepTime = this.breathPattern[stepIndex];
     const currentSeqIndex = this.seqIndex;
     const nextIndex = (this.seqIndex + 1) % exercise.seq.length;
-    const totalPatterns = exercise.seq[currentSeqIndex].count;
+    const seqStep = exercise.seq[currentSeqIndex];
+    const effectiveCount = this.getEffectiveCount(seqStep);
+    const totalPatterns = effectiveCount;
     const completedPatterns = Math.floor(step / 4);
     const nextVibratePattern =
       exercise.seq[nextIndex].type === 'breath' ? 400 : [300, 300];
-    const { count } = exercise.seq[currentSeqIndex];
+    const count = effectiveCount;
 
     // Skip zero-duration phases
     if (stepTime === 0) {
@@ -340,7 +359,8 @@ export class ExerciseEngine {
   private startHIEStep(): void {
     const exercise = this.currentExercise();
     const step = exercise.seq[this.seqIndex];
-    const { type, count } = step;
+    const { type } = step;
+    const count = this.getEffectiveCount(step);
 
     if (this.isSoundEnabled()) {
       this.callbacks.onPlaySound(type as SoundType);
@@ -447,7 +467,7 @@ export class ExerciseEngine {
   private startTextStep(): void {
     const exercise = this.currentExercise();
     const step = exercise.seq[this.seqIndex];
-    const { count } = step;
+    const count = this.getEffectiveCount(step);
     const text = step.text!;
 
     this.timedStep.execute({

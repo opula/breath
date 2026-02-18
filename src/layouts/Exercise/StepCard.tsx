@@ -70,6 +70,12 @@ export const StepCard = ({ exerciseId, step, drag }: Props) => {
             </Text>
           </>
         ) : null}
+
+        {step.ramp && step.ramp > 1 ? (
+          <Text style={tw`text-xs font-inter text-neutral-400 mt-2`}>
+            {`Ramp ${step.ramp}x`}
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
