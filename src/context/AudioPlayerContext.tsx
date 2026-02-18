@@ -68,6 +68,7 @@ interface AudioPlayerActions {
   setLiveVolume: (v: number) => void;
   pickLocalFile: () => Promise<void>;
   pasteUrl: () => Promise<void>;
+  downloadUrl: (url: string) => Promise<void>;
   playFile: (id: string) => void;
   deleteFile: (id: string) => void;
 }
@@ -234,6 +235,44 @@ export const AudioPlayerProvider = ({
     }
   }, [dispatch, player]);
 
+  const downloadUrl = useCallback(
+    async (url: string) => {
+      const id = uuid.v4() as string;
+      const urlPath = url.split('?')[0];
+      const segments = urlPath.split('/');
+      const lastSegment = segments[segments.length - 1] || 'download';
+      const ext = lastSegment.includes('.') ? lastSegment.split('.').pop() : 'mp3';
+      const displayName = decodeURIComponent(lastSegment) || 'Downloaded track';
+      const fileName = `${id}.${ext}`;
+
+      setIsDownloading(true);
+
+      const audioExtensions = ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'opus'];
+      const hasAudioExt = audioExtensions.includes((ext ?? '').toLowerCase());
+
+      try {
+        const downloaded = await downloadToMusicDir(url, fileName);
+
+        if (!downloaded) return;
+
+        if (!downloaded.type.startsWith('audio/') && !hasAudioExt) {
+          deleteFromMusicDir(fileName);
+          return;
+        }
+
+        const file: MusicFile = {id, name: displayName, fileName};
+        dispatch(addFile(file));
+        dispatch(setActiveFile(id));
+        player.replace({uri: getMusicFileUri(fileName)});
+      } catch {
+        deleteFromMusicDir(fileName);
+      } finally {
+        setIsDownloading(false);
+      }
+    },
+    [dispatch, player],
+  );
+
   const playFile = useCallback(
     (id: string) => {
       if (id === activeFileId) {
@@ -280,6 +319,7 @@ export const AudioPlayerProvider = ({
     setLiveVolume,
     pickLocalFile,
     pasteUrl,
+    downloadUrl,
     playFile,
     deleteFile,
   };

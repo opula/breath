@@ -1,9 +1,29 @@
-import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import React, { useCallback } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux";
+import { useAudioPlayer } from "../../context/AudioPlayerContext";
+import { musicFilesSelector } from "../../state/musicLibrary.selectors";
 import { Icon } from "../../components/Icon";
 import tw from "../../utils/tw";
+
+const SAMPLE_TRACKS = [
+  {
+    name: "Early Morning Stillness",
+    url: "https://cdn.midnightsatori.com/Early%20Morning%20Stillness.mp3",
+  },
+  {
+    name: "Reflecting on a Good Day",
+    url: "https://cdn.midnightsatori.com/Reflecting%20on%20a%20Good%20Day.mp3",
+  },
+];
 
 const ADDING_MUSIC = [
   {
@@ -38,6 +58,13 @@ const TIPS = [
 
 export const MusicHelp = () => {
   const navigation = useNavigation();
+  const { downloadUrl, isDownloading } = useAudioPlayer();
+  const files = useSelector(musicFilesSelector);
+
+  const hasTrack = useCallback(
+    (name: string) => files.some((f) => f.name === `${name}.mp3`),
+    [files],
+  );
 
   return (
     <View style={tw`flex-1 bg-black`}>
@@ -57,7 +84,10 @@ export const MusicHelp = () => {
           <View style={tw`h-10 w-10`} />
         </View>
 
-        <ScrollView style={tw`flex-1 px-6 pt-6`} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={tw`flex-1 px-6 pt-6`}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={tw`text-base font-inter text-neutral-400 mb-8`}>
             Add your own music to play during breathing exercises. Tracks play
             in the background alongside exercise sounds.
@@ -78,6 +108,54 @@ export const MusicHelp = () => {
               </Text>
             </View>
           ))}
+
+          {/* Sample tracks */}
+          <Text
+            style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-2`}
+          >
+            Sample Tracks
+          </Text>
+          <Text style={tw`text-sm font-inter text-neutral-400 mb-4`}>
+            Try these free tracks to get started.
+          </Text>
+          {SAMPLE_TRACKS.map((track) => {
+            const alreadyAdded = hasTrack(track.name);
+            return (
+              <View
+                key={track.name}
+                style={tw`flex-row items-center py-3 justify-between`}
+              >
+                <Text
+                  style={tw`text-sm font-inter text-neutral-200 flex-1 mr-4`}
+                  numberOfLines={1}
+                >
+                  {track.name}
+                </Text>
+                {alreadyAdded ? (
+                  <Text style={tw`text-xs font-inter text-neutral-600`}>
+                    Added
+                  </Text>
+                ) : (
+                  <Pressable
+                    style={tw`flex-row items-center justify-center w-18 h-8 rounded-full border border-neutral-600 active:opacity-80`}
+                    onPress={() => downloadUrl(track.url)}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Icon name="download" size={14} color="white" />
+                        <Text style={tw`ml-2 text-xs font-inter text-white`}>
+                          Add
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+                )}
+              </View>
+            );
+          })}
 
           <Text
             style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-4`}
