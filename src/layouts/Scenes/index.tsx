@@ -16,9 +16,14 @@ const formatSceneName = (name: string) =>
 
 type SortedScene = { name: string; originalIndex: number };
 
-const sortedBackgrounds: SortedScene[] = (backgrounds as unknown as string[])
-  .map((name, originalIndex) => ({ name, originalIndex }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+const NONE_INDEX = -1;
+
+const sortedBackgrounds: SortedScene[] = [
+  ...(backgrounds as unknown as string[])
+    .map((name, originalIndex) => ({ name, originalIndex }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
+  { name: "Black", originalIndex: NONE_INDEX },
+];
 
 export const Scenes = () => {
   const navigation = useNavigation();
@@ -28,9 +33,13 @@ export const Scenes = () => {
   const renderItem = useCallback(
     ({ item }: { item: SortedScene }) => {
       const isActive = item.originalIndex === activeIndex;
+      const isBlack = item.originalIndex === NONE_INDEX;
       return (
         <Pressable
-          style={tw`px-8 py-4 active:opacity-80`}
+          style={[
+            tw`px-8 py-4 active:opacity-80`,
+            isBlack && tw`border-t border-neutral-800`,
+          ]}
           onPress={() => dispatch(updateSource(item.originalIndex))}
         >
           <Text

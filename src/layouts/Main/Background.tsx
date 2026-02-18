@@ -40,6 +40,10 @@ export const Background = memo(() => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
   const sourceIndex = useAppSelector(sourceIndexSelector);
 
+  if (sourceIndex === -1) {
+    return null;
+  }
+
   const ActiveBackground = BackgroundComponents[sourceIndex] ?? Wormhole;
 
   return (
