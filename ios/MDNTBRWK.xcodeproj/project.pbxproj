@@ -20,7 +20,7 @@
 		13B07F961A680F5B00A75B9A /* MDNTBRWK.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MDNTBRWK.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MDNTBRWK/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MDNTBRWK/Info.plist; sourceTree = "<group>"; };
-		2F889BA9ACDD980F63748919 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MDNTBRWK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2F889BA9ACDD980F63748919 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = MDNTBRWK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		406BCCD231DB02F6FCD9BDEF /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MDNTBRWK/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		7E79F7CE82E389D0B322D095 /* libPods-MDNTBRWK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MDNTBRWK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MDNTBRWK/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -64,7 +64,6 @@
 				CEA34F894BEB0666D6AC5853 /* Pods-MDNTBRWK.debug.xcconfig */,
 				EEF48DF3865524D1A4703984 /* Pods-MDNTBRWK.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -339,6 +338,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MDNTBRWK/MDNTBRWK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QTZ99Y3958;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -375,6 +375,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MDNTBRWK/MDNTBRWK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = QTZ99Y3958;
 				INFOPLIST_FILE = MDNTBRWK/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
