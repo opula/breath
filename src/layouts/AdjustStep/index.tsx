@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Keyboard, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
@@ -297,6 +297,7 @@ const AdjustTextStep = ({
 }) => {
   const dispatch = useAppDispatch();
   const [text, setText] = useState(step.text ?? "");
+  const [isFocused, setIsFocused] = useState(false);
   const textRef = useRef(text);
 
   useEffect(
@@ -314,10 +315,15 @@ const AdjustTextStep = ({
 
   return (
     <TrayScreen trayHeight={500 + bottom}>
-      <View style={tw`pt-4 px-2 pb-4`}>
-        <Text style={tw`text-base font-inter text-white text-center`}>
-          Message
-        </Text>
+      <Pressable style={tw`pt-4 px-2 pb-4`} onPress={Keyboard.dismiss}>
+        <View style={tw`flex-row justify-between items-center`}>
+          <Text style={tw`text-base font-inter text-white`}>
+            Message
+          </Text>
+          <Pressable onPress={Keyboard.dismiss} hitSlop={8}>
+            <Text style={[tw`text-sm font-inter`, { color: isFocused ? "#6FE7FF" : "#a3a3a3" }]}>Done</Text>
+          </Pressable>
+        </View>
 
         <View style={tw`gap-y-6 my-4`}>
           <View style={tw`border-b border-neutral-800`}>
@@ -328,7 +334,9 @@ const AdjustTextStep = ({
                 setText(val);
                 textRef.current = val;
               }}
-              autoFocus={true}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              autoFocus={!step.text}
               placeholder="Enter message"
               placeholderTextColor="#737373"
               multiline
@@ -385,7 +393,7 @@ const AdjustTextStep = ({
             />
           </View>
         </View>
-      </View>
+      </Pressable>
     </TrayScreen>
   );
 };
