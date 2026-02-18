@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.midnight.breathapp",
+      "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
