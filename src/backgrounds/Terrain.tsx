@@ -7,13 +7,17 @@ import { StorageBufferAttribute } from "three/webgpu";
 import {
   Fn,
   float,
+  uint,
   vec3,
   floor,
   fract,
   mix,
+  select,
   sin,
   cos,
   dot,
+  mod,
+  min,
   normalize,
   uniform,
   storage,
@@ -33,14 +37,11 @@ const SCALE_Y = 0.07;
 const DETAIL_HEIGHT = 3.34;
 const DETAIL_SCALE = 0.09163;
 const FOG_COLOR = 0x999999;
-const ROUGHNESS = 0.2;
-const METALNESS = 0.5;
 const CAM_HEIGHT = 4.214;
 const CAM_DIST = 68.04;
 const FOV = 70;
-const SPOT_INTENSITY = 0;
 const PLANE_SIZE = 200;
-const SEGMENTS = 130;
+const SEGMENTS = 160;
 const EDGE_RADIUS = 90;
 const FOG_DENSITY = 0.015;
 
@@ -239,7 +240,7 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
 
     // ================================================================
     // Helper: sample terrain height at a grid position
-    // (used by both position and normal compute shaders)
+    // (used by the position compute shader)
     // ================================================================
 
     const sampleHeight = Fn(
@@ -302,26 +303,34 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     })().compute(VERT_COUNT);
 
     // ================================================================
-    // Compute: update normals via central differences
-    // Sample noise at offset positions rather than reading neighbor vertices
-    // — avoids winding/indexing issues and is more robust
+    // Compute: update normals via central differences from neighbor heights
     // ================================================================
 
     const computeNormals = Fn(() => {
       const idx = instanceIndex;
       const norm = normalStorage.element(idx);
-      const gridXY = gridXYStorage.element(idx);
-      const smoothEdge = smoothEdgeStorage.element(idx);
+      const stride = uint(STRIDE);
+      const maxIndex = uint(SEGMENTS);
+      const row = idx.div(stride);
+      const col = mod(idx, stride);
 
-      const x = gridXY.x;
-      const y = gridXY.y;
+      const leftCol = select(col.equal(uint(0)), uint(0), col.sub(uint(1)));
+      const rightCol = min(col.add(uint(1)), maxIndex);
+      const downRow = select(row.equal(uint(0)), uint(0), row.sub(uint(1)));
+      const upRow = min(row.add(uint(1)), maxIndex);
+
+      const idxL = row.mul(stride).add(leftCol);
+      const idxR = row.mul(stride).add(rightCol);
+      const idxD = downRow.mul(stride).add(col);
+      const idxU = upRow.mul(stride).add(col);
+
       const e = float(CELL_SIZE);
 
-      // Sample height at 4 offset points for central differences
-      const hL = sampleHeight(x.sub(e), y, smoothEdge);
-      const hR = sampleHeight(x.add(e), y, smoothEdge);
-      const hD = sampleHeight(x, y.sub(e), smoothEdge);
-      const hU = sampleHeight(x, y.add(e), smoothEdge);
+      // Read neighboring heights from the already-computed position buffer.
+      const hL = positionStorage.element(idxL).z;
+      const hR = positionStorage.element(idxR).z;
+      const hD = positionStorage.element(idxD).z;
+      const hU = positionStorage.element(idxU).z;
 
       // In local plane space (XY plane, Z = height):
       // tangent_x = (2e, 0, hR - hL), tangent_y = (0, 2e, hU - hD)
@@ -355,16 +364,6 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     dirLight.position.set(-50, 30, -20);
     scene.add(dirLight);
 
-    const spotLight = new THREE.SpotLight(0xffffff, SPOT_INTENSITY);
-    spotLight.position.set(0, 40, 10);
-    spotLight.angle = Math.PI / 5;
-    spotLight.penumbra = 0.4;
-    spotLight.decay = 1.5;
-    spotLight.distance = 150;
-    spotLight.target.position.set(0, 0, -20);
-    scene.add(spotLight);
-    scene.add(spotLight.target);
-
     // ================================================================
     // Geometry: use template's index buffer with our storage attributes
     // ================================================================
@@ -378,10 +377,8 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     // Done with template
     templateGeo.dispose();
 
-    const material = new THREE.MeshStandardMaterial({
+    const material = new THREE.MeshLambertMaterial({
       color: 0xffffff,
-      roughness: ROUGHNESS,
-      metalness: METALNESS,
       vertexColors: true,
     });
 
@@ -411,7 +408,7 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
         ? 1.0
         : 0.0;
 
-      // Compute positions + colors, then normals
+      // Compute positions + colors every frame.
       renderer.compute(computePositions);
       renderer.compute(computeNormals);
 
@@ -424,7 +421,7 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     return () => {
       disposed = true;
       renderer.setAnimationLoop(null);
-      scene.remove(plane, spotLight, spotLight.target, dirLight, hemiLight);
+      scene.remove(plane, dirLight, hemiLight);
       geometry.dispose();
       material.dispose();
       renderer.dispose();
