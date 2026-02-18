@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, TextInput, Keyboard, Pressable } from "react-native";
+import { View, Text, TextInput, Keyboard, Pressable, ScrollView } from "react-native";
 import tw from "../../utils/tw";
 import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
@@ -315,7 +315,12 @@ const AdjustTextStep = ({
 
   return (
     <TrayScreen trayHeight={500 + bottom}>
-      <Pressable style={tw`pt-4 px-2 pb-4`} onPress={Keyboard.dismiss}>
+      <ScrollView
+        style={tw`pt-4 px-2 pb-4`}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={false}
+      >
         <View style={tw`flex-row justify-between items-center`}>
           <Text style={tw`text-base font-inter text-white`}>
             Message
@@ -393,7 +398,7 @@ const AdjustTextStep = ({
             />
           </View>
         </View>
-      </Pressable>
+      </ScrollView>
     </TrayScreen>
   );
 };
