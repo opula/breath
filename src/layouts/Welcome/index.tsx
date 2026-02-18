@@ -26,19 +26,18 @@ import tw from "../../utils/tw";
 
 const cards = [
   {
-    title: "Breathe with intention",
+    title: "Breathe with purpose",
     message:
-      "A space for stillness. Guided exercises to anchor your breath and quiet the mind.",
+      "Calm down, focus up, or push your limits. Find the technique that fits the moment.",
   },
   {
-    title: "Your practice, your way",
+    title: "Total control",
     message:
-      "Customize every step. Adjust timing, add holds, change the rhythm to suit your flow.",
+      "Adjust every tick of every step. Chain them together into a complete session. Build the perfect practice.",
   },
   {
-    title: "Just begin",
-    message:
-      "Tap to start. Swipe to explore. Everything else fades away.",
+    title: "Start now",
+    message: "Pick a technique and tap to get started. It's that simple.",
   },
 ];
 
@@ -52,7 +51,7 @@ export const Welcome = ({ navigation }: Props) => {
   const PAGE_HEIGHT = height - top - bottom;
   const progressValue = useSharedValue(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const carouselRef = useRef<ICarouselInstance>();
+  const carouselRef = useRef<ICarouselInstance>(undefined);
 
   const isLastCard = currentIndex === cards.length - 1;
 
