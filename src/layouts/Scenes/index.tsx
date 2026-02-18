@@ -14,18 +14,24 @@ const MINT_BLUE = "#6FE7FF";
 const formatSceneName = (name: string) =>
   name.replace(/([a-z])([A-Z])/g, "$1 $2");
 
+type SortedScene = { name: string; originalIndex: number };
+
+const sortedBackgrounds: SortedScene[] = (backgrounds as unknown as string[])
+  .map((name, originalIndex) => ({ name, originalIndex }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
 export const Scenes = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
   const activeIndex = useAppSelector(sourceIndexSelector);
 
   const renderItem = useCallback(
-    ({ item, index }: { item: string; index: number }) => {
-      const isActive = index === activeIndex;
+    ({ item }: { item: SortedScene }) => {
+      const isActive = item.originalIndex === activeIndex;
       return (
         <Pressable
           style={tw`px-8 py-4 active:opacity-80`}
-          onPress={() => dispatch(updateSource(index))}
+          onPress={() => dispatch(updateSource(item.originalIndex))}
         >
           <Text
             style={[
@@ -33,7 +39,7 @@ export const Scenes = () => {
               { color: isActive ? MINT_BLUE : "#a3a3a3" },
             ]}
           >
-            {formatSceneName(item)}
+            {formatSceneName(item.name)}
           </Text>
         </Pressable>
       );
@@ -42,7 +48,7 @@ export const Scenes = () => {
   );
 
   const keyExtractor = useCallback(
-    (_item: string, index: number) => String(index),
+    (item: SortedScene) => String(item.originalIndex),
     [],
   );
 
@@ -65,7 +71,7 @@ export const Scenes = () => {
         </View>
 
         <FlatList
-          data={backgrounds as unknown as string[]}
+          data={sortedBackgrounds}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
         />
