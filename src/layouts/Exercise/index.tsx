@@ -108,7 +108,7 @@ export const Exercise = ({ navigation, route }: Props) => {
 
   return (
     <View style={tw`flex-1 bg-black`}>
-      <SafeAreaView style={tw`flex-1 px-4`}>
+      <SafeAreaView style={tw`flex-1`}>
         <View
           style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
         >
@@ -124,14 +124,14 @@ export const Exercise = ({ navigation, route }: Props) => {
           <View style={tw`h-10 w-10`} />
         </View>
 
-        <View style={tw`py-4 px-2`}>
-          <Text style={[tw`text-xs font-inter mb-2`, { color: '#6FE7FF' }]}>
+        <View style={tw`py-4 px-6 mt-2`}>
+          <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
             Edit name
           </Text>
           <EditName exerciseId={id} />
         </View>
 
-        <View style={tw`flex-1`}>
+        <View style={tw`flex-1 px-4`}>
           <DraggableFlatList
             data={exercise.seq}
             renderItem={renderItem}
@@ -149,31 +149,49 @@ export const Exercise = ({ navigation, route }: Props) => {
               )
             }
             ListHeaderComponent={() => (
-              <View style={tw`mt-6 px-2`}>
-                <View style={tw`border-b border-neutral-800`}>
-                  <Text style={[tw`text-xs font-inter mb-2`, { color: '#6FE7FF' }]}>
-                    Steps
-                  </Text>
-                </View>
+              <View style={tw`mt-4 px-2`}>
+                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+                  Steps
+                </Text>
+              </View>
+            )}
+            ListEmptyComponent={() => (
+              <View style={tw`items-center pt-8`}>
+                <Text style={tw`text-sm font-inter text-neutral-500 mb-6`}>
+                  No steps yet — add your first!
+                </Text>
               </View>
             )}
             ListFooterComponent={() => (
-              <View style={tw`py-4 mb-8`}>
+              <View
+                style={tw.style(
+                  exercise.seq.length ? `pt-8` : `pt-2`,
+                  `pb-8 items-center`,
+                )}
+              >
                 <Pressable
-                  style={tw`items-center justify-center active:opacity-80`}
+                  style={[
+                    tw`flex-row items-center px-4 py-2 rounded-full border active:opacity-80`,
+                    { borderColor: "#6FE7FF" },
+                  ]}
                   onPress={() =>
                     navigation.navigate("NewStepMenu", { exerciseId: id })
                   }
                 >
-                  <Text style={[tw`text-base font-inter`, { color: '#6FE7FF' }]}>
+                  <Icon name="plus" size={14} color="#6FE7FF" />
+                  <Text
+                    style={[tw`ml-2 text-xs font-inter`, { color: "#6FE7FF" }]}
+                  >
                     Add step
                   </Text>
                 </Pressable>
-                <Text
-                  style={tw`text-xs font-inter text-neutral-600 text-center mt-1`}
-                >
-                  Long press to reorder. Swipe left to delete.
-                </Text>
+                {exercise.seq.length ? (
+                  <Text
+                    style={tw`text-xs font-inter text-neutral-600 text-center mt-2`}
+                  >
+                    Long press to reorder. Swipe left to delete.
+                  </Text>
+                ) : null}
               </View>
             )}
           />

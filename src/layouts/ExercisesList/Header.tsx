@@ -27,7 +27,7 @@ export const Header = ({ navigation }: Props) => {
         <Icon name="close" size={20} color="white" />
       </Pressable>
       <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
-        Your Exercises
+        Exercises
       </Text>
       <Pressable
         style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
@@ -42,7 +42,7 @@ export const Header = ({ navigation }: Props) => {
           defer(() => navigation.navigate("Exercise", { id: exerciseId }));
         }}
       >
-        <Icon name="plus" size={20} color="white" />
+        <Icon name="plus-stack" size={20} color="#6FE7FF" />
       </Pressable>
     </View>
   );
