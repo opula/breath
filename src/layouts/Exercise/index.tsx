@@ -109,21 +109,23 @@ export const Exercise = ({ navigation, route }: Props) => {
   return (
     <View style={tw`flex-1 bg-black`}>
       <SafeAreaView style={tw`flex-1 px-4`}>
-        <View style={tw`flex-row px-4 justify-between items-center`}>
+        <View
+          style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
+        >
           <Pressable
             style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
           >
-            <Icon name="left-arrow" size={20} color="white" />
+            <Icon name="close" size={20} color="white" />
           </Pressable>
-          <Text style={tw`text-base font-inter text-white`}>
+          <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
             {exercise.name}
           </Text>
-          <View style={tw`h-10 w-10 items-center justify-center`}></View>
+          <View style={tw`h-10 w-10`} />
         </View>
 
         <View style={tw`py-4 px-2`}>
-          <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+          <Text style={[tw`text-xs font-inter mb-2`, { color: '#6FE7FF' }]}>
             Edit name
           </Text>
           <EditName exerciseId={id} />
@@ -149,7 +151,7 @@ export const Exercise = ({ navigation, route }: Props) => {
             ListHeaderComponent={() => (
               <View style={tw`mt-6 px-2`}>
                 <View style={tw`border-b border-neutral-800`}>
-                  <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                  <Text style={[tw`text-xs font-inter mb-2`, { color: '#6FE7FF' }]}>
                     Steps
                   </Text>
                 </View>
@@ -163,7 +165,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                     navigation.navigate("NewStepMenu", { exerciseId: id })
                   }
                 >
-                  <Text style={tw`text-base font-inter text-blue-500`}>
+                  <Text style={[tw`text-base font-inter`, { color: '#6FE7FF' }]}>
                     Add step
                   </Text>
                 </Pressable>
