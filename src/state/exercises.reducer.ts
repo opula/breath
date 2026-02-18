@@ -89,6 +89,31 @@ export const exercisesSlice = createSlice({
             },
       );
     },
+    updateExerciseStepText(
+      state,
+      action: PayloadAction<{
+        exerciseId: string;
+        stepId: string;
+        text: string;
+      }>,
+    ) {
+      const {exerciseId, stepId, text} = action.payload;
+      state.userExercises = state.userExercises.map(exercise =>
+        exercise.id !== exerciseId
+          ? exercise
+          : {
+              ...exercise,
+              seq: exercise.seq.map(step =>
+                step.id !== stepId
+                  ? step
+                  : {
+                      ...step,
+                      text,
+                    },
+              ),
+            },
+      );
+    },
     updateExerciseStepRamp(
       state,
       action: PayloadAction<{
@@ -194,6 +219,7 @@ export const {
   updateExerciseStepValue,
   updateExerciseStepCount,
   updateExerciseStepRamp,
+  updateExerciseStepText,
   editExerciseName,
   addExerciseStep,
   addExercise,

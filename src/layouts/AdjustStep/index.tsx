@@ -1,16 +1,18 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import tw from "../../utils/tw";
 import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
+import { Exercise } from "../../types/exercise";
 import { capitalize } from "lodash";
 import {
   updateExerciseStepCount,
   updateExerciseStepRamp,
+  updateExerciseStepText,
   updateExerciseStepValue,
 } from "../../state/exercises.reducer";
 import Decimal from "decimal.js";
@@ -39,6 +41,7 @@ export const AdjustStep = ({ route }: Props) => {
 
   const isBreath = type === "breath";
   const isDoubleInhale = type === "double-inhale";
+  const isText = type === "text";
   const isSingle = type === "exhale" || type === "hold" || type === "inhale";
 
   const totalDuration = useMemo(() => {
@@ -212,6 +215,10 @@ export const AdjustStep = ({ route }: Props) => {
     );
   }
 
+  if (isText) {
+    return <AdjustTextStep step={step!} exerciseId={exerciseId} stepId={stepId} bottom={bottom} />;
+  }
+
   return (
     <TrayScreen trayHeight={250 + bottom}>
       <View style={tw`pt-4 px-2`}>
@@ -272,6 +279,112 @@ export const AdjustStep = ({ route }: Props) => {
             </View>
           </View>
         ) : null}
+      </View>
+    </TrayScreen>
+  );
+};
+
+const AdjustTextStep = ({
+  step,
+  exerciseId,
+  stepId,
+  bottom,
+}: {
+  step: Exercise["seq"][number];
+  exerciseId: string;
+  stepId: string;
+  bottom: number;
+}) => {
+  const dispatch = useAppDispatch();
+  const [text, setText] = useState(step.text ?? "");
+  const textRef = useRef(text);
+
+  useEffect(
+    () => () => {
+      dispatch(
+        updateExerciseStepText({
+          exerciseId,
+          stepId,
+          text: textRef.current,
+        }),
+      );
+    },
+    [],
+  );
+
+  return (
+    <TrayScreen trayHeight={500 + bottom}>
+      <View style={tw`pt-4 px-2 pb-4`}>
+        <Text style={tw`text-base font-inter text-white text-center`}>
+          Message
+        </Text>
+
+        <View style={tw`gap-y-6 my-4`}>
+          <View style={tw`border-b border-neutral-800`}>
+            <TextInput
+              style={tw`text-base font-inter text-white py-2`}
+              value={text}
+              onChangeText={(val) => {
+                setText(val);
+                textRef.current = val;
+              }}
+              autoFocus={true}
+              placeholder="Enter message"
+              placeholderTextColor="#737373"
+              multiline
+            />
+          </View>
+
+          <View>
+            <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+              Duration
+            </Text>
+            <HorizontalDial
+              min={0}
+              max={1000}
+              step={1}
+              suffix="s"
+              zeroLabel="∞"
+              defaultValue={step.count ?? 0}
+              onChange={(newValue: number) => {
+                dispatch(
+                  updateExerciseStepCount({
+                    exerciseId,
+                    stepId,
+                    count: Math.round(newValue),
+                  }),
+                );
+              }}
+            />
+          </View>
+
+          <View
+            style={!step.count ? tw`opacity-50` : undefined}
+            pointerEvents={!step.count ? "none" : "auto"}
+          >
+            <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+              Ramp
+            </Text>
+            <HorizontalDial
+              min={1}
+              max={3}
+              step={0.1}
+              suffix="x"
+              defaultValue={step.ramp ?? 1}
+              onChange={(newValue: number) => {
+                dispatch(
+                  updateExerciseStepRamp({
+                    exerciseId,
+                    stepId,
+                    ramp: new Decimal(newValue)
+                      .toDecimalPlaces(1)
+                      .toNumber(),
+                  }),
+                );
+              }}
+            />
+          </View>
+        </View>
       </View>
     </TrayScreen>
   );

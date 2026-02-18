@@ -29,6 +29,7 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
       count: 0,
       ...(type === "breath" ? { value: [0, 0, 0, 0] } : {}),
       ...(type === "double-inhale" ? { value: [1.5, 0.3, 1.5] } : {}),
+      ...(type === "text" ? { text: "" } : {}),
     } as Exercise["seq"][number];
 
     dispatch(addExerciseStep({ exerciseId, step }));
@@ -105,8 +106,16 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
             Double Inhale
           </Text>
         </Pressable>
-        <Pressable style={tw`px-6 py-4 opacity-50`} disabled={true}>
-          <Text style={tw`text-lg font-inter text-neutral-600`}>Message</Text>
+        <Pressable
+          style={({ pressed }) =>
+            tw.style(
+              "px-6 py-4 border-b border-neutral-800",
+              pressed && "opacity-80",
+            )
+          }
+          onPress={() => createStep("text")}
+        >
+          <Text style={tw`text-lg font-inter text-neutral-200`}>Message</Text>
         </Pressable>
       </View>
     </TrayScreen>

@@ -29,7 +29,6 @@ export const StepCard = ({ exerciseId, step, drag }: Props) => {
       style={tw`bg-black px-2`}
       onLongPress={drag}
       onPress={() => {
-        if (type === "text") return;
         navigation.navigate("AdjustStep", { exerciseId, stepId: id });
       }}
     >
