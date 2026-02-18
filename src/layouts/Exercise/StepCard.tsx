@@ -5,7 +5,6 @@ import tw from "../../utils/tw";
 import { capitalize, sum } from "lodash";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import Decimal from "decimal.js";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 
 const stepDisplayName = (type: string) =>
