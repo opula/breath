@@ -19,7 +19,7 @@ export const Pagination: FC<{
     <View style={tw`flex-row items-center justify-center`}>
       {range(count).map(index => (
         <PaginationItem
-          backgroundColor={'white'}
+          backgroundColor={'#6FE7FF'}
           animValue={progressValue}
           index={index}
           key={index}

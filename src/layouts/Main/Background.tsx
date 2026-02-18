@@ -13,6 +13,7 @@ import { Particles } from "../../backgrounds/Particles";
 import { Terrain } from "../../backgrounds/Terrain";
 import { DotGrid } from "../../backgrounds/DotGrid";
 import { GameOfLife } from "../../backgrounds/GameOfLife";
+import { SinPulse } from "../../backgrounds/SinPulse";
 import { useAppSelector } from "../../hooks/store";
 import {
   isGrayscaleSelector,
@@ -32,6 +33,7 @@ const BackgroundComponents = [
   Terrain,
   DotGrid,
   GameOfLife,
+  SinPulse,
 ] as const;
 
 export const Background = memo(() => {

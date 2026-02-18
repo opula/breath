@@ -15,44 +15,30 @@ import {
   OrientationLocker,
   PORTRAIT,
 } from "@hortau/react-native-orientation-locker";
-import { useDerivedValue, useSharedValue } from "react-native-reanimated";
-import {
-  Canvas,
-  Fill,
-  Shader,
-  useClock,
-  vec,
-} from "@shopify/react-native-skia";
-import { source } from "./source";
+import { useSharedValue } from "react-native-reanimated";
 import { AnimatePresence, MotiView } from "moti";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { NavigationProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { HAS_COMPLETED_WELCOME, storage } from "../../utils/storage";
 import { Pagination } from "./Pagination";
+import { WelcomeBackground } from "./Background";
 import tw from "../../utils/tw";
-
-const seed = 5000 * Math.random();
 
 const cards = [
   {
-    title: "Advance breathwork made easy",
+    title: "Breathe with intention",
     message:
-      "tincidunt vitae semper quis lectus nulla at volutpat diam ut venenatis tellus",
+      "A space for stillness. Guided exercises to anchor your breath and quiet the mind.",
   },
   {
-    title: "Many exercises",
+    title: "Your practice, your way",
     message:
-      "tincidunt vitae semper quis lectus nulla at volutpat diam ut venenatis tellus",
+      "Customize every step. Adjust timing, add holds, change the rhythm to suit your flow.",
   },
   {
-    title: "Hypnotic backgrounds",
+    title: "Just begin",
     message:
-      "tincidunt vitae semper quis lectus nulla at volutpat diam ut venenatis tellus",
-  },
-  {
-    title: "Other features",
-    message:
-      "tincidunt vitae semper quis lectus nulla at volutpat diam ut venenatis tellus",
+      "Tap to start. Swipe to explore. Everything else fades away.",
   },
 ];
 
@@ -70,63 +56,45 @@ export const Welcome = ({ navigation }: Props) => {
 
   const isLastCard = currentIndex === cards.length - 1;
 
-  const clock = useClock();
-
-  const uniforms = useDerivedValue(() => {
-    return {
-      canvas: vec(width, height),
-      iTime: clock.value / 1000 + seed,
-    };
-  }, [height, width, clock]);
-
   return (
-    <>
-      <View style={tw`flex-1 absolute bg-black`}>
-        <Canvas style={{ height, width }}>
-          <Fill>
-            <Shader source={source} uniforms={uniforms} />
-          </Fill>
-        </Canvas>
+    <View style={tw`flex-1 bg-black`}>
+      <View style={tw`absolute inset-0`}>
+        <WelcomeBackground />
       </View>
-
-      <View style={tw`bg-black opacity-85 absolute inset-0`} />
+      <View style={tw`absolute inset-0 bg-black opacity-85`} />
 
       {Platform.OS !== "web" ? (
         <OrientationLocker orientation={PORTRAIT} />
       ) : null}
 
-      <View style={tw`flex-1`}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <Carousel
-            ref={carouselRef as Ref<ICarouselInstance>}
-            loop={false}
-            vertical={false}
-            height={PAGE_HEIGHT}
-            width={width}
-            data={cards}
-            onSnapToItem={setCurrentIndex}
-            renderItem={({ item, index }) => (
-              <View style={tw`flex-1 px-8 items-center justify-center`}>
-                <View style={tw`pt-12 mt-12`}>
-                  <Text
-                    style={tw`text-2xl font-inter text-white text-center`}
-                  >
-                    {item.title}
-                  </Text>
-                  <Text
-                    style={tw`text-base font-inter text-white text-center mt-4`}
-                  >
-                    {item.message}
-                  </Text>
-                </View>
-              </View>
-            )}
-            onProgressChange={(_, absoluteProgress) =>
-              (progressValue.value = absoluteProgress)
-            }
-          />
-        </SafeAreaView>
-      </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Carousel
+          ref={carouselRef as Ref<ICarouselInstance>}
+          loop={false}
+          vertical={false}
+          height={PAGE_HEIGHT}
+          width={width}
+          data={cards}
+          onSnapToItem={setCurrentIndex}
+          renderItem={({ item }) => (
+            <View style={tw`flex-1 px-8 items-center justify-end pb-48`}>
+              <Text
+                style={tw`text-3xl font-inter font-bold text-white text-center`}
+              >
+                {item.title}
+              </Text>
+              <Text
+                style={tw`text-base font-inter text-neutral-400 text-center mt-4`}
+              >
+                {item.message}
+              </Text>
+            </View>
+          )}
+          onProgressChange={(_, absoluteProgress) =>
+            (progressValue.value = absoluteProgress)
+          }
+        />
+      </SafeAreaView>
 
       <View style={[tw`absolute left-0 right-0`, { bottom: bottom + 120 }]}>
         <Pagination count={cards.length} progressValue={progressValue} />
@@ -152,7 +120,12 @@ export const Welcome = ({ navigation }: Props) => {
                 storage.set(HAS_COMPLETED_WELCOME, true);
               }}
             >
-              <Text style={tw`text-base font-inter font-bold text-white`}>
+              <Text
+                style={[
+                  tw`text-base font-inter font-bold`,
+                  { color: "#6FE7FF" },
+                ]}
+              >
                 Get started
               </Text>
             </Pressable>
@@ -183,6 +156,6 @@ export const Welcome = ({ navigation }: Props) => {
           </MotiView>
         )}
       </AnimatePresence>
-    </>
+    </View>
   );
 };

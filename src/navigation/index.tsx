@@ -36,7 +36,7 @@ export type MainStackParams = {
 };
 
 const Stack = createStackNavigator<MainStackParams>();
-const hasCompletedWelcome = storage.getBoolean(HAS_COMPLETED_WELCOME);
+const hasCompletedWelcome = false; // storage.getBoolean(HAS_COMPLETED_WELCOME);
 
 // Define cross-platform transition options to ensure smooth transitions on Android
 const defaultScreenOptions: StackNavigationOptions = {

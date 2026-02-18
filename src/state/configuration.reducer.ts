@@ -12,7 +12,7 @@ interface ConfigurationState {
 const initialState: ConfigurationState = {
   isPaused: true,
   isGrayscale: false,
-  bgSourceIndex: 0,
+  bgSourceIndex: 12,
   soundsEnabled: false,
   hapticsEnabled: true,
 };
