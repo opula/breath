@@ -1,6 +1,7 @@
 // https://github.com/wcandillon/react-native-webgpu/blob/578ad989b4326724702b14245d5c82622849ee23/apps/example/src/ThreeJS/components/makeWebGPURenderer.ts#L1
 import type { NativeCanvas } from "react-native-wgpu";
 import * as THREE from "three/webgpu";
+import { markWebGPUInitError, markWebGPUReady } from "./webgpu-ready";
 
 // Here we need to wrap the Canvas into a non-host object for now
 export class ReactNativeCanvas {
@@ -62,11 +63,29 @@ export class ReactNativeCanvas {
 export const makeWebGPURenderer = (
   context: GPUCanvasContext,
   { antialias = true, alpha = false }: { antialias?: boolean; alpha?: boolean } = {},
-) =>
-  new THREE.WebGPURenderer({
+) => {
+  const renderer = new THREE.WebGPURenderer({
     antialias,
     alpha,
     // @ts-expect-error - RN canvas doesn't match HTMLCanvasElement type
     canvas: new ReactNativeCanvas(context.canvas),
     context,
   });
+
+  const originalInit = renderer.init.bind(renderer) as (
+    ...args: unknown[]
+  ) => Promise<unknown>;
+
+  renderer.init = async (...args: unknown[]) => {
+    try {
+      const result = await originalInit(...args);
+      markWebGPUReady();
+      return result;
+    } catch (error) {
+      markWebGPUInitError(error);
+      throw error;
+    }
+  };
+
+  return renderer;
+};

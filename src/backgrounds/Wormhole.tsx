@@ -18,6 +18,7 @@ const tunnelSpeed = 12;
 const rotationSpeed = 0.3;
 const radialSegments = 96;
 const lengthSegments = 2048;
+const MAX_DELTA_SECONDS = 0.1; // clamp large frame gaps on app resume
 
 export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
   const ref = useRef<CanvasRef>(null);
@@ -139,13 +140,14 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
     const scenePassColor = scenePass.getTextureNode("output");
     const bloomPass = bloom(scenePassColor);
     postProcessing.outputNode = scenePassColor.add(bloomPass);
+    let simulationTime = 0;
 
     function animate() {
       if (disposed) {
         return;
       }
-      const delta = clock.getDelta();
-      const elapsed = clock.elapsedTime;
+      const delta = Math.min(clock.getDelta(), MAX_DELTA_SECONDS);
+      simulationTime += delta;
 
       // Swap vertex colors for grayscale (only on change)
       const isGray = grayscaleRef.current;
@@ -157,8 +159,8 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
 
       tubes.forEach((tb) => tb.update(delta));
 
-      camera.position.x = Math.cos(elapsed * 0.6) * 1.5;
-      camera.position.y = Math.sin(elapsed * 0.6) * 1.5;
+      camera.position.x = Math.cos(simulationTime * 0.6) * 1.5;
+      camera.position.y = Math.sin(simulationTime * 0.6) * 1.5;
 
       postProcessing.render();
       context!.present();

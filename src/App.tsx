@@ -48,10 +48,6 @@ const Main = () => {
     async function prepare() {
       try {
         // Pre-load fonts, make API calls, etc.
-
-        // Artificially delay for two seconds to simulate a slow loading
-        // experience. Please remove this if you copy and paste the code!
-        await new Promise((resolve) => setTimeout(resolve, 3500));
       } catch (e) {
         console.warn(e);
       } finally {

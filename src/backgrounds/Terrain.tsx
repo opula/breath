@@ -44,6 +44,7 @@ const PLANE_SIZE = 200;
 const SEGMENTS = 160;
 const EDGE_RADIUS = 90;
 const FOG_DENSITY = 0.015;
+const MAX_DELTA_SECONDS = 0.1; // clamp large frame gaps on app resume
 
 const STRIDE = SEGMENTS + 1;
 const VERT_COUNT = STRIDE * STRIDE;
@@ -397,7 +398,7 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     function animate() {
       if (disposed) return;
 
-      const delta = clock.getDelta();
+      const delta = Math.min(clock.getDelta(), MAX_DELTA_SECONDS);
       waveTime += delta * WAVE_SPEED;
       flightOffset += delta * FLY_SPEED;
 
