@@ -49,8 +49,13 @@ export const renderExerciseAudio = (
   loops: number,
   soundCues: SoundCues,
   audioContext: AudioContext,
+  delaySec: number = 0,
 ): AudioBuffer => {
   const segments: AudioBuffer[] = [];
+
+  if (delaySec > 0) {
+    segments.push(createSilenceAudioBuffer(audioContext, delaySec, 1));
+  }
 
   for (let loop = 0; loop < loops; loop++) {
     for (const step of exercise.seq) {

@@ -29,6 +29,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   );
 
   const [loops, setLoops] = useState(3);
+  const [delay, setDelay] = useState(0);
   const [volume, setVolume] = useState(100);
 
   const {
@@ -55,8 +56,8 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   );
 
   const durationSeconds = useMemo(
-    () => (exercise ? calculateExerciseDuration(exercise, loops) : 0),
-    [exercise, loops],
+    () => (exercise ? calculateExerciseDuration(exercise, loops) + delay : 0),
+    [exercise, loops, delay],
   );
 
   const durationDisplay = useMemo(
@@ -65,8 +66,8 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   );
 
   const handleGenerate = useCallback(() => {
-    generate(loops, volume);
-  }, [generate, loops, volume]);
+    generate(loops, volume, delay);
+  }, [generate, loops, volume, delay]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) {
@@ -120,15 +121,18 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                 />
               </View>
 
-              <View style={tw`mt-6 items-center`}>
-                <Text
-                  style={[
-                    tw`text-3xl font-inter text-white`,
-                    { fontVariant: ["tabular-nums"] },
-                  ]}
-                >
-                  {durationDisplay}
+              <View style={tw`mt-6 pl-4`}>
+                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+                  Delay
                 </Text>
+                <HorizontalDial
+                  min={0}
+                  max={60}
+                  step={1}
+                  suffix="sec"
+                  defaultValue={delay}
+                  onChange={setDelay}
+                />
               </View>
 
               <View style={tw`mt-6 pl-4`}>
@@ -143,6 +147,20 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                   defaultValue={volume}
                   onChange={setVolume}
                 />
+              </View>
+
+              <View style={tw`mt-12 items-center`}>
+                <Text
+                  style={[
+                    tw`text-3xl font-inter text-white`,
+                    { fontVariant: ["tabular-nums"] },
+                  ]}
+                >
+                  {durationDisplay}
+                </Text>
+                <Text style={tw`text-xs font-inter text-neutral-500 mt-1`}>
+                  Total time
+                </Text>
               </View>
 
               <View style={tw`flex-1`} />

@@ -125,7 +125,7 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
 
   // Generate the rendered buffer
   const generate = useCallback(
-    async (loops: number, gain: number) => {
+    async (loops: number, gain: number, delay: number = 0) => {
       if (!exercise) return;
       setIsGenerating(true);
 
@@ -138,6 +138,7 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
           loops,
           soundCuesRef.current,
           ctx,
+          delay,
         );
 
         const gainValue = gain / 100;
