@@ -1496,7 +1496,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-wgpu (0.4.2):
+  - react-native-wgpu (0.5.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2469,7 +2469,7 @@ SPEC CHECKSUMS:
   react-native-orientation-locker: 78dae7f0fc920de01a69c6d8a4ceae234f0b70cf
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   react-native-skia: 05327e7acee05e7c27b68a5da0bc80d65f5d790c
-  react-native-wgpu: e60bff728d27427e8a030d77d3290062bf5ed529
+  react-native-wgpu: b0f6f9ad1b0763e6f804b08a42b2670ec8c6a1fb
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
   React-perflogger: 02b010e665772c7dcb859d85d44c1bfc5ac7c0e4
