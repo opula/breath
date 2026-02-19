@@ -1,4 +1,4 @@
-import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
@@ -35,11 +35,13 @@ const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
 export const Main = () => {
   useEffect(() => {
-    activateKeepAwake();
+    activateKeepAwakeAsync();
+
     const timer = setTimeout(
       () => deactivateKeepAwake(),
       KEEP_AWAKE_TIMEOUT_MS,
     );
+
     return () => {
       clearTimeout(timer);
       deactivateKeepAwake();
@@ -88,10 +90,7 @@ export const Main = () => {
   return (
     <>
       <View style={tw`flex-1 bg-black`}>
-        {/* <AnimatePresence>{isFocused ? <Background /> : null}</AnimatePresence> */}
-        <AnimatePresence>
-          {isAppActive ? <Background /> : null}
-        </AnimatePresence>
+        <AnimatePresence>{isAppActive ? <Background /> : null}</AnimatePresence>
       </View>
 
       <AnimatePresence>
