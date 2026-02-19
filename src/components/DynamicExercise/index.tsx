@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
+import { useAppIsActive } from "../../hooks/useAppIsActive";
 
 export const DynamicExercise = memo(
   ({
@@ -22,6 +23,7 @@ export const DynamicExercise = memo(
   }) => {
     const exercises = useAppSelector(exercisesSelector);
     const { bottom } = useSafeAreaInsets();
+    const isAppActive = useAppIsActive();
 
     const {
       label,
@@ -102,7 +104,7 @@ export const DynamicExercise = memo(
           <View style={tw`absolute inset-0 justify-center items-center z-0`}>
             {isHIE && <Backdrop />}
             {isText && <TextBackdrop />}
-            {isBreathing && <BreathRing breath={iBreath} />}
+            {isAppActive && isBreathing && <BreathRing breath={iBreath} />}
           </View>
           <View style={tw`absolute inset-0 items-center justify-center`}>
             <AnimatePresence exitBeforeEnter>

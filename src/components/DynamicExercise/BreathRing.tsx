@@ -118,8 +118,6 @@ export const BreathRing = ({ breath }: { breath: SharedValue<number> }) => {
       antialias: false,
       alpha: true,
     });
-    renderer.init();
-
     let disposed = false;
 
     function animate() {
@@ -130,7 +128,11 @@ export const BreathRing = ({ breath }: { breath: SharedValue<number> }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;

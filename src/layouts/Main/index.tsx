@@ -16,6 +16,7 @@ import {
 import { MainStackParams } from "../../navigation";
 import { Background } from "./Background";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
+import { useAppIsActive } from "../../hooks/useAppIsActive";
 import {
   isPausedSelector,
   isGrayscaleSelector,
@@ -47,6 +48,7 @@ export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
+  const isAppActive = useAppIsActive();
   const { left, bottom } = useSafeAreaInsets();
 
   const isPaused = useAppSelector(isPausedSelector);
@@ -88,7 +90,7 @@ export const Main = () => {
       <View style={tw`flex-1 bg-black`}>
         {/* <AnimatePresence>{isFocused ? <Background /> : null}</AnimatePresence> */}
         <AnimatePresence>
-          <Background />
+          {isAppActive ? <Background /> : null}
         </AnimatePresence>
       </View>
 
