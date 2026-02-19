@@ -105,7 +105,6 @@ export const SinPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
     scene.add(mesh);
 
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    renderer.init();
 
     let disposed = false;
 
@@ -121,7 +120,11 @@ export const SinPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;

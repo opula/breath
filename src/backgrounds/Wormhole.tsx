@@ -132,7 +132,6 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
     scene.add(tubeA.points, tubeB.points);
 
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    void renderer.init();
     renderer.toneMapping = THREE.ReinhardToneMapping;
 
     const postProcessing = new THREE.PostProcessing(renderer);
@@ -165,7 +164,11 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;

@@ -227,7 +227,6 @@ export const Particles = ({ grayscale = false }: { grayscale?: boolean }) => {
 
     // --- Renderer ---
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    void renderer.init();
 
     // --- Animation loop ---
     function animate() {
@@ -252,7 +251,11 @@ export const Particles = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;

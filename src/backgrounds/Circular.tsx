@@ -202,7 +202,6 @@ export const Circular = ({ grayscale = false }: { grayscale?: boolean }) => {
 
     // Renderer
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    renderer.init();
 
     let disposed = false;
 
@@ -217,7 +216,11 @@ export const Circular = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;

@@ -389,7 +389,6 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
 
     // Renderer
     const renderer = makeWebGPURenderer(context, { antialias: false });
-    void renderer.init();
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
     let waveTime = 0;
@@ -416,7 +415,11 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.setAnimationLoop(animate);
+    renderer.init().then(() => {
+      if (!disposed) {
+        renderer.setAnimationLoop(animate);
+      }
+    });
 
     return () => {
       disposed = true;
