@@ -22,6 +22,7 @@ import { ExerciseInfo } from "../layouts/ExerciseInfo";
 import { Scenes } from "../layouts/Scenes";
 import { Help } from "../layouts/Help";
 import { MusicHelp } from "../layouts/MusicHelp";
+import { BackgroundAudio } from "../layouts/BackgroundAudio";
 
 export type MainStackParams = {
   Welcome: undefined;
@@ -35,6 +36,7 @@ export type MainStackParams = {
   ExerciseInfo: { id: string };
   AdjustStep: { exerciseId: string; stepId: string };
   NewStepMenu: { exerciseId: string };
+  BackgroundAudio: { id: string };
 };
 
 const Stack = createStackNavigator<MainStackParams>();
@@ -105,6 +107,14 @@ export const MainStack = () => {
         name="ExerciseInfo"
         component={ExerciseInfo}
         options={modalScreenOptions}
+      />
+      <Stack.Screen
+        name="BackgroundAudio"
+        component={BackgroundAudio}
+        options={{
+          ...modalScreenOptions,
+          gestureEnabled: false,
+        }}
       />
 
       <Stack.Group

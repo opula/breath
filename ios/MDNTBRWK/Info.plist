@@ -50,6 +50,10 @@
     <true/>
     <key>RCTRootViewBackgroundColor</key>
     <integer>4278190080</integer>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>audio</string>
+    </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

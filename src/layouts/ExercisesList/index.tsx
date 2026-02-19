@@ -29,13 +29,15 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import SwipeableItem, { OpenDirection } from "react-native-swipeable-item";
 import type { SwipeableItemImperativeRef } from "react-native-swipeable-item";
-import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
+import { SwipeRightRemove, SwipeRightActions } from "../../components/UnderlyingSwipe";
+import { isExerciseEligibleForBackground } from "../../services/BackgroundAudio/exerciseEligibility";
 import { ExerciseItem } from "./ExerciseItem";
 import { Header } from "./Header";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const OVERSWIPE_DIST = 20;
 const SNAP_LEFT = [120];
+const SNAP_RIGHT = [120];
 
 interface Props {
   navigation: NavigationProp<MainStackParams, "ExercisesList">;
@@ -133,11 +135,16 @@ export const ExercisesList = ({ navigation }: Props) => {
     (params: RenderItemParams<Exercise>) => {
       const { item, getIndex, drag, isActive } = params;
       const index = getIndex();
+      const isEligible = isExerciseEligibleForBackground(item);
 
       const onPressDelete = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         dispatch(removeExercise({ exerciseId: item.id }));
       };
+
+      const onPressBackground = isEligible
+        ? () => navigation.navigate("BackgroundAudio", { id: item.id })
+        : undefined;
 
       const row = (
         <SwipeableItem
@@ -163,6 +170,17 @@ export const ExercisesList = ({ navigation }: Props) => {
             <SwipeRightRemove onPressDelete={onPressDelete} drag={drag} />
           )}
           snapPointsLeft={SNAP_LEFT}
+          {...(isEligible
+            ? {
+                renderUnderlayRight: () => (
+                  <SwipeRightActions
+                    onPressBackground={onPressBackground!}
+                    drag={drag}
+                  />
+                ),
+                snapPointsRight: SNAP_RIGHT,
+              }
+            : {})}
         >
           <ExerciseItem {...{ item, index, drag, navigation }} />
         </SwipeableItem>
