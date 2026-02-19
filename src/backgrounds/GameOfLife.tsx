@@ -26,6 +26,8 @@ const GRID_COLS = 96; // cell columns (rows derived from aspect)
 // Simulation timing
 const TICK_RATE = 10; // GoL updates per second
 const INITIAL_DENSITY = 0.3; // fraction of cells alive at start
+const MAX_DELTA_SECONDS = 0.1; // clamp large frame gaps (resume/background)
+const MAX_STEPS_PER_FRAME = 2; // avoid long catch-up stalls on a single frame
 
 // Energy trail (dead cells fade out instead of snapping off)
 const ENERGY_DECAY = 30; // energy lost per tick when dead (out of 255)
@@ -182,20 +184,30 @@ export const GameOfLife = ({ grayscale = false }: { grayscale?: boolean }) => {
     const renderer = makeWebGPURenderer(context, { antialias: false });
 
     let disposed = false;
-    let lastTickTime = 0;
+    let simulationTime = 0;
+    let accumulator = 0;
     const tickInterval = 1.0 / TICK_RATE;
 
     function animate() {
       if (disposed) return;
-      const elapsed = clock.getElapsedTime();
-      (timeU as unknown as { value: number }).value = elapsed;
+      const delta = Math.min(clock.getDelta(), MAX_DELTA_SECONDS);
+      simulationTime += delta;
+      (timeU as unknown as { value: number }).value = simulationTime;
       (grayscaleU as unknown as { value: number }).value =
         grayscaleRef.current ? 1.0 : 0.0;
 
-      // Tick GoL at fixed rate, independent of frame rate
-      while (elapsed - lastTickTime >= tickInterval) {
+      // Fixed-step simulation with bounded catch-up to prevent resume stalls.
+      accumulator += delta;
+      let steps = 0;
+      while (accumulator >= tickInterval && steps < MAX_STEPS_PER_FRAME) {
         tick();
-        lastTickTime += tickInterval;
+        accumulator -= tickInterval;
+        steps += 1;
+      }
+
+      // Drop excess backlog (e.g. after app resumes) instead of stalling.
+      if (steps === MAX_STEPS_PER_FRAME && accumulator >= tickInterval) {
+        accumulator = 0;
       }
 
       renderer.render(scene, camera);
