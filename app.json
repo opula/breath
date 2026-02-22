@@ -19,10 +19,11 @@
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.mdnt.brwk",
-      "buildNumber": "9",
+      "buildNumber": "12",
       "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "This app does not use the microphone. This permission is required by an audio playback library.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
           "NSAllowsLocalNetworking": true

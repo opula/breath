@@ -1,61 +1,32 @@
-import { AudioContext } from "react-native-audio-api";
 import { Exercise } from "../../types/exercise";
-import {
-  createSilenceAudioBuffer,
-  concatenateAudioBuffers,
-  normalizeAudioBufferChannels,
-} from "./audioBufferUtils";
 
-type SoundCues = {
-  inhale: AudioBuffer | null;
-  exhale: AudioBuffer | null;
-  hold: AudioBuffer | null;
+export type CueType = "inhale" | "exhale" | "hold";
+
+export type ScheduledEvent = {
+  time: number; // seconds from start of playback
+  cue: CueType;
+  duration: number; // phase duration (to auto-stop cue at phase boundary)
+};
+
+export type PlaybackSchedule = {
+  events: ScheduledEvent[];
+  totalDuration: number;
 };
 
 /**
- * Create a mono buffer of `phaseDurationSec` with the sound cue placed at offset 0.
- * The rest is silence (zeros).
- */
-const createPhaseBuffer = (
-  soundCue: AudioBuffer | null,
-  phaseDurationSec: number,
-  audioContext: AudioContext,
-): AudioBuffer => {
-  const sampleRate = audioContext.sampleRate || 44100;
-  const totalSamples = Math.max(1, Math.round(sampleRate * phaseDurationSec));
-  const buffer = audioContext.createBuffer(1, totalSamples, sampleRate);
-  const data = buffer.getChannelData(0);
-
-  if (soundCue) {
-    const mono = normalizeAudioBufferChannels(soundCue, 1, audioContext);
-    const cueData = mono.getChannelData(0);
-    const copyLen = Math.min(cueData.length, totalSamples);
-    for (let i = 0; i < copyLen; i++) {
-      data[i] = cueData[i];
-    }
-  }
-
-  return buffer;
-};
-
-/**
- * Pre-render an entire exercise (repeated `loops` times) into a single mono AudioBuffer.
+ * Build a schedule of sound-cue events for an exercise.
  *
- * Walk each step for each loop iteration and produce phase buffers that are
- * concatenated into the final result.
+ * Pure data function — no AudioBuffers or AudioContext needed.
+ * Walk every step for `loops` iterations and emit { time, cue, duration }
+ * for each phase that has a sound cue. Silent phases just advance the cursor.
  */
-export const renderExerciseAudio = (
+export const buildPlaybackSchedule = (
   exercise: Exercise,
   loops: number,
-  soundCues: SoundCues,
-  audioContext: AudioContext,
   delaySec: number = 0,
-): AudioBuffer => {
-  const segments: AudioBuffer[] = [];
-
-  if (delaySec > 0) {
-    segments.push(createSilenceAudioBuffer(audioContext, delaySec, 1));
-  }
+): PlaybackSchedule => {
+  const events: ScheduledEvent[] = [];
+  let cursor = delaySec;
 
   for (let loop = 0; loop < loops; loop++) {
     for (const step of exercise.seq) {
@@ -73,54 +44,46 @@ export const renderExerciseAudio = (
 
           for (let cycle = 0; cycle < effectiveCount; cycle++) {
             if (inhaleDur > 0) {
-              segments.push(
-                createPhaseBuffer(soundCues.inhale, inhaleDur, audioContext),
-              );
+              events.push({ time: cursor, cue: "inhale", duration: inhaleDur });
+              cursor += inhaleDur;
             }
             if (hold1Dur > 0) {
-              segments.push(
-                createPhaseBuffer(soundCues.hold, hold1Dur, audioContext),
-              );
+              events.push({ time: cursor, cue: "hold", duration: hold1Dur });
+              cursor += hold1Dur;
             }
             if (exhaleDur > 0) {
-              segments.push(
-                createPhaseBuffer(soundCues.exhale, exhaleDur, audioContext),
-              );
+              events.push({ time: cursor, cue: "exhale", duration: exhaleDur });
+              cursor += exhaleDur;
             }
             if (hold2Dur > 0) {
-              segments.push(
-                createPhaseBuffer(soundCues.hold, hold2Dur, audioContext),
-              );
+              events.push({ time: cursor, cue: "hold", duration: hold2Dur });
+              cursor += hold2Dur;
             }
           }
           break;
         }
 
         case "inhale": {
-          segments.push(
-            createPhaseBuffer(soundCues.inhale, step.count, audioContext),
-          );
+          events.push({ time: cursor, cue: "inhale", duration: step.count });
+          cursor += step.count;
           break;
         }
 
         case "exhale": {
-          segments.push(
-            createPhaseBuffer(soundCues.exhale, step.count, audioContext),
-          );
+          events.push({ time: cursor, cue: "exhale", duration: step.count });
+          cursor += step.count;
           break;
         }
 
         case "hold": {
-          segments.push(
-            createPhaseBuffer(soundCues.hold, step.count, audioContext),
-          );
+          events.push({ time: cursor, cue: "hold", duration: step.count });
+          cursor += step.count;
           break;
         }
 
         case "text": {
-          segments.push(
-            createSilenceAudioBuffer(audioContext, step.count, 1),
-          );
+          // Silent phase — just advance cursor
+          cursor += step.count;
           break;
         }
 
@@ -128,19 +91,16 @@ export const renderExerciseAudio = (
           const [firstDur = 0, pauseDur = 0, secondDur = 0] =
             step.value ?? [];
           if (firstDur > 0) {
-            segments.push(
-              createPhaseBuffer(soundCues.inhale, firstDur, audioContext),
-            );
+            events.push({ time: cursor, cue: "inhale", duration: firstDur });
+            cursor += firstDur;
           }
           if (pauseDur > 0) {
-            segments.push(
-              createSilenceAudioBuffer(audioContext, pauseDur, 1),
-            );
+            // Silent pause between double-inhale parts
+            cursor += pauseDur;
           }
           if (secondDur > 0) {
-            segments.push(
-              createPhaseBuffer(soundCues.inhale, secondDur, audioContext),
-            );
+            events.push({ time: cursor, cue: "inhale", duration: secondDur });
+            cursor += secondDur;
           }
           break;
         }
@@ -148,9 +108,5 @@ export const renderExerciseAudio = (
     }
   }
 
-  if (segments.length === 0) {
-    return createSilenceAudioBuffer(audioContext, 0.1, 1);
-  }
-
-  return concatenateAudioBuffers(segments, audioContext);
+  return { events, totalDuration: cursor };
 };

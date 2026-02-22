@@ -1,15 +1,5 @@
 import { AudioContext } from "react-native-audio-api";
 
-export const createSilenceAudioBuffer = (
-  audioContext: AudioContext,
-  durationInSeconds = 1,
-  numberOfChannels = 1,
-) => {
-  const sampleRate = audioContext.sampleRate || 44100;
-  const numberOfSamples = sampleRate * durationInSeconds;
-  return audioContext.createBuffer(numberOfChannels, numberOfSamples, sampleRate);
-};
-
 export const normalizeAudioBufferChannels = (
   buffer: AudioBuffer,
   targetChannels: number,
@@ -43,63 +33,4 @@ export const normalizeAudioBufferChannels = (
   }
 
   return normalizedBuffer;
-};
-
-export const concatenateAudioBuffers = (
-  audioBuffers: AudioBuffer[],
-  audioContext: AudioContext,
-): AudioBuffer => {
-  if (audioBuffers.length === 0) {
-    throw new Error("Cannot concatenate empty array of buffers");
-  }
-
-  const totalLength = audioBuffers.reduce((acc, buf) => acc + buf.length, 0);
-  const { numberOfChannels, sampleRate } = audioBuffers[0];
-
-  const result = audioContext.createBuffer(
-    numberOfChannels,
-    totalLength,
-    sampleRate,
-  );
-
-  let offset = 0;
-  for (const buffer of audioBuffers) {
-    for (let channel = 0; channel < numberOfChannels; channel++) {
-      const resultData = result.getChannelData(channel);
-      const bufferData = buffer.getChannelData(channel);
-      for (let i = 0; i < buffer.length; i++) {
-        resultData[offset + i] = bufferData[i];
-      }
-    }
-    offset += buffer.length;
-  }
-
-  return result;
-};
-
-export const applyGainWithSoftLimiting = (
-  audioBuffer: AudioBuffer,
-  gainValue: number,
-  audioContext: AudioContext,
-): AudioBuffer => {
-  const gainedBuffer = audioContext.createBuffer(
-    audioBuffer.numberOfChannels,
-    audioBuffer.length,
-    audioBuffer.sampleRate,
-  );
-
-  for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-    const originalData = audioBuffer.getChannelData(channel);
-    const gainedData = gainedBuffer.getChannelData(channel);
-
-    for (let i = 0; i < audioBuffer.length; i++) {
-      let sample = originalData[i] * gainValue;
-      if (Math.abs(sample) > 0.95) {
-        sample = Math.sign(sample) * Math.tanh(Math.abs(sample));
-      }
-      gainedData[i] = sample;
-    }
-  }
-
-  return gainedBuffer;
 };
