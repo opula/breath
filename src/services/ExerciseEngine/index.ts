@@ -23,6 +23,13 @@ export class ExerciseEngine {
   private sequenceLoop = 0;
   private breathPattern = [0, 0, 0, 0];
   private destroyed = false;
+  private repeatState: {
+    repeatStepIndex: number;
+    blockStart: number;
+    blockEnd: number;
+    remaining: number;
+    total: number;
+  } | null = null;
 
   constructor(
     exercises: Exercise[],
@@ -71,6 +78,8 @@ export class ExerciseEngine {
     this.callbacks.onAnimateBreath(0, 0);
     this.seqIndex = -1;
     this.breathPattern = [0, 0, 0, 0];
+    this.repeatState = null;
+    this.callbacks.onRepeatChange(null);
 
     if (andStop) {
       this.sequenceLoop = 0;
@@ -200,27 +209,111 @@ export class ExerciseEngine {
   private nextStep(): void {
     const exercise = this.currentExercise();
     const currentIndex = this.seqIndex;
-    const nextIndex = (this.seqIndex + 1) % exercise.seq.length;
 
-    // Sequence wrapped — increment sequenceLoop
-    if (nextIndex === 0 && currentIndex > -1) {
-      this.sequenceLoop++;
-    }
+    // --- Repeat-aware index computation ---
+    let nextIndex: number;
 
-    // Non-loopable exercise that wrapped around — reset and restart
-    if (!exercise.loopable && nextIndex < currentIndex) {
-      this.reset();
-      return;
+    if (this.repeatState && currentIndex === this.repeatState.blockEnd) {
+      // Just finished last step in repeat block
+      this.repeatState.remaining--;
+      if (this.repeatState.remaining > 0) {
+        // More iterations — jump back to block start
+        nextIndex = this.repeatState.blockStart;
+        this.callbacks.onRepeatChange({
+          round: this.repeatState.total - this.repeatState.remaining,
+          total: this.repeatState.total,
+        });
+      } else {
+        // Done repeating — advance past the repeat step
+        const afterRepeat = this.repeatState.repeatStepIndex + 1;
+        this.repeatState = null;
+        this.callbacks.onRepeatChange(null);
+        if (afterRepeat >= exercise.seq.length) {
+          // Wrapped around
+          this.sequenceLoop++;
+          if (!exercise.loopable) {
+            this.reset();
+            return;
+          }
+          nextIndex = 0;
+        } else {
+          nextIndex = afterRepeat;
+        }
+      }
+    } else if (this.repeatState) {
+      // Mid-block — advance normally within the block
+      nextIndex = currentIndex + 1;
+    } else {
+      // No repeat state — existing logic
+      nextIndex = (this.seqIndex + 1) % exercise.seq.length;
+
+      // Sequence wrapped — increment sequenceLoop
+      if (nextIndex === 0 && currentIndex > -1) {
+        this.sequenceLoop++;
+      }
+
+      // Non-loopable exercise that wrapped around — reset and restart
+      if (!exercise.loopable && nextIndex < currentIndex) {
+        this.reset();
+        return;
+      }
     }
 
     const step = exercise.seq[nextIndex];
     this.seqIndex = nextIndex;
 
+    // --- If we landed on a repeat step, set up repeatState and recurse ---
+    if (step.type === 'repeat') {
+      if (this.repeatState) {
+        // Nested repeat — skip it
+        this.nextStep();
+        return;
+      }
+
+      const lookback = (step.value as number[])?.[0] ?? 1;
+      const repeatCount = this.getEffectiveCount(step);
+      // Block already ran once; remaining = repeatCount - 1 extra iterations
+      const remaining = repeatCount - 1;
+      if (remaining <= 0) {
+        // count<=1: block already ran once, nothing more to do — skip
+        this.nextStep();
+        return;
+      }
+
+      const blockStart = Math.max(0, nextIndex - lookback);
+      const blockEnd = nextIndex - 1;
+
+      if (blockEnd < blockStart) {
+        // Nothing to repeat — skip
+        this.nextStep();
+        return;
+      }
+
+      this.repeatState = {
+        repeatStepIndex: nextIndex,
+        blockStart,
+        blockEnd,
+        remaining,
+        total: repeatCount,
+      };
+
+      this.callbacks.onRepeatChange({ round: 1, total: repeatCount });
+
+      // Jump to one before blockStart so nextStep advances into it
+      this.seqIndex = blockStart - 1;
+      this.nextStep();
+      return;
+    }
+
+    this.executeStep(step, currentIndex);
+  }
+
+  private executeStep(step: Exercise['seq'][number], previousIndex: number): void {
     switch (step.type) {
       case 'breath': {
         const effectiveCount = this.getEffectiveCount(step);
         this.breathPattern = (step.value as number[]).slice();
-        this.startBreathPhase(currentIndex > -1);
+        this.startBreathPhase(previousIndex > -1);
         this.callbacks.onStateChange({
           label: BREATH_LABELS[0],
           sublabel: `n° ${effectiveCount ? effectiveCount : 1}`,

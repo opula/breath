@@ -43,7 +43,7 @@ interface Props {
   navigation: NavigationProp<MainStackParams, "ExercisesList">;
 }
 
-const VALID_STEP_TYPES = ["inhale", "exhale", "hold", "breath", "text", "double-inhale"];
+const VALID_STEP_TYPES = ["inhale", "exhale", "hold", "breath", "text", "double-inhale", "repeat"];
 
 const isValidExercise = (e: unknown): e is Exercise => {
   if (!e || typeof e !== "object") return false;

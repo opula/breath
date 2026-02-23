@@ -19,6 +19,7 @@ export interface ExerciseEngineCallbacks {
   onAnimateBreath(target: number, durationSec: number): void;
   onHaptic(): void;
   onPauseChange(isPaused: boolean): void;
+  onRepeatChange(info: { round: number; total: number } | null): void;
 }
 
 export interface ExerciseEngineOptions {

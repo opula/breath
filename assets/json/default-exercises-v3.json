@@ -222,6 +222,15 @@
       {
         "type": "exhale",
         "count": 2
+      },
+      {
+        "type": "repeat",
+        "value": [2],
+        "count": 20
+      },
+      {
+        "type": "hold",
+        "count": 30
       }
     ],
     "loopable": true

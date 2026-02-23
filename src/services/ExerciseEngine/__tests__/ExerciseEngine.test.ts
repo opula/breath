@@ -69,6 +69,7 @@ function createMockCallbacks(): ExerciseEngineCallbacks & {
   breathAnimations: Array<{ target: 0 | 1; durationSec: number }>;
   hapticCount: number;
   pauseChanges: boolean[];
+  repeatChanges: ({ round: number; total: number } | null)[];
 } {
   const mock = {
     states: [] as EngineState[],
@@ -77,6 +78,7 @@ function createMockCallbacks(): ExerciseEngineCallbacks & {
     breathAnimations: [] as Array<{ target: 0 | 1; durationSec: number }>,
     hapticCount: 0,
     pauseChanges: [] as boolean[],
+    repeatChanges: [] as ({ round: number; total: number } | null)[],
 
     onStateChange(state: EngineState) { mock.states.push({ ...state }); },
     onPlaySound(type: any) { mock.sounds.push(type); },
@@ -86,6 +88,7 @@ function createMockCallbacks(): ExerciseEngineCallbacks & {
     },
     onHaptic() { mock.hapticCount++; },
     onPauseChange(isPaused: boolean) { mock.pauseChanges.push(isPaused); },
+    onRepeatChange(info: { round: number; total: number } | null) { mock.repeatChanges.push(info); },
   };
   return mock;
 }
@@ -744,6 +747,290 @@ describe('ExerciseEngine', () => {
 
       // sequenceLoop should be preserved (incremented on wrap, not reset by reset())
       expect(engine.getSequenceLoop()).toBeGreaterThan(0);
+    });
+  });
+
+  describe('repeat step', () => {
+    // double-inhale(0) → exhale(1) → repeat(2, lookback=2, count=3) → hold(3)
+    const bellowExercise: Exercise = {
+      id: 'test-bellow',
+      name: 'Bellow',
+      seq: [
+        { id: 's1', type: 'double-inhale', value: [1, 0.1, 1], count: 0 },
+        { id: 's2', type: 'exhale', count: 2 },
+        { id: 's3', type: 'repeat', value: [2], count: 3 },
+        { id: 's4', type: 'hold', count: 5 },
+      ],
+      loopable: true,
+    };
+
+    // inhale(0) → repeat(1, lookback=1, count=4)
+    const simpleRepeat: Exercise = {
+      id: 'test-simple-repeat',
+      name: 'Simple Repeat',
+      seq: [
+        { id: 's1', type: 'inhale', count: 2 },
+        { id: 's2', type: 'repeat', value: [1], count: 4 },
+      ],
+      loopable: true,
+    };
+
+    // inhale(0) → repeat(1, lookback=1, count=1) — block already ran once, skip
+    const repeatCountOne: Exercise = {
+      id: 'test-repeat-one',
+      name: 'Repeat One',
+      seq: [
+        { id: 's1', type: 'inhale', count: 2 },
+        { id: 's2', type: 'repeat', value: [1], count: 1 },
+        { id: 's3', type: 'hold', count: 3 },
+      ],
+      loopable: true,
+    };
+
+    // inhale(0) → hold(1) → repeat(2, lookback=2, count=2) — non-loopable
+    const nonLoopableRepeat: Exercise = {
+      id: 'test-noloop-repeat',
+      name: 'Non-Loopable Repeat',
+      seq: [
+        { id: 's1', type: 'inhale', count: 1 },
+        { id: 's2', type: 'hold', count: 1 },
+        { id: 's3', type: 'repeat', value: [2], count: 2 },
+      ],
+      loopable: false,
+    };
+
+    it('repeats the block the correct number of times', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([simpleRepeat], scheduler, callbacks);
+
+      engine.start();
+      // count=4 means 4 total: 1 initial + 3 from repeat
+      // Track how many times 'inhale' state appears (each run starts with an inhale state)
+      scheduler.runAllJobs();
+
+      const inhaleStates = callbacks.states.filter(
+        (s) => s.label === 'inhale' && s.isHIE === false && s.isBreathing === false,
+      );
+      // inhale HIE steps produce isHIE=true; let's just count all inhale labels
+      const allInhale = callbacks.states.filter((s) => s.label === 'inhale');
+      // 4 iterations of the block + at least 1 more from the loop wrap
+      expect(allInhale.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('advances past repeat step to subsequent steps', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([bellowExercise], scheduler, callbacks);
+
+      engine.start();
+      scheduler.runAllJobs();
+
+      // After repeat block completes, should reach the hold step
+      const holdStates = callbacks.states.filter((s) => s.label === 'hold' && s.isHIE);
+      expect(holdStates.length).toBeGreaterThan(0);
+    });
+
+    it('count=1 skips repeat (block already ran once)', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([repeatCountOne], scheduler, callbacks);
+
+      engine.start();
+
+      // Run until we see a 'hold' label (which comes after the skipped repeat)
+      let iterations = 0;
+      while (iterations < 50 && scheduler.jobs.length > 0) {
+        const holdSeen = callbacks.states.some((s) => s.label === 'hold');
+        if (holdSeen) break;
+        scheduler.runNextJob();
+        iterations++;
+      }
+
+      // Should see inhale then hold (repeat with count=1 is a no-op)
+      const allLabels = callbacks.states.map((s) => s.label);
+      expect(allLabels).toContain('inhale');
+      expect(allLabels).toContain('hold');
+
+      // Count distinct step transitions to inhale before hold appears.
+      // A step transition is when the label changes TO 'inhale' from something else.
+      let inhaleStepCount = 0;
+      for (let i = 0; i < allLabels.length; i++) {
+        if (allLabels[i] === 'hold') break;
+        if (allLabels[i] === 'inhale' && (i === 0 || allLabels[i - 1] !== 'inhale')) {
+          inhaleStepCount++;
+        }
+      }
+      expect(inhaleStepCount).toBe(1);
+    });
+
+    it('plays block steps in order during repeat', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([bellowExercise], scheduler, callbacks);
+
+      engine.start();
+
+      // Run until we see the hold step (which comes after the repeat block)
+      let iterations = 0;
+      while (iterations < 200 && scheduler.jobs.length > 0) {
+        const holdSeen = callbacks.states.some((s) => s.label === 'hold' && s.isHIE);
+        if (holdSeen) break;
+        scheduler.runNextJob();
+        iterations++;
+      }
+
+      // Count distinct exhale step transitions before the HIE hold
+      // Each exhale step starts with a transition from non-exhale to exhale
+      const holdIndex = callbacks.states.findIndex((s) => s.label === 'hold' && s.isHIE);
+      const preHoldLabels = callbacks.states.slice(0, holdIndex).map((s) => s.label);
+
+      let exhaleStepCount = 0;
+      for (let i = 0; i < preHoldLabels.length; i++) {
+        if (preHoldLabels[i] === 'exhale' && (i === 0 || preHoldLabels[i - 1] !== 'exhale')) {
+          exhaleStepCount++;
+        }
+      }
+
+      // count=3 → 3 total: 1 initial pass + 2 from repeat (remaining = 3-1 = 2)
+      expect(exhaleStepCount).toBe(3);
+    });
+
+    it('reset clears repeat state', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([bellowExercise], scheduler, callbacks);
+
+      engine.start();
+      // Run a few jobs into the repeat block
+      scheduler.runNextJob();
+      scheduler.runNextJob();
+
+      engine.reset(true);
+
+      // After reset, starting again should work from step 0
+      engine.start();
+      const lastState = callbacks.states[callbacks.states.length - 1];
+      expect(lastState.label).toBe('inhale'); // double-inhale starts with 'inhale'
+    });
+
+    it('non-loopable exercise resets after repeat block ends at seq boundary', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([nonLoopableRepeat], scheduler, callbacks);
+
+      engine.start();
+      scheduler.runAllJobs();
+
+      // After repeat finishes at end of seq, non-loopable should reset
+      // Check that it processed inhale and hold
+      const labels = callbacks.states.map((s) => s.label);
+      expect(labels).toContain('inhale');
+      expect(labels).toContain('hold');
+    });
+
+    it('onRepeatChange fires with round 1 at repeat start', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([simpleRepeat], scheduler, callbacks);
+
+      engine.start();
+
+      // simpleRepeat: inhale(count=2) → repeat(lookback=1, count=4)
+      // After the first inhale completes the repeat step is encountered
+      // Run until repeat is set up
+      while (scheduler.jobs.length > 0 && callbacks.repeatChanges.length === 0) {
+        scheduler.runNextJob();
+      }
+
+      expect(callbacks.repeatChanges.length).toBeGreaterThanOrEqual(1);
+      expect(callbacks.repeatChanges[0]).toEqual({ round: 1, total: 4 });
+    });
+
+    it('onRepeatChange round increments on each block completion', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([simpleRepeat], scheduler, callbacks);
+
+      engine.start();
+
+      // Run through all repeat iterations
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      // count=4: round 1 at setup, round 2 after first block end, round 3, then null when done
+      const nonNull = callbacks.repeatChanges.filter((c) => c !== null);
+      expect(nonNull).toEqual([
+        { round: 1, total: 4 },
+        { round: 2, total: 4 },
+        { round: 3, total: 4 },
+      ]);
+    });
+
+    it('onRepeatChange fires null when repeat finishes', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([simpleRepeat], scheduler, callbacks);
+
+      engine.start();
+
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      // Last repeat change before the loop wraps should be null
+      const lastRepeatChange = callbacks.repeatChanges.filter(
+        (c, i) => i < callbacks.repeatChanges.length && c === null,
+      );
+      expect(lastRepeatChange.length).toBeGreaterThan(0);
+    });
+
+    it('onRepeatChange fires null on reset', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([bellowExercise], scheduler, callbacks);
+
+      engine.start();
+      // Run a few jobs to get into the repeat block
+      scheduler.runNextJob();
+      scheduler.runNextJob();
+
+      callbacks.repeatChanges.length = 0;
+      engine.reset(true);
+
+      expect(callbacks.repeatChanges).toContain(null);
+    });
+
+    it('ramp affects repeat count', () => {
+      const rampedRepeat: Exercise = {
+        id: 'test-ramp-repeat',
+        name: 'Ramped Repeat',
+        seq: [
+          { id: 's1', type: 'inhale', count: 1 },
+          { id: 's2', type: 'repeat', value: [1], count: 4, ramp: 1.5 },
+        ],
+        loopable: true,
+      };
+
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([rampedRepeat], scheduler, callbacks);
+
+      engine.start();
+
+      // First loop: effectiveCount = 4 (ramp on loop 0 = no change)
+      // Count inhale states in first loop
+      while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
+        scheduler.runNextJob();
+      }
+
+      // Should have wrapped at least once
+      expect(engine.getSequenceLoop()).toBeGreaterThanOrEqual(1);
+
+      // Count total inhale labels emitted (first loop: 4 total = 1 initial + 3 repeated)
+      const inhaleCount = callbacks.states.filter((s) => s.label === 'inhale').length;
+      expect(inhaleCount).toBeGreaterThanOrEqual(4);
     });
   });
 

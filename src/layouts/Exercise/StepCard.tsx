@@ -7,8 +7,11 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 
-const stepDisplayName = (type: string) =>
-  type === "double-inhale" ? "Double Inhale" : capitalize(type);
+const stepDisplayName = (type: string) => {
+  if (type === "double-inhale") return "Double Inhale";
+  if (type === "repeat") return "Repeat";
+  return capitalize(type);
+};
 
 interface Props {
   exerciseId: string;
@@ -67,6 +70,12 @@ export const StepCard = ({ exerciseId, step, drag }: Props) => {
               {count ? `For ${count} seconds.` : "For as long as you need."}
             </Text>
           </>
+        ) : null}
+
+        {type === "repeat" && Array.isArray(value) ? (
+          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
+            {`Repeat previous ${value[0]} step${value[0] === 1 ? "" : "s"}, ${count}x`}
+          </Text>
         ) : null}
 
         {step.ramp && step.ramp > 1 ? (

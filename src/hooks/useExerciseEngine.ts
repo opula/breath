@@ -29,6 +29,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const [isText, setText] = useState(false);
   const [isHIE, setHIE] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
+  const [repeatRound, setRepeatRound] = useState('');
 
   const iBreath = useSharedValue(0);
   const onPauseRef = useRef(onPause);
@@ -36,6 +37,10 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
 
   const debouncedClearName = useDebouncedCallback(() => {
     setExerciseName('');
+  }, 2000);
+
+  const debouncedClearRepeat = useDebouncedCallback(() => {
+    setRepeatRound('');
   }, 2000);
 
   const showName = useCallback((name: string) => {
@@ -69,6 +74,15 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
       },
       onPauseChange(isPaused) {
         onPauseRef.current?.(isPaused);
+      },
+      onRepeatChange(info) {
+        if (info) {
+          setRepeatRound(`Round ${info.round} of ${info.total}`);
+          debouncedClearRepeat();
+        } else {
+          debouncedClearRepeat.cancel();
+          setRepeatRound('');
+        }
       },
     };
 
@@ -142,6 +156,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     isText,
     isHIE,
     exerciseName,
+    repeatRound,
     iBreath,
     handleTap,
     handleDoubleTap,

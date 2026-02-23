@@ -32,6 +32,7 @@ export const DynamicExercise = memo(
       isText,
       isHIE,
       exerciseName,
+      repeatRound,
       iBreath,
       handleTap,
       handleDoubleTap,
@@ -142,6 +143,30 @@ export const DynamicExercise = memo(
               </View>
             </AnimatePresence>
           </View>
+
+          <AnimatePresence>
+            {repeatRound !== '' && (
+              <MotiView
+                key={repeatRound}
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ opacity: { type: "timing", duration: 500 } }}
+                style={[
+                  tw`absolute left-0 right-0 justify-center items-center`,
+                  {
+                    bottom: bottom + 48,
+                  },
+                ]}
+              >
+                <View style={tw`px-6 py-2 rounded-xl bg-black`}>
+                  <Text style={tw`text-neutral-200 text-xs font-inter`}>
+                    {repeatRound}
+                  </Text>
+                </View>
+              </MotiView>
+            )}
+          </AnimatePresence>
 
           <AnimatePresence>
             {exerciseName && (

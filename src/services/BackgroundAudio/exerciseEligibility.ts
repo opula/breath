@@ -12,6 +12,7 @@ export const isExerciseEligibleForBackground = (exercise: Exercise): boolean =>
     switch (step.type) {
       case "breath":
       case "double-inhale":
+      case "repeat":
         return true;
       case "hold":
       case "inhale":
@@ -32,6 +33,39 @@ export const isExerciseEligibleForBackground = (exercise: Exercise): boolean =>
  * - `double-inhale`: sum(value) — fixed durations per occurrence.
  * - `hold` / `inhale` / `exhale` / `text`: effectiveCount seconds.
  */
+const stepDuration = (
+  step: Exercise["seq"][number],
+  loop: number,
+): number => {
+  switch (step.type) {
+    case "breath": {
+      const values = step.value ?? [0, 0, 0, 0];
+      const cycleSeconds = values.reduce((a, b) => a + b, 0);
+      let effectiveCount: number;
+      if (step.count === 0) {
+        effectiveCount = 1;
+      } else {
+        const rampAdd = step.ramp ? step.ramp * loop : 0;
+        effectiveCount = step.count + rampAdd;
+      }
+      return effectiveCount * cycleSeconds;
+    }
+    case "double-inhale": {
+      const values = step.value ?? [0, 0, 0];
+      return values.reduce((a, b) => a + b, 0);
+    }
+    case "hold":
+    case "inhale":
+    case "exhale":
+    case "text":
+      return step.count;
+    case "repeat":
+      return 0; // handled separately
+    default:
+      return 0;
+  }
+};
+
 export const calculateExerciseDuration = (
   exercise: Exercise,
   loops: number,
@@ -39,33 +73,23 @@ export const calculateExerciseDuration = (
   let total = 0;
 
   for (let loop = 0; loop < loops; loop++) {
-    for (const step of exercise.seq) {
-      switch (step.type) {
-        case "breath": {
-          const values = step.value ?? [0, 0, 0, 0];
-          const cycleSeconds = values.reduce((a, b) => a + b, 0);
-          let effectiveCount: number;
-          if (step.count === 0) {
-            effectiveCount = 1;
-          } else {
-            const rampAdd = step.ramp ? step.ramp * loop : 0;
-            effectiveCount = step.count + rampAdd;
-          }
-          total += effectiveCount * cycleSeconds;
-          break;
+    for (let i = 0; i < exercise.seq.length; i++) {
+      const step = exercise.seq[i];
+      if (step.type === "repeat") {
+        const lookback = (step.value as number[])?.[0] ?? 1;
+        const repeatCount = step.count;
+        if (repeatCount <= 0) continue;
+        const blockStart = Math.max(0, i - lookback);
+        let blockDuration = 0;
+        for (let j = blockStart; j < i; j++) {
+          if (exercise.seq[j].type === "repeat") continue;
+          blockDuration += stepDuration(exercise.seq[j], loop);
         }
-        case "double-inhale": {
-          const values = step.value ?? [0, 0, 0];
-          total += values.reduce((a, b) => a + b, 0);
-          break;
-        }
-        case "hold":
-        case "inhale":
-        case "exhale":
-        case "text": {
-          total += step.count;
-          break;
-        }
+        // The block steps are already counted once in the main loop,
+        // so add (repeatCount - 1) extra iterations
+        total += (repeatCount - 1) * blockDuration;
+      } else {
+        total += stepDuration(step, loop);
       }
     }
   }

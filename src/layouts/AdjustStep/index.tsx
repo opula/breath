@@ -42,6 +42,7 @@ export const AdjustStep = ({ route }: Props) => {
   const isBreath = type === "breath";
   const isDoubleInhale = type === "double-inhale";
   const isText = type === "text";
+  const isRepeat = type === "repeat";
   const isSingle = type === "exhale" || type === "hold" || type === "inhale";
 
   const totalDuration = useMemo(() => {
@@ -209,6 +210,93 @@ export const AdjustStep = ({ route }: Props) => {
             <Text style={tw`text-sm font-inter text-neutral-400`}>
               {`${totalSec.toFixed(1)}s total`}
             </Text>
+          </View>
+        </View>
+      </TrayScreen>
+    );
+  }
+
+  if (isRepeat) {
+    const lookback = (value as number[] | undefined)?.[0] ?? 1;
+
+    return (
+      <TrayScreen trayHeight={350 + bottom}>
+        <View style={tw`pt-4 px-2 pb-4`}>
+          <Text style={tw`text-base font-inter text-white text-center`}>
+            Repeat
+          </Text>
+
+          <View style={tw`gap-y-6 my-4`}>
+            <View>
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Lookback
+              </Text>
+              <HorizontalDial
+                min={1}
+                max={20}
+                step={1}
+                suffix=" steps"
+                defaultValue={lookback}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepValue({
+                      exerciseId,
+                      stepId,
+                      value: [Math.round(newValue)],
+                    }),
+                  );
+                }}
+              />
+            </View>
+
+            <View>
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Count
+              </Text>
+              <HorizontalDial
+                min={1}
+                max={1000}
+                step={1}
+                suffix="x"
+                defaultValue={count ?? 1}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepCount({
+                      exerciseId,
+                      stepId,
+                      count: Math.round(newValue),
+                    }),
+                  );
+                }}
+              />
+            </View>
+
+            <View
+              style={!count || count <= 1 ? tw`opacity-50` : undefined}
+              pointerEvents={!count || count <= 1 ? "none" : "auto"}
+            >
+              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
+                Ramp
+              </Text>
+              <HorizontalDial
+                min={1}
+                max={3}
+                step={0.1}
+                suffix="x"
+                defaultValue={step?.ramp ?? 1}
+                onChange={(newValue: number) => {
+                  dispatch(
+                    updateExerciseStepRamp({
+                      exerciseId,
+                      stepId,
+                      ramp: new Decimal(newValue)
+                        .toDecimalPlaces(1)
+                        .toNumber(),
+                    }),
+                  );
+                }}
+              />
+            </View>
           </View>
         </View>
       </TrayScreen>

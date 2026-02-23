@@ -7,7 +7,7 @@ export type Exercise = {
     count: number;
     ramp?: number;
     value?: number[];
-    type: 'inhale' | 'exhale' | 'hold' | 'breath' | 'text' | 'double-inhale';
+    type: 'inhale' | 'exhale' | 'hold' | 'breath' | 'text' | 'double-inhale' | 'repeat';
   }[];
   loopable: boolean;
 };

@@ -415,6 +415,15 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             setBreathing(false);
             break;
 
+          case "repeat": {
+            const lookback = (value as number[])?.[0] ?? 1;
+            setLabel(`Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`);
+            setSublabel(`${count}x`);
+            setBreathing(false);
+            setText(false);
+            break;
+          }
+
           case "hold":
           case "inhale":
           case "exhale":
@@ -460,6 +469,15 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             setText(true);
             setBreathing(false);
             break;
+
+          case "repeat": {
+            const lookback = (value as number[])?.[0] ?? 1;
+            setLabel(`Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`);
+            setSublabel(`${count}x`);
+            setBreathing(false);
+            setText(false);
+            break;
+          }
 
           case "hold":
           case "inhale":
@@ -617,6 +635,17 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                     {`Tap to continue`}
                   </Text>
                 ) : null}
+              </>
+            ) : currentType === "repeat" ? (
+              <>
+                <Text style={tw`text-xs font-inter text-white text-center`}>
+                  {`Repeat previous ${currentValue?.[0] ?? 1} step${(currentValue?.[0] ?? 1) === 1 ? "" : "s"}`}
+                </Text>
+                <Text
+                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
+                >
+                  {`${currentCount}x`}
+                </Text>
               </>
             ) : null}
           </View>
