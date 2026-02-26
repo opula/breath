@@ -1,6 +1,7 @@
 export type Exercise = {
   id: string;
   name: string;
+  description?: string;
   seq: {
     id: string;
     text?: string;

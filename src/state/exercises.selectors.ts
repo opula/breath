@@ -31,3 +31,12 @@ export const exerciseNameByIdSelector = createSelector(
     return exercise.name;
   },
 );
+
+export const exerciseDescriptionByIdSelector = createSelector(
+  exercisesByIdSelector,
+  (_, id) => id,
+  (exercisesIndex: Record<string, Exercise>, id: string) => {
+    const exercise = exercisesIndex[id];
+    return exercise.description ?? '';
+  },
+);

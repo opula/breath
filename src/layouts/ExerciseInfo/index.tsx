@@ -45,6 +45,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
     route.params.id,
   );
 
+  const hasDescription = !!exercise.description;
+  const totalSteps = (hasDescription ? 1 : 0) + exercise.seq.length;
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [label, setLabel] = useState("");
   const [sublabel, setSublabel] = useState("");
@@ -57,9 +60,12 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
   const clock = useClock();
   const iBreath = useSharedValue(0);
 
-  const currentType = exercise.seq[currentIndex].type;
-  const currentValue = exercise.seq[currentIndex].value;
-  const currentCount = exercise.seq[currentIndex].count;
+  const showingDescription = hasDescription && currentIndex === 0;
+  const seqStepIndex = hasDescription ? currentIndex - 1 : currentIndex;
+  const currentStep = showingDescription ? null : exercise.seq[seqStepIndex];
+  const currentType = currentStep?.type;
+  const currentValue = currentStep?.value;
+  const currentCount = currentStep?.count;
 
   const uniforms = useDerivedValue(() => {
     return {
@@ -335,7 +341,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
       emitter.current.on(Ops.START_DOUBLE_INHALE, () => {
         const currentSeqIndex = seqIndex.current;
         const step = exercise.seq[currentSeqIndex];
-        const [firstDur, pauseDur, secondDur] = (step.value as number[] | undefined) ?? [1.5, 0.3, 1.5];
+        const [firstDur, pauseDur, secondDur] = (step.value as
+          | number[]
+          | undefined) ?? [1.5, 0.3, 1.5];
 
         setLabel("inhale");
         setSublabel("");
@@ -417,7 +425,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
 
           case "repeat": {
             const lookback = (value as number[])?.[0] ?? 1;
-            setLabel(`Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`);
+            setLabel(
+              `Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`,
+            );
             setSublabel(`${count}x`);
             setBreathing(false);
             setText(false);
@@ -472,7 +482,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
 
           case "repeat": {
             const lookback = (value as number[])?.[0] ?? 1;
-            setLabel(`Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`);
+            setLabel(
+              `Repeat previous ${lookback} step${lookback === 1 ? "" : "s"}`,
+            );
             setSublabel(`${count}x`);
             setBreathing(false);
             setText(false);
@@ -497,9 +509,11 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
   );
 
   useEffect(() => {
-    defer(() => {
-      runUserNext();
-    });
+    if (!hasDescription) {
+      defer(() => {
+        runUserNext();
+      });
+    }
   }, []);
 
   return (
@@ -523,16 +537,26 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
 
         <View style={tw`flex-1`}>
           <View style={tw`flex-row h-10 items-center px-6`}>
-            {exercise.seq.map((_, index) => (
+            {Array.from({ length: totalSteps }, (_, index) => (
               <View
                 key={`${index}-step`}
-                style={tw`${index !== 0 ? "ml-1" : ""} ${index !== exercise.seq.length - 1 ? "mr-1" : ""} flex-1 h-1 rounded-sm ${currentIndex >= index ? "bg-neutral-200" : "bg-neutral-700"}`}
+                style={tw`${index !== 0 ? "ml-1" : ""} ${index !== totalSteps - 1 ? "mr-1" : ""} flex-1 h-1 rounded-sm ${currentIndex >= index ? "bg-neutral-200" : "bg-neutral-700"}`}
               />
             ))}
           </View>
 
           <View style={tw`flex-1 justify-center items-center`}>
-            {isBreathing ? (
+            {showingDescription ? (
+              <View style={tw`px-8 items-center justify-center`}>
+                <Text
+                  style={[
+                    tw`text-base font-inter text-center text-neutral-200 leading-relaxed`,
+                  ]}
+                >
+                  {exercise.description}
+                </Text>
+              </View>
+            ) : isBreathing ? (
               <Canvas style={{ height: 240, width: 240 }}>
                 <Fill>
                   <Shader source={source} uniforms={uniforms} />
@@ -572,7 +596,13 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
           </View>
 
           <View style={tw`justify-end items-center mb-2 h-16`}>
-            {currentType === "breath" ? (
+            {showingDescription ? (
+              <Text
+                style={tw`text-[10px] font-inter text-neutral-400 text-center`}
+              >
+                Tap to continue
+              </Text>
+            ) : currentType === "breath" ? (
               <>
                 <Text
                   style={tw`text-xs font-inter text-white text-center`}
@@ -652,11 +682,19 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
 
           <View style={tw`absolute inset-0 flex-row`}>
             <Pressable
-              style={tw`w-32 h-full justify-center pl-4 pb-8`}
+              style={tw`w-32 h-full justify-center pl-2 pb-8`}
               onPress={() => {
                 if (currentIndex) {
                   setCurrentIndex(currentIndex - 1);
-                  runUserPrev();
+                  if (hasDescription && currentIndex === 1) {
+                    exerciseScheduler.clearJobs();
+                    iBreath.value = withTiming(0, { duration: 1 });
+                    setBreathing(false);
+                    setText(false);
+                    seqIndex.current = -1;
+                  } else {
+                    runUserPrev();
+                  }
                 }
               }}
             >
@@ -669,9 +707,9 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               ) : null}
             </Pressable>
             <Pressable
-              style={tw`flex-1 h-full justify-center items-end pr-4 pb-8`}
+              style={tw`flex-1 h-full justify-center items-end pr-2 pb-8`}
               onPress={() => {
-                if (currentIndex < exercise.seq.length - 1) {
+                if (currentIndex < totalSteps - 1) {
                   setCurrentIndex(currentIndex + 1);
                   runUserNext();
                 } else {

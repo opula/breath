@@ -1,6 +1,7 @@
 [
   {
     "name": "Resonance",
+    "description": "Breathe at the body's natural resonant frequency to maximize heart rate variability and bring the nervous system into balance.",
     "seq": [
       {
         "type": "breath",
@@ -12,6 +13,7 @@
   },
   {
     "name": "Deep Calm",
+    "description": "Long, slow breathing to activate the parasympathetic nervous system and settle into deep relaxation.",
     "seq": [
       {
         "type": "breath",
@@ -23,6 +25,7 @@
   },
   {
     "name": "4-7-8",
+    "description": "A natural tranquilizer for the nervous system, popularized by Dr. Andrew Weil. The extended hold and long exhale promote deep calm.",
     "seq": [
       {
         "type": "breath",
@@ -42,6 +45,7 @@
   },
   {
     "name": "Extended 4-7-8",
+    "description": "A longer version of the 4-7-8 pattern for experienced practitioners seeking deeper relaxation.",
     "seq": [
       {
         "type": "breath",
@@ -61,6 +65,7 @@
   },
   {
     "name": "Box",
+    "description": "Equal inhale, hold, exhale, and hold phases create a balanced rhythm used by Navy SEALs to maintain calm and focus under pressure.",
     "seq": [
       {
         "type": "breath",
@@ -80,6 +85,7 @@
   },
   {
     "name": "Extended Exhale",
+    "description": "A 1:2 inhale-to-exhale ratio that emphasizes the exhale to activate the body's rest-and-digest response.",
     "seq": [
       {
         "type": "breath",
@@ -91,6 +97,7 @@
   },
   {
     "name": "Physiological Sigh",
+    "description": "A double inhale followed by a long exhale. Research from Stanford shows this is the fastest real-time method to reduce stress.",
     "seq": [
       {
         "type": "double-inhale",
@@ -106,6 +113,7 @@
   },
   {
     "name": "Longer Holds",
+    "description": "Progressively lengthens each breath cycle, training the body to slow down and deepen its natural breathing rhythm.",
     "seq": [
       {
         "type": "breath",
@@ -142,6 +150,7 @@
   },
   {
     "name": "Study",
+    "description": "Starts with calm breathing that gradually quickens to sharpen focus, then returns to a slower pace. Designed for sustained concentration.",
     "seq": [
       {
         "type": "breath",
@@ -178,6 +187,7 @@
   },
   {
     "name": "Breath of Fire",
+    "description": "Rapid, rhythmic breathing from Kundalini yoga. Builds energy, increases alertness, and strengthens the diaphragm.",
     "seq": [
       {
         "type": "breath",
@@ -213,6 +223,7 @@
   },
   {
     "name": "Bellow Breathing",
+    "description": "Rapid double-inhale and exhale cycles that ramp in intensity, followed by a deep inhale and an extended hold that grows longer each round.",
     "seq": [
       {
         "type": "double-inhale",
@@ -226,17 +237,28 @@
       {
         "type": "repeat",
         "value": [2],
-        "count": 20
+        "count": 40,
+        "ramp": 1.2
+      },
+      {
+        "type": "inhale",
+        "count": 4
       },
       {
         "type": "hold",
-        "count": 30
+        "count": 72,
+        "ramp": 1.2
+      },
+      {
+        "type": "exhale",
+        "count": 4
       }
     ],
     "loopable": true
   },
   {
     "name": "Brown Fat Activation",
+    "description": "Deliberate breathing with emphasis on strong inhales and breath holds to stimulate brown adipose tissue and generate body heat.",
     "seq": [
       {
         "type": "breath",
@@ -260,6 +282,7 @@
   },
   {
     "name": "Tummo",
+    "description": "A Tibetan inner heat meditation practice. Vigorous breathing followed by extended breath holds to build heat and focus the mind.",
     "seq": [
       {
         "type": "breath",
@@ -295,6 +318,7 @@
   },
   {
     "name": "Wim Hof",
+    "description": "The Wim Hof Method. Controlled hyperventilation followed by a breath hold on empty lungs, then a recovery breath with a short hold.",
     "seq": [
       {
         "type": "breath",
@@ -326,6 +350,7 @@
   },
   {
     "name": "CO2 Tolerance",
+    "description": "Gradually lengthens exhales across three stages to train your body's tolerance to carbon dioxide, improving breath hold capacity over time.",
     "seq": [
       {
         "type": "breath",
@@ -364,6 +389,7 @@
   },
   {
     "name": "Apnea",
+    "description": "Breath hold training with progressively longer retention times. Builds comfort with air hunger for freediving and general breath control.",
     "seq": [
       {
         "type": "breath",
@@ -385,6 +411,7 @@
   },
   {
     "name": "Retention",
+    "description": "Simple breath retention practice with holds after each exhale. Builds CO2 tolerance and calms the mind.",
     "seq": [
       {
         "type": "breath",
@@ -396,6 +423,7 @@
   },
   {
     "name": "Vortex",
+    "description": "Breathing accelerates through progressively shorter cycles, spiraling inward to a still point followed by a hold.",
     "seq": [
       {
         "type": "breath",
@@ -435,93 +463,8 @@
     "loopable": true
   },
   {
-    "name": "Five Whys",
-    "seq": [
-      {
-        "type": "text",
-        "text": "Imagine a problem or a desire you have.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Focus on the driving force behind it.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Could you let that go?",
-        "count": 0
-      },
-      {
-        "type": "breath",
-        "value": [6, 0, 6, 0],
-        "count": 3
-      },
-      {
-        "type": "text",
-        "text": "Identify a reason behind the driving force.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Could you let that go?",
-        "count": 0
-      },
-      {
-        "type": "breath",
-        "value": [6, 0, 6, 0],
-        "count": 3
-      },
-      {
-        "type": "text",
-        "text": "And a reason behind that.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Could you let that go?",
-        "count": 0
-      },
-      {
-        "type": "breath",
-        "value": [6, 0, 6, 0],
-        "count": 3
-      },
-      {
-        "type": "text",
-        "text": "And a reason behind that.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Could you let that go?",
-        "count": 0
-      },
-      {
-        "type": "breath",
-        "value": [6, 0, 6, 0],
-        "count": 3
-      },
-      {
-        "type": "text",
-        "text": "And a reason behind that.",
-        "count": 0
-      },
-      {
-        "type": "text",
-        "text": "Could you let that go?",
-        "count": 0
-      },
-      {
-        "type": "breath",
-        "value": [6, 0, 6, 0],
-        "count": 3
-      }
-    ],
-    "loopable": true
-  },
-  {
     "name": "Shamanic",
+    "description": "Progressive box breathing with increasing durations and extended holds between rounds. A meditative journey that deepens with each cycle.",
     "seq": [
       {
         "type": "breath",
@@ -613,6 +556,7 @@
   },
   {
     "name": "Altered State",
+    "description": "Intense, rhythmic hyperventilation followed by a long breath hold to shift consciousness and induce a meditative altered state.",
     "seq": [
       {
         "type": "breath",
@@ -636,6 +580,7 @@
   },
   {
     "name": "Dopamine Light",
+    "description": "An accelerating breath pattern that builds intensity through progressively faster cycles, culminating in a long hold designed to elevate mood and energy.",
     "seq": [
       {
         "type": "breath",
@@ -684,6 +629,7 @@
   },
   {
     "name": "Cup Hands",
+    "description": "Cup your hands over your nose and mouth while breathing. Rebreathing CO2 calms the nervous system and reduces anxiety quickly.",
     "seq": [
       {
         "type": "breath",
@@ -700,11 +646,13 @@
   },
   {
     "name": "Holotropic",
+    "description": "Based on Stanislav Grof's holotropic breathwork. Sustained deep, fast breathing to access expanded states of awareness.",
     "seq": [
       {
         "type": "breath",
         "value": [1.4, 0, 0.8, 0],
-        "count": 48
+        "count": 40,
+        "ramp": 1.3
       },
       {
         "type": "breath",
@@ -728,6 +676,7 @@
   },
   {
     "name": "Euphoric Release",
+    "description": "Combines hyperventilation with full-body muscular tension and release. The contrast creates a wave of relaxation and euphoria.",
     "seq": [
       {
         "type": "breath",

@@ -156,6 +156,23 @@ export const exercisesSlice = createSlice({
             },
       );
     },
+    editExerciseDescription(
+      state,
+      action: PayloadAction<{
+        exerciseId: string;
+        description: string;
+      }>,
+    ) {
+      const {exerciseId, description} = action.payload;
+      state.userExercises = state.userExercises.map(exercise =>
+        exercise.id !== exerciseId
+          ? exercise
+          : {
+              ...exercise,
+              description,
+            },
+      );
+    },
     addExerciseStep(
       state,
       action: PayloadAction<{
@@ -221,6 +238,7 @@ export const {
   updateExerciseStepRamp,
   updateExerciseStepText,
   editExerciseName,
+  editExerciseDescription,
   addExerciseStep,
   addExercise,
 } = exercisesSlice.actions;

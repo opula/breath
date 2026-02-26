@@ -27,6 +27,7 @@ import { type Exercise as ExerciseItem } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { useDebouncedCallback } from "use-debounce";
 import { EditName } from "./EditName";
+import { EditDescription } from "./EditDescription";
 import { useParametrizedAppSelector } from "../../utils/selectors";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -129,6 +130,13 @@ export const Exercise = ({ navigation, route }: Props) => {
             Edit name
           </Text>
           <EditName exerciseId={id} />
+        </View>
+
+        <View style={tw`px-6`}>
+          <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+            Description
+          </Text>
+          <EditDescription exerciseId={id} />
         </View>
 
         <View style={tw`flex-1 px-4`}>
