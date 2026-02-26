@@ -2,6 +2,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
+import { CoachOverlay } from "../../components/CoachOverlay";
 
 import { Icon } from "../../components/Icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,6 +23,7 @@ import {
   isGrayscaleSelector,
   soundsEnabledSelector,
   hapticsEnabledSelector,
+  hasSeenTutorialSelector,
 } from "../../state/configuration.selectors";
 import {
   toggleGrayscale as toggleGrayscaleAction,
@@ -29,6 +31,7 @@ import {
   setPause as setPauseAction,
   toggleSounds as toggleSoundsAction,
   toggleHaptics as toggleHapticsAction,
+  dismissTutorial as dismissTutorialAction,
 } from "../../state/configuration.reducer";
 
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
@@ -57,6 +60,7 @@ export const Main = () => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
+  const hasSeenTutorial = useAppSelector(hasSeenTutorialSelector);
 
   const [toastMessage, setToastMessage] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -66,13 +70,12 @@ export const Main = () => {
     toastTimer.current = setTimeout(() => setToastMessage(""), 2000);
   }, []);
 
-  const togglePaused = useCallback(
-    () => dispatch(togglePausedAction()),
-    [dispatch],
-  );
   const setPause = useCallback(
-    (status: boolean) => dispatch(setPauseAction(status)),
-    [dispatch],
+    (status: boolean) => {
+      dispatch(setPauseAction(status));
+      if (!hasSeenTutorial) dispatch(dismissTutorialAction());
+    },
+    [dispatch, hasSeenTutorial],
   );
   const toggleGrayscale = useCallback(() => {
     dispatch(toggleGrayscaleAction());
@@ -109,6 +112,8 @@ export const Main = () => {
       <View style={tw`absolute inset-0`}>
         <DynamicExercise onPause={setPause} />
       </View>
+
+      <CoachOverlay />
 
       <AnimatePresence>
         {isPaused && isFocused ? (
