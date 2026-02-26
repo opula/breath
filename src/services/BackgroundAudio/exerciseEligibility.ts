@@ -24,12 +24,22 @@ export const isExerciseEligibleForBackground = (exercise: Exercise): boolean =>
     }
   });
 
+/** Matches ExerciseEngine.getEffectiveCount — multiplicative linear ramp. */
+const getEffectiveCount = (
+  count: number,
+  ramp: number | undefined,
+  loop: number,
+): number => {
+  if (!count || !ramp || ramp <= 1) return count;
+  return Math.round(count * (1 + loop * (ramp - 1)));
+};
+
 /**
  * Calculate the total duration in seconds for an exercise repeated `loops` times.
  *
  * For each loop iteration, walks every step:
  * - `breath`: effectiveCount * sum(value).  count:0 → 1 cycle, no ramp applied.
- *   Ramp increases count by `ramp` each loop (starting from loop index 1).
+ *   Ramp multiplies count by `ramp` each loop (starting from loop index 1).
  * - `double-inhale`: sum(value) — fixed durations per occurrence.
  * - `hold` / `inhale` / `exhale` / `text`: effectiveCount seconds.
  */
@@ -41,13 +51,9 @@ const stepDuration = (
     case "breath": {
       const values = step.value ?? [0, 0, 0, 0];
       const cycleSeconds = values.reduce((a, b) => a + b, 0);
-      let effectiveCount: number;
-      if (step.count === 0) {
-        effectiveCount = 1;
-      } else {
-        const rampAdd = step.ramp ? step.ramp * loop : 0;
-        effectiveCount = step.count + rampAdd;
-      }
+      const effectiveCount = step.count === 0
+        ? 1
+        : getEffectiveCount(step.count, step.ramp, loop);
       return effectiveCount * cycleSeconds;
     }
     case "double-inhale": {
@@ -58,7 +64,7 @@ const stepDuration = (
     case "inhale":
     case "exhale":
     case "text":
-      return step.count;
+      return getEffectiveCount(step.count, step.ramp, loop);
     case "repeat":
       return 0; // handled separately
     default:
@@ -77,7 +83,7 @@ export const calculateExerciseDuration = (
       const step = exercise.seq[i];
       if (step.type === "repeat") {
         const lookback = (step.value as number[])?.[0] ?? 1;
-        const repeatCount = step.count;
+        const repeatCount = getEffectiveCount(step.count, step.ramp, loop);
         if (repeatCount <= 0) continue;
         const blockStart = Math.max(0, i - lookback);
         let blockDuration = 0;

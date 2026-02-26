@@ -13,6 +13,16 @@ export type PlaybackSchedule = {
   totalDuration: number;
 };
 
+/** Matches ExerciseEngine.getEffectiveCount — multiplicative linear ramp. */
+const getEffectiveCount = (
+  count: number,
+  ramp: number | undefined,
+  loop: number,
+): number => {
+  if (!count || !ramp || ramp <= 1) return count;
+  return Math.round(count * (1 + loop * (ramp - 1)));
+};
+
 /**
  * Build a schedule of sound-cue events for an exercise.
  *
@@ -30,13 +40,9 @@ const processStep = (
     case "breath": {
       const [inhaleDur = 0, hold1Dur = 0, exhaleDur = 0, hold2Dur = 0] =
         step.value ?? [];
-      let effectiveCount: number;
-      if (step.count === 0) {
-        effectiveCount = 1;
-      } else {
-        const rampAdd = step.ramp ? step.ramp * loop : 0;
-        effectiveCount = step.count + rampAdd;
-      }
+      const effectiveCount = step.count === 0
+        ? 1
+        : getEffectiveCount(step.count, step.ramp, loop);
 
       for (let cycle = 0; cycle < effectiveCount; cycle++) {
         if (inhaleDur > 0) {
@@ -60,22 +66,25 @@ const processStep = (
     }
 
     case "inhale": {
-      events.push({ time: cursor, cue: "inhale", duration: step.count });
-      return cursor + step.count;
+      const count = getEffectiveCount(step.count, step.ramp, loop);
+      events.push({ time: cursor, cue: "inhale", duration: count });
+      return cursor + count;
     }
 
     case "exhale": {
-      events.push({ time: cursor, cue: "exhale", duration: step.count });
-      return cursor + step.count;
+      const count = getEffectiveCount(step.count, step.ramp, loop);
+      events.push({ time: cursor, cue: "exhale", duration: count });
+      return cursor + count;
     }
 
     case "hold": {
-      events.push({ time: cursor, cue: "hold", duration: step.count });
-      return cursor + step.count;
+      const count = getEffectiveCount(step.count, step.ramp, loop);
+      events.push({ time: cursor, cue: "hold", duration: count });
+      return cursor + count;
     }
 
     case "text": {
-      return cursor + step.count;
+      return cursor + getEffectiveCount(step.count, step.ramp, loop);
     }
 
     case "double-inhale": {
@@ -113,7 +122,7 @@ export const buildPlaybackSchedule = (
 
       if (step.type === "repeat") {
         const lookback = (step.value as number[])?.[0] ?? 1;
-        const repeatCount = step.count;
+        const repeatCount = getEffectiveCount(step.count, step.ramp, loop);
         if (repeatCount <= 0) continue;
         const blockStart = Math.max(0, i - lookback);
         // Block steps were already emitted once; emit (repeatCount - 1) more

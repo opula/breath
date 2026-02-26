@@ -152,7 +152,8 @@ export class ExerciseEngine {
     if (this.destroyed) return;
     this.exerciseIndex = index;
     this.options.saveExerciseIndex?.(index);
-    this.reset();
+    this.reset(true);
+    this.start();
   }
 
   // --- Queries ---
