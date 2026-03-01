@@ -53,6 +53,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
   const [sublabel, setSublabel] = useState("");
   const [isBreathing, setBreathing] = useState(false);
   const [isText, setText] = useState(false);
+  const [isRepeat, setRepeat] = useState(false);
 
   const emitter = useRef(new EventEmitter());
   const seqIndex = useRef(-1);
@@ -409,18 +410,21 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             );
             setBreathing(true);
             setText(false);
+            setRepeat(false);
             break;
 
           case "double-inhale":
             emitter.current.emit(Ops.START_DOUBLE_INHALE);
             setBreathing(true);
             setText(false);
+            setRepeat(false);
             break;
 
           case "text":
             emitter.current.emit(Ops.START_TEXT);
             setText(true);
             setBreathing(false);
+            setRepeat(false);
             break;
 
           case "repeat": {
@@ -431,6 +435,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             setSublabel(`${count}x`);
             setBreathing(false);
             setText(false);
+            setRepeat(true);
             break;
           }
 
@@ -440,6 +445,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             emitter.current.emit(Ops.START_HIE);
             setBreathing(false);
             setText(false);
+            setRepeat(false);
             break;
         }
       });
@@ -466,18 +472,21 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             );
             setBreathing(true);
             setText(false);
+            setRepeat(false);
             break;
 
           case "double-inhale":
             emitter.current.emit(Ops.START_DOUBLE_INHALE);
             setBreathing(true);
             setText(false);
+            setRepeat(false);
             break;
 
           case "text":
             emitter.current.emit(Ops.START_TEXT);
             setText(true);
             setBreathing(false);
+            setRepeat(false);
             break;
 
           case "repeat": {
@@ -488,6 +497,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             setSublabel(`${count}x`);
             setBreathing(false);
             setText(false);
+            setRepeat(true);
             break;
           }
 
@@ -562,6 +572,19 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                   <Shader source={source} uniforms={uniforms} />
                 </Fill>
               </Canvas>
+            ) : isRepeat ? (
+              <View style={tw`px-8 items-center justify-center`}>
+                <Text
+                  style={tw`text-base font-inter text-center text-neutral-200 mb-2`}
+                >
+                  {label}
+                </Text>
+                <Text
+                  style={tw`text-sm font-inter text-center text-neutral-400`}
+                >
+                  {sublabel}
+                </Text>
+              </View>
             ) : (
               <View
                 style={tw`${isText ? "h-36 w-36" : "h-24 w-24"} items-center justify-center`}
@@ -667,16 +690,11 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                 ) : null}
               </>
             ) : currentType === "repeat" ? (
-              <>
-                <Text style={tw`text-xs font-inter text-white text-center`}>
-                  {`Repeat previous ${currentValue?.[0] ?? 1} step${(currentValue?.[0] ?? 1) === 1 ? "" : "s"}`}
-                </Text>
-                <Text
-                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
-                >
-                  {`${currentCount}x`}
-                </Text>
-              </>
+              <Text
+                style={tw`text-[10px] font-inter text-neutral-400 text-center`}
+              >
+                Tap to continue
+              </Text>
             ) : null}
           </View>
 

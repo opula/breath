@@ -125,20 +125,6 @@ export const Exercise = ({ navigation, route }: Props) => {
           <View style={tw`h-10 w-10`} />
         </View>
 
-        <View style={tw`py-4 px-6 mt-2`}>
-          <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-            Edit name
-          </Text>
-          <EditName exerciseId={id} />
-        </View>
-
-        <View style={tw`px-6`}>
-          <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-            Description
-          </Text>
-          <EditDescription exerciseId={id} />
-        </View>
-
         <View style={tw`flex-1 px-4`}>
           <DraggableFlatList
             data={exercise.seq}
@@ -156,13 +142,29 @@ export const Exercise = ({ navigation, route }: Props) => {
                 }),
               )
             }
-            ListHeaderComponent={() => (
-              <View style={tw`mt-4 px-2`}>
-                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                  Steps
-                </Text>
+            ListHeaderComponent={
+              <View>
+                <View style={tw`py-4 px-2 mt-2`}>
+                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+                    Edit name
+                  </Text>
+                  <EditName exerciseId={id} />
+                </View>
+
+                <View style={tw`px-2`}>
+                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+                    Description
+                  </Text>
+                  <EditDescription exerciseId={id} />
+                </View>
+
+                <View style={tw`mt-4 px-2`}>
+                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
+                    Steps
+                  </Text>
+                </View>
               </View>
-            )}
+            }
             ListEmptyComponent={() => (
               <View style={tw`items-center pt-8`}>
                 <Text style={tw`text-sm font-inter text-neutral-500 mb-6`}>

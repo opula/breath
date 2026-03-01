@@ -1,0 +1,1314 @@
+[
+  {
+    "name": "Resonance",
+    "description": "Breathe at the body's natural resonant frequency (~5.5 breaths per minute) to maximize heart rate variability. This is the 'perfect breath' rate \u2014 the same rhythm produced by Ave Maria prayer and Sanskrit mantras \u2014 synchronizing cardiovascular and respiratory systems into coherence.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Deep Calm",
+    "description": "At just 3.75 breaths per minute, this ultra-slow rhythm activates deep parasympathetic dominance \u2014 shifting the nervous system into its lowest gear for profound relaxation and recovery.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          8,
+          0,
+          8,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "4-7-8",
+    "description": "Dr. Andrew Weil's natural tranquilizer for the nervous system. The 7-second hold saturates blood with oxygen while the 8-second exhale maximizes CO\u2082 expulsion and vagal activation. Widely adopted by military for rapid sleep onset \u2014 the 19-second cycle at ~3 bpm creates extreme parasympathetic dominance.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          7,
+          8,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "type": "hold",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Box",
+    "description": "Equal inhale, hold, exhale, and hold phases create a perfectly balanced rhythm used by Navy SEALs to maintain calm and focus under pressure. Scale the duration to your CO\u2082 tolerance: 3s per phase if low, 5\u20136s if moderate, 8\u201310s if high.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "type": "hold",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Extended Exhale",
+    "description": "A 1:2 inhale-to-exhale ratio that emphasizes the exhale to activate the body's rest-and-digest response. The extended exhalation phase stimulates the vagus nerve more powerfully than equal-ratio breathing, making this one of the simplest and most effective calming patterns.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          8,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "7-11",
+    "description": "With an exhale nearly 60% longer than the inhale at just 3.3 breaths per minute, this creates one of the strongest vagal activation ratios of any simple breathing technique. Described by the Human Givens Institute as the most powerful single relaxation technique available.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          7,
+          0,
+          11,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Physiological Sigh",
+    "description": "A double inhale followed by a long exhale \u2014 the fastest real-time method to reduce stress, validated by Stanford research. The double inhale reopens collapsed alveoli in the lungs, maximizing CO\u2082 offloading in a single breath cycle. Use 1\u20133 breaths as an acute rescue tool.",
+    "seq": [
+      {
+        "type": "double-inhale",
+        "value": [
+          1.5,
+          0.3,
+          1.5
+        ],
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 8
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Cyclic Sighing",
+    "description": "Stanford's landmark 2023 protocol: 5 minutes of continuous double-inhale-then-long-exhale breathing that outperformed mindfulness meditation for mood improvement in a randomized controlled trial. Same mechanism as the Physiological Sigh, but sustained as a daily practice with cumulative benefits over 28+ days.",
+    "seq": [
+      {
+        "type": "double-inhale",
+        "value": [
+          2,
+          0.3,
+          1
+        ],
+        "count": 33
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "type": "repeat",
+        "value": [
+          2
+        ],
+        "count": 33
+      },
+      {
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 5
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Longer Holds",
+    "description": "Progressively lengthens each breath cycle using an automatic ramp, training the body to slow down and deepen its natural breathing rhythm \u2014 each round stretches slightly longer than the last.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 12,
+        "ramp": 1.1
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Study",
+    "description": "Starts with calm breathing that gradually quickens to sharpen focus, then returns to a slower pace. Designed for sustained concentration during long work or study sessions.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          0
+        ],
+        "count": 150
+      },
+      {
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 20
+      },
+      {
+        "type": "breath",
+        "value": [
+          2.5,
+          0,
+          2.5,
+          0
+        ],
+        "count": 24
+      },
+      {
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          2,
+          0
+        ],
+        "count": 30
+      },
+      {
+        "type": "breath",
+        "value": [
+          1.6,
+          0,
+          1.6,
+          0
+        ],
+        "count": 400
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          0
+        ],
+        "count": 40
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Breathe Light",
+    "description": "Patrick McKeown's core Oxygen Advantage exercise. Gently reduce breathing volume to create tolerable air hunger, allowing CO\u2082 to accumulate and improve the Bohr effect \u2014 the mechanism by which higher CO\u2082 causes hemoglobin to release more oxygen to tissues. Breathing should be so quiet that fine hairs inside your nostrils barely move.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          5,
+          1
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Breath of Fire",
+    "description": "Rapid, rhythmic breathing from Kundalini yoga. Builds energy, increases alertness, and strengthens the diaphragm through sustained diaphragmatic pumping followed by a long retention that concentrates the energizing effect.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          0.6,
+          0,
+          0.6,
+          0
+        ],
+        "count": 120
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 120
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Bellow Breathing",
+    "description": "Rapid double-inhale and exhale cycles that ramp in intensity, followed by a deep inhale and an extended hold that grows longer each round. A progressive engine that builds heat and energy.",
+    "seq": [
+      {
+        "type": "double-inhale",
+        "value": [
+          1.2,
+          0.1,
+          1.2
+        ],
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 2
+      },
+      {
+        "type": "repeat",
+        "value": [
+          2
+        ],
+        "count": 40,
+        "ramp": 1.2
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 72,
+        "ramp": 1.2
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Brown Fat Activation",
+    "description": "Deliberate breathing with emphasis on strong, forceful inhales and breath holds to stimulate brown adipose tissue and generate body heat. The inhale-dominant ratio (3.5s in vs 1.5s out) creates a sympathetic charge that primes thermogenesis.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          3.5,
+          0,
+          1.5,
+          0
+        ],
+        "count": 10
+      },
+      {
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "type": "hold",
+        "count": 30
+      },
+      {
+        "type": "exhale",
+        "count": 5
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Tummo",
+    "description": "A Tibetan inner heat meditation practice. Vigorous inhale-dominant breathing followed by extended breath holds builds core body temperature and focuses the mind. Traditionally practiced in freezing conditions to demonstrate mastery over autonomic function.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          1.3,
+          0,
+          0.7,
+          0
+        ],
+        "count": 40
+      },
+      {
+        "type": "inhale",
+        "count": 3
+      },
+      {
+        "type": "exhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 75
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Wim Hof",
+    "description": "The Wim Hof Method: controlled hyperventilation followed by a breath hold on empty lungs, then a recovery breath with a short hold. A 2025 trial (N=404) confirmed WHM produces greater momentary improvements in energy, mental clarity, and stress handling compared to meditation.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          1.5,
+          0,
+          1,
+          0
+        ],
+        "count": 30
+      },
+      {
+        "type": "exhale",
+        "count": 3
+      },
+      {
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 15
+      },
+      {
+        "type": "exhale",
+        "count": 3
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "CO2 Tolerance",
+    "description": "Gradually lengthens exhales across three stages to train your body's tolerance to carbon dioxide, improving breath hold capacity and overall breathing efficiency over time.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          4,
+          0
+        ],
+        "count": 30
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          8,
+          0
+        ],
+        "count": 20
+      },
+      {
+        "type": "breath",
+        "value": [
+          8,
+          0,
+          16,
+          0
+        ],
+        "count": 10
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally before beginning again",
+        "count": 0
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Apnea",
+    "description": "Breath hold training with progressively longer retention times. Builds comfort with air hunger and trains the dive reflex for freediving and general breath control.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          6,
+          12,
+          6,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "type": "breath",
+        "value": [
+          6,
+          18,
+          12,
+          0
+        ],
+        "count": 0
+      },
+      {
+        "type": "breath",
+        "value": [
+          6,
+          24,
+          12,
+          0
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Retention",
+    "description": "Simple breath retention practice with holds after each exhale. An accessible entry point to breath-hold training that builds CO\u2082 tolerance and calms the mind.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          12
+        ],
+        "count": 0
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "CO\u2082 Table",
+    "description": "The standard freediving hypercapnic protocol: hold duration stays constant while rest periods shrink each round, progressively training the brain to tolerate rising carbon dioxide \u2014 the primary limiter in breath-hold performance. 8 rounds, increasingly uncomfortable.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 120
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 105
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 90
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 75
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 60
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 45
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 30
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 15
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "text",
+        "text": "Recovery: breathe slowly and deeply",
+        "count": 60
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "O\u2082 Table",
+    "description": "The complementary freediving hypoxic protocol: rest stays constant while breath-hold duration increases each round, progressively depleting oxygen and training the body's hypoxic response \u2014 building adaptations that extend breath-hold capacity.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Breathe normally",
+        "count": 120
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "repeat",
+        "value": [
+          2
+        ],
+        "count": 7,
+        "ramp": 1.1
+      },
+      {
+        "type": "text",
+        "text": "Recovery: breathe slowly and deeply",
+        "count": 60
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Shamanic",
+    "description": "Progressive box breathing with increasing durations and extended holds between rounds. A meditative journey that deepens with each cycle, building from 4-count to 8-count box patterns.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "count": 12
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "breath",
+        "value": [
+          5,
+          5,
+          5,
+          5
+        ],
+        "count": 12
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "breath",
+        "value": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "count": 12
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "breath",
+        "value": [
+          7,
+          7,
+          7,
+          7
+        ],
+        "count": 12
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      },
+      {
+        "type": "breath",
+        "value": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "count": 12
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 60
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Altered State",
+    "description": "Intense, rhythmic hyperventilation followed by a long breath hold to shift consciousness and induce a meditative altered state. The rapid breathing depletes CO\u2082, and the extended hold creates a unique neurological window as oxygen levels drop.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          1.7,
+          0,
+          0.8,
+          0
+        ],
+        "count": 48
+      },
+      {
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "type": "hold",
+        "count": 80
+      },
+      {
+        "type": "exhale",
+        "count": 4
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Dopamine Light",
+    "description": "An accelerating breath pattern that builds intensity through progressively faster cycles, culminating in a long hold designed to elevate mood and energy through catecholamine release.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          2.4,
+          0,
+          0.6,
+          0
+        ],
+        "count": 20
+      },
+      {
+        "type": "breath",
+        "value": [
+          2,
+          0,
+          0.6,
+          0
+        ],
+        "count": 24
+      },
+      {
+        "type": "breath",
+        "value": [
+          1.6,
+          0,
+          0.6,
+          0
+        ],
+        "count": 28
+      },
+      {
+        "type": "breath",
+        "value": [
+          1.1,
+          0,
+          0.6,
+          0
+        ],
+        "count": 36
+      },
+      {
+        "type": "breath",
+        "value": [
+          0.6,
+          0,
+          0.6,
+          0
+        ],
+        "count": 50
+      },
+      {
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "type": "inhale",
+        "count": 6
+      },
+      {
+        "type": "hold",
+        "count": 90
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      }
+    ],
+    "loopable": true
+  },
+  {
+    "name": "Holotropic",
+    "description": "Based on Stanislav Grof's holotropic breathwork. Sustained deep, fast breathing with a ramp that accelerates the pace, pushing toward expanded states of awareness through prolonged hyperventilation and an open-ended hold.",
+    "seq": [
+      {
+        "type": "breath",
+        "value": [
+          1.4,
+          0,
+          0.8,
+          0
+        ],
+        "count": 40,
+        "ramp": 1.3
+      },
+      {
+        "type": "breath",
+        "value": [
+          3,
+          0,
+          3,
+          0
+        ],
+        "count": 3
+      },
+      {
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "type": "exhale",
+        "count": 5
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Nadi Shodhana",
+    "description": "Alternate nostril breathing in the classical 1:2:2 pranayama ratio. Alternating airflow between nostrils balances sympathetic and parasympathetic tone, harmonizing left and right brain hemispheres while significantly reducing blood pressure.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Close right nostril, inhale through left",
+        "count": 2
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 8
+      },
+      {
+        "type": "text",
+        "text": "Close left nostril, exhale through right",
+        "count": 2
+      },
+      {
+        "type": "exhale",
+        "count": 8
+      },
+      {
+        "type": "text",
+        "text": "Keep left closed, inhale through right",
+        "count": 2
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 8
+      },
+      {
+        "type": "text",
+        "text": "Close right nostril, exhale through left",
+        "count": 2
+      },
+      {
+        "type": "exhale",
+        "count": 8
+      },
+      {
+        "type": "repeat",
+        "value": [
+          10
+        ],
+        "count": 4
+      },
+      {
+        "type": "text",
+        "text": "Release both nostrils. Breathe normally through both sides",
+        "count": 3
+      },
+      {
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 5
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Bhramari",
+    "description": "The Humming Bee Breath. A continuous humming vibration during exhalation stimulates the vagus nerve and boosts nasal nitric oxide production by 15\u00d7 compared to quiet exhaling \u2014 one of the most potent single-technique vagal toners in all of pranayama.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Close ears with thumbs. Hum on exhale \u2014 mouth closed, teeth slightly apart",
+        "count": 0
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "exhale",
+        "count": 12
+      },
+      {
+        "type": "repeat",
+        "value": [
+          2
+        ],
+        "count": 11
+      },
+      {
+        "type": "text",
+        "text": "Release your ears. Sit still and listen to the fading resonance",
+        "count": 15
+      },
+      {
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 3
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Sitali",
+    "description": "Drawing air across a curled tongue creates evaporative cooling that lowers core body temperature, reduces blood pressure, and shifts brainwaves toward calming alpha and theta patterns \u2014 one of the only pranayamas that intentionally uses mouth inhalation.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Curl tongue edges upward to form a tube. Inhale through tongue like sipping a straw",
+        "count": 0
+      },
+      {
+        "type": "inhale",
+        "count": 4
+      },
+      {
+        "type": "hold",
+        "count": 6
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "type": "repeat",
+        "value": [
+          3
+        ],
+        "count": 14
+      },
+      {
+        "type": "text",
+        "text": "Close mouth. Return to normal nasal breathing",
+        "count": 3
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          6,
+          0
+        ],
+        "count": 4
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Viloma",
+    "description": "Interrupted breathing developed by B.K.S. Iyengar. The inhale is split into three segments with 2-second pauses between each, expanding lung capacity section by section while teaching precise breath control \u2014 like filling a glass from bottom to top.",
+    "seq": [
+      {
+        "type": "inhale",
+        "count": 2
+      },
+      {
+        "type": "hold",
+        "count": 2
+      },
+      {
+        "type": "inhale",
+        "count": 2
+      },
+      {
+        "type": "hold",
+        "count": 2
+      },
+      {
+        "type": "inhale",
+        "count": 2
+      },
+      {
+        "type": "hold",
+        "count": 2
+      },
+      {
+        "type": "exhale",
+        "count": 6
+      },
+      {
+        "type": "repeat",
+        "value": [
+          7
+        ],
+        "count": 7
+      },
+      {
+        "type": "breath",
+        "value": [
+          6,
+          0,
+          6,
+          0
+        ],
+        "count": 4
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Sniper Breathing",
+    "description": "A two-phase military protocol: first calm the nervous system with box breathing, then exploit the natural respiratory pause at the bottom of exhalation \u2014 the 3\u20137 second window where the body is stillest and heart rate variability is minimized. Used by snipers and SWAT operators for maximum precision.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Phase 1: Calming reset",
+        "count": 3
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          4,
+          4,
+          0
+        ],
+        "count": 4
+      },
+      {
+        "type": "text",
+        "text": "Phase 2: Precision mode \u2014 hold at the bottom of your exhale",
+        "count": 3
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          5
+        ],
+        "count": 8
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "SOMA Awakening",
+    "description": "A multi-phase protocol combining rhythmic breathing, exhale retention, and inhale retention with body locks. A Cambridge University study found this pattern increases Lempel-Ziv neural complexity \u2014 the same brain-state metric elevated by psychedelic substances \u2014 producing reported experiences of bliss and expanded awareness.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Phase 1: Rhythmic breathing",
+        "count": 3
+      },
+      {
+        "type": "breath",
+        "value": [
+          4,
+          0,
+          4,
+          0
+        ],
+        "count": 60
+      },
+      {
+        "type": "text",
+        "text": "Exhale completely and hold on empty lungs",
+        "count": 3
+      },
+      {
+        "type": "exhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 0
+      },
+      {
+        "type": "text",
+        "text": "Inhale deeply and hold \u2014 squeeze pelvic floor, chin to chest",
+        "count": 3
+      },
+      {
+        "type": "inhale",
+        "count": 5
+      },
+      {
+        "type": "hold",
+        "count": 45
+      },
+      {
+        "type": "exhale",
+        "count": 8
+      },
+      {
+        "type": "repeat",
+        "value": [
+          9
+        ],
+        "count": 2
+      },
+      {
+        "type": "text",
+        "text": "Let your breathing return to its own natural rhythm",
+        "count": 5
+      },
+      {
+        "type": "breath",
+        "value": [
+          5.5,
+          0,
+          5.5,
+          0
+        ],
+        "count": 5
+      }
+    ],
+    "loopable": false
+  },
+  {
+    "name": "Hook Recovery",
+    "description": "The critical post-breath-hold recovery technique used by freedivers and fighter pilots. A sharp inhale followed by a brief pressure hold forces oxygen into the bloodstream and pushes blood toward the brain, recovering arterial oxygen 2\u00d7 faster than passive breathing. Use after any apnea exercise.",
+    "seq": [
+      {
+        "type": "text",
+        "text": "Recovery breaths: sharp inhale, bear down gently, release",
+        "count": 3
+      },
+      {
+        "type": "inhale",
+        "count": 1
+      },
+      {
+        "type": "hold",
+        "count": 2
+      },
+      {
+        "type": "exhale",
+        "count": 2
+      },
+      {
+        "type": "repeat",
+        "value": [
+          3
+        ],
+        "count": 2
+      },
+      {
+        "type": "text",
+        "text": "Resume normal breathing",
+        "count": 0
+      }
+    ],
+    "loopable": false
+  }
+]
