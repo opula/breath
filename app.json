@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.mdnt.brwk",
-      "buildNumber": "17",
+      "buildNumber": "18",
       "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -44,6 +44,7 @@
     "plugins": [
       "expo-font",
       "expo-splash-screen",
+      ["expo-audio", { "enableBackgroundPlayback": true }],
       ["react-native-audio-api", { "iosBackgroundMode": true }]
     ],
     "fonts": [

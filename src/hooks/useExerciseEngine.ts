@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Vibration } from 'react-native';
+import { AppState, Vibration } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -105,6 +105,16 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   useEffect(() => {
     engine.updateExercises(exercises);
   }, [exercises, engine]);
+
+  // Pause engine when app goes to background
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background' && engine.isActive()) {
+        engine.pause();
+      }
+    });
+    return () => sub.remove();
+  }, [engine]);
 
   // Show name on mount + wire external GOTO_SEQUENCE events
   useEffect(() => {

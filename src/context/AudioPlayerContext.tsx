@@ -96,7 +96,7 @@ export const AudioPlayerProvider = ({
   useEffect(() => {
     setAudioModeAsync({
       playsInSilentMode: true,
-      shouldPlayInBackground: false,
+      shouldPlayInBackground: true,
       interruptionMode: 'mixWithOthers',
     });
   }, []);
