@@ -76,7 +76,7 @@ export const Settings = () => {
           >
             <Icon name="close" size={20} color="white" />
           </Pressable>
-          <Text style={tw`text-sm font-inter font-medium text-neutral-200`}>
+          <Text style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}>
             Settings
           </Text>
           <View style={tw`h-10 w-10`} />

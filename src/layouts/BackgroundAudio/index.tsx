@@ -95,7 +95,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
             <Icon name="close" size={20} color="white" />
           </Pressable>
           <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200`}
+            style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}
             numberOfLines={1}
           >
             {exercise.name}

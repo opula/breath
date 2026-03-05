@@ -537,7 +537,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             <Icon name="close" size={20} color="white" />
           </Pressable>
           <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 text-white`}
+            style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}
           >
             {exercise.name}
           </Text>
