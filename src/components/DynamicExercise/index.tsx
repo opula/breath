@@ -171,7 +171,7 @@ export const DynamicExercise = memo(
           {!label && (
             <View style={tw`absolute inset-0 justify-center items-center`}>
               <Text
-                style={tw`text-xs font-inter font-light text-neutral-300 uppercase`}
+                style={tw`text-[11px] font-inter font-light text-neutral-300 lowercase text-center`}
               >
                 tap to begin exercise
               </Text>
@@ -192,7 +192,7 @@ export const DynamicExercise = memo(
                 ]}
               >
                 <Text
-                  style={tw`text-base font-inter text-neutral-200 uppercase`}
+                  style={tw`text-sm font-medium font-inter text-neutral-300 uppercase`}
                 >
                   {exerciseName}
                 </Text>
