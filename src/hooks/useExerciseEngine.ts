@@ -153,6 +153,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
 
   const handleNextExercise = useCallback(
     (delta: number) => {
+      if (engine.isActive()) return;
       engine.nextExercise(delta);
       showName(engine.getExerciseName());
     },
