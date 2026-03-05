@@ -6,7 +6,12 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
-import { StatusBar, View } from "react-native";
+import { LogBox, StatusBar, View } from "react-native";
+
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated",
+  "RecordingNotificationManager is not implemented",
+]);
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 // Theme is now handled by twrnc
 import { SafeAreaProvider } from "react-native-safe-area-context";
