@@ -12,20 +12,18 @@ const GESTURES = [
   { gesture: "Swipe up / down", action: "Change exercise" },
 ];
 
-const SIDEBAR_ACTIONS = [
-  { icon: "Grayscale", action: "Toggle color / grayscale mode" },
-  { icon: "Sound", action: "Toggle exercise sounds" },
-  { icon: "Vibrations", action: "Toggle haptic feedback" },
-  { icon: "Exercises", action: "View and edit exercises" },
-  { icon: "Music", action: "In-app music player" },
-  { icon: "Scenes", action: "Change background scene" },
+const PAUSED_ACTIONS = [
+  { label: "Exercises", action: "View and edit exercises" },
+  { label: "Music", action: "In-app music player" },
+  { label: "Scenes", action: "Change background scene" },
+  { label: "Settings", action: "Grayscale, sounds, haptics & help" },
 ];
 
 export const Help = () => {
   const navigation = useNavigation();
 
   return (
-    <View style={tw`flex-1 bg-black bg-opacity-50`}>
+    <View style={tw`flex-1 bg-black`}>
       <SafeAreaView style={tw`flex-1`}>
         <View
           style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
@@ -45,7 +43,7 @@ export const Help = () => {
         <ScrollView style={tw`flex-1 px-6 pt-6`}>
           <Text style={tw`text-base font-inter text-neutral-400 mb-8`}>
             Control your breathing exercises with simple gestures. Pause at any
-            time to access additional options from the sidebar.
+            time to access additional options from the menu.
           </Text>
 
           <Text
@@ -69,10 +67,10 @@ export const Help = () => {
           >
             While Paused
           </Text>
-          {SIDEBAR_ACTIONS.map((item) => (
-            <View key={item.icon} style={tw`flex-row py-3`}>
+          {PAUSED_ACTIONS.map((item) => (
+            <View key={item.label} style={tw`flex-row py-3`}>
               <Text style={tw`text-sm font-inter text-neutral-200 w-36`}>
-                {item.icon}
+                {item.label}
               </Text>
               <Text style={tw`text-sm font-inter text-neutral-400 flex-1`}>
                 {item.action}

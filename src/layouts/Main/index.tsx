@@ -1,10 +1,9 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Text, View } from "react-native";
 import { DynamicExercise } from "../../components/DynamicExercise";
 import { CoachOverlay } from "../../components/CoachOverlay";
 
-import { Icon } from "../../components/Icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AnimatePresence, MotiView } from "moti";
 import { Pressable } from "react-native";
@@ -20,21 +19,21 @@ import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import {
   isPausedSelector,
-  isGrayscaleSelector,
-  soundsEnabledSelector,
-  hapticsEnabledSelector,
   hasSeenTutorialSelector,
 } from "../../state/configuration.selectors";
 import {
-  toggleGrayscale as toggleGrayscaleAction,
-  togglePaused as togglePausedAction,
   setPause as setPauseAction,
-  toggleSounds as toggleSoundsAction,
-  toggleHaptics as toggleHapticsAction,
   dismissTutorial as dismissTutorialAction,
 } from "../../state/configuration.reducer";
 
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
+
+const NAV_ITEMS = [
+  { label: "exercises", screen: "ExercisesList" as const },
+  { label: "music", screen: "MusicControls" as const },
+  { label: "scenes", screen: "Scenes" as const },
+  { label: "settings", screen: "Settings" as const },
+];
 
 export const Main = () => {
   useEffect(() => {
@@ -54,21 +53,10 @@ export const Main = () => {
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
   const isAppActive = useAppIsActive();
-  const { left, bottom } = useSafeAreaInsets();
+  const { top, right } = useSafeAreaInsets();
 
   const isPaused = useAppSelector(isPausedSelector);
-  const isGrayscale = useAppSelector(isGrayscaleSelector);
-  const soundsEnabled = useAppSelector(soundsEnabledSelector);
-  const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
   const hasSeenTutorial = useAppSelector(hasSeenTutorialSelector);
-
-  const [toastMessage, setToastMessage] = useState("");
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const showToast = useCallback((message: string) => {
-    setToastMessage(message);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastMessage(""), 2000);
-  }, []);
 
   const setPause = useCallback(
     (status: boolean) => {
@@ -77,18 +65,6 @@ export const Main = () => {
     },
     [dispatch, hasSeenTutorial],
   );
-  const toggleGrayscale = useCallback(() => {
-    dispatch(toggleGrayscaleAction());
-    showToast(isGrayscale ? "Color mode" : "Grayscale mode");
-  }, [dispatch, showToast, isGrayscale]);
-  const toggleSounds = useCallback(() => {
-    dispatch(toggleSoundsAction());
-    showToast(soundsEnabled ? "Sounds off" : "Sounds on");
-  }, [dispatch, showToast, soundsEnabled]);
-  const toggleHaptics = useCallback(() => {
-    dispatch(toggleHapticsAction());
-    showToast(hapticsEnabled ? "Vibrations off" : "Vibrations on");
-  }, [dispatch, showToast, hapticsEnabled]);
 
   return (
     <>
@@ -115,123 +91,31 @@ export const Main = () => {
 
       <CoachOverlay />
 
-      <AnimatePresence>
-        {isPaused && isFocused ? (
-          <MotiView
-            key="left"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 300 } }}
-            style={[
-              tw`absolute top-0 bottom-0 justify-center`,
-              {
-                left: Math.max(left, 16),
-              },
-            ]}
-          >
+      {isPaused && isFocused ? (
+        <View
+          style={[
+            tw`absolute items-end`,
+            {
+              right: Math.max(right, 20),
+              top: Math.max(top, 16) + 8,
+            },
+          ]}
+        >
+          {NAV_ITEMS.map((item) => (
             <Pressable
-              style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={toggleGrayscale}
+              key={item.screen}
+              style={tw`py-3 active:opacity-50`}
+              onPress={() => navigation.navigate(item.screen)}
             >
-              <Icon
-                name="moon"
-                size={22}
-                color={isGrayscale ? "white" : "#737373"}
-              />
+              <Text
+                style={tw`text-sm font-inter font-medium text-neutral-100 uppercase tracking-widest`}
+              >
+                {item.label}
+              </Text>
             </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={toggleSounds}
-            >
-              <Icon
-                name="volume-max"
-                size={22}
-                color={soundsEnabled ? "white" : "#737373"}
-              />
-            </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={toggleHaptics}
-            >
-              <Icon
-                name="bell-ring"
-                size={22}
-                color={hapticsEnabled ? "white" : "#737373"}
-              />
-            </Pressable>
-          </MotiView>
-        ) : null}
-
-        {isPaused && isFocused ? (
-          <MotiView
-            key="right"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 300 } }}
-            style={[
-              tw`absolute top-0 bottom-0 justify-center`,
-              {
-                right: Math.max(left, 16),
-              },
-            ]}
-          >
-            <Pressable
-              style={tw`h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={() => {
-                navigation.navigate("ExercisesList");
-              }}
-            >
-              <Icon name="book" size={22} color="white" />
-            </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={() => {
-                navigation.navigate("MusicControls");
-              }}
-            >
-              <Icon name="headphones" size={22} color="white" />
-            </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={() => {
-                navigation.navigate("Scenes");
-              }}
-            >
-              <Icon name="image" size={22} color="white" />
-            </Pressable>
-            <Pressable
-              style={tw`mt-2 h-12 w-12 items-center justify-center active:opacity-80`}
-              onPress={() => navigation.navigate("Help")}
-            >
-              <Icon name="help" size={22} color="white" />
-            </Pressable>
-          </MotiView>
-        ) : null}
-
-        <AnimatePresence>
-          {toastMessage ? (
-            <MotiView
-              key={toastMessage}
-              from={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ opacity: { type: "timing", duration: 500 } }}
-              style={[
-                tw`absolute left-0 right-0 justify-center items-center`,
-                { bottom: bottom + 16 },
-              ]}
-            >
-              <View style={tw`px-6 py-2 rounded-xl bg-black`}>
-                <Text style={tw`text-neutral-200 text-xs font-inter`}>
-                  {toastMessage}
-                </Text>
-              </View>
-            </MotiView>
-          ) : null}
-        </AnimatePresence>
-      </AnimatePresence>
+          ))}
+        </View>
+      ) : null}
     </>
   );
 };

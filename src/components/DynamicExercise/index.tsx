@@ -8,7 +8,11 @@ import { runOnJS } from "react-native-reanimated";
 import { BreathRing } from "./BreathRing";
 import { Backdrop } from "./Backdrop";
 import { TextBackdrop } from "./TextBackdrop";
-import { Directions, Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+  Directions,
+  Gesture,
+  GestureDetector,
+} from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
@@ -16,11 +20,7 @@ import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 
 export const DynamicExercise = memo(
-  ({
-    onPause,
-  }: {
-    onPause?: (value: boolean) => void;
-  }) => {
+  ({ onPause }: { onPause?: (value: boolean) => void }) => {
     const exercises = useAppSelector(exercisesSelector);
     const { bottom } = useSafeAreaInsets();
     const isAppActive = useAppIsActive();
@@ -145,7 +145,7 @@ export const DynamicExercise = memo(
           </View>
 
           <AnimatePresence>
-            {repeatRound !== '' && (
+            {repeatRound !== "" && (
               <MotiView
                 key={repeatRound}
                 from={{ opacity: 0 }}
@@ -155,18 +155,28 @@ export const DynamicExercise = memo(
                 style={[
                   tw`absolute left-0 right-0 justify-center items-center`,
                   {
-                    bottom: bottom + 48,
+                    bottom: bottom + 80,
                   },
                 ]}
               >
-                <View style={tw`px-6 py-2 rounded-xl bg-black`}>
-                  <Text style={tw`text-neutral-200 text-xs font-inter`}>
-                    {repeatRound}
-                  </Text>
-                </View>
+                <Text
+                  style={tw`text-base font-inter font-light text-neutral-100 uppercase`}
+                >
+                  {repeatRound}
+                </Text>
               </MotiView>
             )}
           </AnimatePresence>
+
+          {!label && (
+            <View style={tw`absolute inset-0 justify-center items-center`}>
+              <Text
+                style={tw`text-xs font-inter font-light text-neutral-300 uppercase`}
+              >
+                tap to begin exercise
+              </Text>
+            </View>
+          )}
 
           <AnimatePresence>
             {exerciseName && (
@@ -177,17 +187,15 @@ export const DynamicExercise = memo(
                 exit={{ opacity: 0 }}
                 transition={{ opacity: { type: "timing", duration: 500 } }}
                 style={[
-                  tw`absolute left-0 right-0 justify-center items-center`,
-                  {
-                    bottom: bottom + 16,
-                  },
+                  tw`absolute left-0 right-0 items-center`,
+                  { bottom: bottom + 16 },
                 ]}
               >
-                <View style={tw`px-6 py-2 rounded-xl bg-black`}>
-                  <Text style={tw`text-neutral-200 text-xs font-inter`}>
-                    {exerciseName}
-                  </Text>
-                </View>
+                <Text
+                  style={tw`text-base font-inter text-neutral-200 uppercase`}
+                >
+                  {exerciseName}
+                </Text>
               </MotiView>
             )}
           </AnimatePresence>
