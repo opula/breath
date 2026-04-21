@@ -11,6 +11,7 @@ import {
   smoothModalInterpolator,
 } from "./transitions";
 import { Main } from "../layouts/Main";
+import { Home } from "../layouts/Home";
 import { Welcome } from "../layouts/Welcome";
 import { HAS_COMPLETED_WELCOME, storage } from "../utils/storage";
 import { MusicControls } from "../layouts/MusicControls";
@@ -29,6 +30,7 @@ import { AddMusic } from "../layouts/AddMusic";
 
 export type MainStackParams = {
   Welcome: undefined;
+  Home: undefined;
   Main: undefined;
   MusicControls: undefined;
   MusicHelp: undefined;
@@ -80,10 +82,11 @@ const modalScreenOptions: StackNavigationOptions = {
 export const MainStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName={hasCompletedWelcome ? "Main" : "Welcome"}
+      initialRouteName={hasCompletedWelcome ? "Home" : "Welcome"}
       screenOptions={defaultScreenOptions}
     >
       <Stack.Screen name="Welcome" component={Welcome} />
+      <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="Main" component={Main} />
       <Stack.Screen
         name="ExercisesList"

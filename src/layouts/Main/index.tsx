@@ -29,7 +29,7 @@ import {
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
 const NAV_ITEMS = [
-  { label: "exercises", screen: "ExercisesList" as const },
+  { label: "library", screen: "Home" as const },
   { label: "music", screen: "MusicControls" as const },
   { label: "scenes", screen: "Scenes" as const },
   { label: "settings", screen: "Settings" as const },

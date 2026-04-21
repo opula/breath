@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { LogBox, StatusBar, View } from "react-native";
+import { useFonts } from "expo-font";
 
 LogBox.ignoreLogs([
   "SafeAreaView has been deprecated",
@@ -49,6 +50,16 @@ const DarkTheme = {
 const Main = () => {
   const [appIsReady, setAppIsReady] = useState(false);
 
+  // Load Rubik + JetBrains Mono at runtime so the mapping between tw class
+  // names (font-display, font-mono) and the iOS-registered family is
+  // explicit and independent of each TTF's internal PostScript name.
+  const [fontsLoaded] = useFonts({
+    Rubik: require("../assets/fonts/Rubik-Regular.ttf"),
+    "Rubik-ExtraBold": require("../assets/fonts/Rubik-ExtraBold.ttf"),
+    JetBrainsMono: require("../assets/fonts/JetBrainsMono-Regular.ttf"),
+    "JetBrainsMono-Medium": require("../assets/fonts/JetBrainsMono-Medium.ttf"),
+  });
+
   useEffect(() => {
     async function prepare() {
       try {
@@ -71,7 +82,7 @@ const Main = () => {
     }
   }, [appIsReady]);
 
-  if (!appIsReady) {
+  if (!appIsReady || !fontsLoaded) {
     return null;
   }
 

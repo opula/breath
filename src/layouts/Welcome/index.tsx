@@ -115,7 +115,7 @@ export const Welcome = ({ navigation }: Props) => {
             <Pressable
               style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
               onPress={() => {
-                navigation.navigate("Main");
+                navigation.navigate("Home");
                 storage.set(HAS_COMPLETED_WELCOME, true);
               }}
             >
