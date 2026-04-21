@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   FlatList,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -28,11 +27,8 @@ export const MusicControls = () => {
     isPlaying,
     volume,
     setVolume,
-    pickLocalFile,
-    pasteUrl,
     playFile,
     deleteFile,
-    isDownloading,
   } = useAudioPlayer();
 
   const files = useSelector(musicFilesSelector);
@@ -125,34 +121,17 @@ export const MusicControls = () => {
           />
         </View>
 
-        {/* Action buttons */}
+        {/* Add music button */}
         <View
-          style={tw`flex-row items-center justify-start gap-3 pt-4 mb-2 pr-4 pl-8 border-t border-neutral-800`}
+          style={tw`flex-row items-center justify-center pt-4 mb-2 border-t border-neutral-800`}
         >
-          <Text style={tw`text-white text-sm`}>Add music</Text>
           <Pressable
-            style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
-            onPress={pasteUrl}
-            disabled={isDownloading}
+            style={tw`flex-row items-center px-5 py-2 rounded-full border border-neutral-600 active:opacity-80`}
+            onPress={() => navigation.navigate("AddMusic" as never)}
           >
-            {isDownloading ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Icon name="clipboard" color="white" size={14} />
-                <Text style={tw`ml-2 text-xs font-inter text-white`}>
-                  Paste URL
-                </Text>
-              </>
-            )}
-          </Pressable>
-          <Pressable
-            style={tw`flex-row items-center px-4 py-2 rounded-full border border-neutral-600 active:opacity-80`}
-            onPress={pickLocalFile}
-          >
-            <Icon name="folder" color="white" size={14} />
+            <Icon name="plus" color="white" size={14} />
             <Text style={tw`ml-2 text-xs font-inter text-white`}>
-              Pick File
+              Add music
             </Text>
           </Pressable>
         </View>

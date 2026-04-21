@@ -24,6 +24,8 @@ import { Help } from "../layouts/Help";
 import { Settings } from "../layouts/Settings";
 import { MusicHelp } from "../layouts/MusicHelp";
 import { BackgroundAudio } from "../layouts/BackgroundAudio";
+import { FileTransfer } from "../layouts/FileTransfer";
+import { AddMusic } from "../layouts/AddMusic";
 
 export type MainStackParams = {
   Welcome: undefined;
@@ -39,6 +41,8 @@ export type MainStackParams = {
   AdjustStep: { exerciseId: string; stepId: string };
   NewStepMenu: { exerciseId: string };
   BackgroundAudio: { id: string };
+  FileTransfer: undefined;
+  AddMusic: undefined;
 };
 
 const Stack = createStackNavigator<MainStackParams>();
@@ -127,6 +131,8 @@ export const MainStack = () => {
       >
         <Stack.Screen name="MusicControls" component={MusicControls} />
         <Stack.Screen name="MusicHelp" component={MusicHelp} />
+        <Stack.Screen name="FileTransfer" component={FileTransfer} />
+        <Stack.Screen name="AddMusic" component={AddMusic} />
         <Stack.Screen name="Scenes" component={Scenes} />
         <Stack.Screen name="Help" component={Help} />
         <Stack.Screen name="Settings" component={Settings} />

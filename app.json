@@ -19,7 +19,7 @@
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.mdnt.brwk",
-      "buildNumber": "19",
+      "buildNumber": "20",
       "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -55,6 +55,22 @@
       {
         "asset": "./assets/fonts/Inter-Bold.ttf",
         "family": "Inter-Bold"
+      },
+      {
+        "asset": "./assets/fonts/Rubik-Regular.ttf",
+        "family": "Rubik"
+      },
+      {
+        "asset": "./assets/fonts/Rubik-ExtraBold.ttf",
+        "family": "Rubik-ExtraBold"
+      },
+      {
+        "asset": "./assets/fonts/JetBrainsMono-Regular.ttf",
+        "family": "JetBrainsMono"
+      },
+      {
+        "asset": "./assets/fonts/JetBrainsMono-Medium.ttf",
+        "family": "JetBrainsMono-Medium"
       }
     ]
   }

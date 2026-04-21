@@ -27,6 +27,11 @@ const SAMPLE_TRACKS = [
 
 const ADDING_MUSIC = [
   {
+    method: "WiFi Transfer",
+    description:
+      "Scan a QR code from another device on the same WiFi network, then drag and drop audio files through your browser.",
+  },
+  {
     method: "Paste URL",
     description:
       "Copy a link to an audio file, then tap Paste URL. The file will be downloaded and added to your library.",

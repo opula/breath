@@ -5,11 +5,17 @@ import { reduxStorage } from "./storage";
 import { exercisesReducer as exercises } from "./state/exercises.reducer";
 import { configurationReducer as configuration } from "./state/configuration.reducer";
 import { musicLibraryReducer as musicLibrary } from "./state/musicLibrary.reducer";
+import { accentReducer as accent } from "./state/accent.reducer";
+import { favoritesReducer as favorites } from "./state/favorites.reducer";
+import { lastPlayedReducer as lastPlayed } from "./state/lastPlayed.reducer";
 
 const rootReducers = combineReducers({
   exercises,
   configuration,
   musicLibrary,
+  accent,
+  favorites,
+  lastPlayed,
 });
 
 export const store = configureStore({

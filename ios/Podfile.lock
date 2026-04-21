@@ -1401,6 +1401,31 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-netinfo (12.0.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - react-native-nitro-buffer (0.0.15):
+    - NitroModules
+    - React-Core
   - react-native-orientation-locker (1.6.0):
     - React-Core
   - react-native-safe-area-context (5.6.2):
@@ -2003,6 +2028,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNHttpServer (1.6.1):
+    - NitroModules
+    - React-Core
   - RNReactNativeHapticFeedback (2.3.3):
     - hermes-engine
     - RCTRequired
@@ -2271,6 +2299,8 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
+  - react-native-nitro-buffer (from `../node_modules/react-native-nitro-buffer`)
   - "react-native-orientation-locker (from `../node_modules/@hortau/react-native-orientation-locker`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-skia (from `../node_modules/@shopify/react-native-skia`)"
@@ -2309,6 +2339,7 @@ DEPENDENCIES:
   - RNAudioAPI (from `../node_modules/react-native-audio-api`)
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNHttpServer (from `../node_modules/react-native-nitro-http-server`)
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2421,6 +2452,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
+  react-native-nitro-buffer:
+    :path: "../node_modules/react-native-nitro-buffer"
   react-native-orientation-locker:
     :path: "../node_modules/@hortau/react-native-orientation-locker"
   react-native-safe-area-context:
@@ -2497,6 +2532,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-masked-view/masked-view"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNHttpServer:
+    :path: "../node_modules/react-native-nitro-http-server"
   RNReactNativeHapticFeedback:
     :path: "../node_modules/react-native-haptic-feedback"
   RNReanimated:
@@ -2560,6 +2597,8 @@ SPEC CHECKSUMS:
   React-logger: 50fdb9a8236da90c0b1072da5c32ee03aeb5bf28
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
+  react-native-netinfo: 7e0b1936e928fa8ddb60da9e572a33767db7805f
+  react-native-nitro-buffer: 2703f7748a35d39676772773506227eaa233608c
   react-native-orientation-locker: 78dae7f0fc920de01a69c6d8a4ceae234f0b70cf
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   react-native-skia: 05327e7acee05e7c27b68a5da0bc80d65f5d790c
@@ -2598,6 +2637,7 @@ SPEC CHECKSUMS:
   RNAudioAPI: 80d2581d8f1e827cfc6e2dea53a8e6faef73735f
   RNCMaskedView: d2578d41c59b936db122b2798ba37e4722d21035
   RNGestureHandler: 2914750df066d89bf9d8f48a10ad5f0051108ac3
+  RNHttpServer: d233bd431fc42c8cc60472319f00f8a8c4fd293a
   RNReactNativeHapticFeedback: d7bc1bcfe68bb139c9919ea81d11d7c6e866e870
   RNReanimated: f4644326ad2bc0f5c0e52f15db316d4f5ee77a60
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
