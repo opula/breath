@@ -1,16 +1,16 @@
-import React, {memo, useEffect, useRef, useState} from 'react';
-import {View, TextInput} from 'react-native';
-import tw from '../../utils/tw';
-import {useAppDispatch} from '../../hooks/store';
-import {editExerciseDescription} from '../../state/exercises.reducer';
-import {useParametrizedAppSelector} from '../../utils/selectors';
-import {exerciseDescriptionByIdSelector} from '../../state/exercises.selectors';
+import React, { memo, useEffect, useRef, useState } from "react";
+import { View, TextInput } from "react-native";
+import tw from "../../utils/tw";
+import { useAppDispatch } from "../../hooks/store";
+import { editExerciseDescription } from "../../state/exercises.reducer";
+import { useParametrizedAppSelector } from "../../utils/selectors";
+import { exerciseDescriptionByIdSelector } from "../../state/exercises.selectors";
 
 interface Props {
   exerciseId: string;
 }
 
-export const EditDescription = memo(({exerciseId}: Props) => {
+export const EditDescription = memo(({ exerciseId }: Props) => {
   const dispatch = useAppDispatch();
   const exerciseDescription = useParametrizedAppSelector(
     exerciseDescriptionByIdSelector,
@@ -33,16 +33,16 @@ export const EditDescription = memo(({exerciseId}: Props) => {
   );
 
   return (
-    <View style={tw`border-b border-neutral-800 pb-1`}>
+    <View>
       <TextInput
-        style={tw`text-base font-inter text-white py-2`}
+        style={tw`text-sm font-inter text-mb-mute leading-snug`}
         value={description}
-        onChangeText={text => {
+        onChangeText={(text) => {
           setDescription(text);
           descriptionRef.current = text;
         }}
         placeholder="Add a description..."
-        placeholderTextColor="#737373"
+        placeholderTextColor="#6E6E74"
         multiline
       />
     </View>

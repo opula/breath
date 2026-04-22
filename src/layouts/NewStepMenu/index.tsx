@@ -10,18 +10,35 @@ import uuid from "react-native-uuid";
 import { useAppDispatch } from "../../hooks/store";
 import { addExerciseStep } from "../../state/exercises.reducer";
 import { defer } from "lodash";
+import { Overline } from "../../components/Overline";
 
 interface Props {
   navigation: NavigationProp<MainStackParams, "NewStepMenu">;
   route: RouteProp<MainStackParams, "NewStepMenu">;
 }
 
+type StepKind = Exercise["seq"][number]["type"];
+
+const OPTIONS: {
+  type: StepKind;
+  label: string;
+  hint: string;
+}[] = [
+  { type: "breath", label: "Breath cycle", hint: "· four-phase inhale/hold/exhale/hold" },
+  { type: "inhale", label: "Inhale", hint: "· single timed inhale" },
+  { type: "hold", label: "Hold", hint: "· retention at current lung state" },
+  { type: "exhale", label: "Exhale", hint: "· single timed exhale" },
+  { type: "double-inhale", label: "Double inhale", hint: "· two inhales with a pause" },
+  { type: "text", label: "Message", hint: "· display an instructional prompt" },
+  { type: "repeat", label: "Repeat", hint: "· loop previous phases" },
+];
+
 export const NewStepMenu = ({ navigation, route }: Props) => {
   const { exerciseId } = route.params;
   const dispatch = useAppDispatch();
   const { bottom } = useSafeAreaInsets();
 
-  const createStep = (type: Exercise["seq"][number]["type"]) => {
+  const createStep = (type: StepKind) => {
     const stepId = uuid.v4() as string;
     const step = {
       id: stepId,
@@ -42,93 +59,58 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
   };
 
   return (
-    <TrayScreen trayHeight={532 + bottom}>
-      <View style={tw`pt-6 px-2 mb-6 items-center`}>
-        <Text style={tw`text-base font-inter text-white`}>Create new step</Text>
+    <TrayScreen trayHeight={600 + bottom}>
+      <View style={tw`pt-2 pb-2 px-2`}>
+        <Overline accent right={`${OPTIONS.length} kinds`}>
+          Add phase
+        </Overline>
       </View>
 
-      <View style={[tw`flex-1`, { marginBottom: bottom }]}>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("breath")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>
-            Breath cycle
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("inhale")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>Inhale</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("hold")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>Hold</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("exhale")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>Exhale</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("double-inhale")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>
-            Double Inhale
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("text")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>Message</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) =>
-            tw.style(
-              "px-6 py-4 border-b border-neutral-800",
-              pressed && "opacity-80",
-            )
-          }
-          onPress={() => createStep("repeat")}
-        >
-          <Text style={tw`text-lg font-inter text-neutral-200`}>Repeat</Text>
-        </Pressable>
+      <View style={tw`flex-1 px-2`}>
+        {OPTIONS.map((opt, i) => (
+          <Pressable
+            key={opt.type}
+            onPress={() => createStep(opt.type)}
+            style={({ pressed }) => [
+              tw`flex-row items-center py-4 border-b border-mb-line`,
+              pressed && tw`opacity-70`,
+            ]}
+          >
+            <Text
+              style={[
+                tw`font-mono text-[10px] text-mb-mute uppercase w-8`,
+                { letterSpacing: 1.5 },
+              ]}
+            >
+              {String(i + 1).padStart(2, "0")}
+            </Text>
+            <View style={tw`flex-1`}>
+              <Text
+                style={[
+                  tw`font-display text-[18px] text-mb-fg uppercase`,
+                  { letterSpacing: -0.4 },
+                ]}
+              >
+                {opt.label}
+              </Text>
+              <Text
+                style={[
+                  tw`font-mono text-[9px] text-mb-mute uppercase mt-1`,
+                  { letterSpacing: 1.8 },
+                ]}
+              >
+                {opt.hint}
+              </Text>
+            </View>
+            <Text
+              style={[
+                tw`font-mono text-[14px] text-mb-mute`,
+              ]}
+            >
+              →
+            </Text>
+          </Pressable>
+        ))}
       </View>
     </TrayScreen>
   );

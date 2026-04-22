@@ -1,86 +1,151 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { Icon } from "../../components/Icon";
 import tw from "../../utils/tw";
+import { Overline } from "../../components/Overline";
+import { BigTitle } from "../../components/BigTitle";
 
 const GESTURES = [
-  { gesture: "Tap", action: "Start or advance to next step" },
-  { gesture: "Double tap", action: "Pause or resume" },
-  { gesture: "Long press", action: "Reset exercise" },
-  { gesture: "Swipe up / down", action: "Change exercise" },
+  { label: "Single tap", hint: "· start or advance to the next phase" },
+  { label: "Double tap", hint: "· pause or resume the session" },
+  { label: "Long press", hint: "· reset the session to the start" },
+  { label: "Swipe up / down", hint: "· change the current exercise" },
 ];
 
-const PAUSED_ACTIONS = [
-  { label: "Exercises", action: "View and edit exercises" },
-  { label: "Music", action: "In-app music player" },
-  { label: "Scenes", action: "Change background scene" },
-  { label: "Settings", action: "Grayscale, sounds, haptics & help" },
+const CONTROLS = [
+  { label: "← library", hint: "· return to the exercise list" },
+  { label: "pause · resume", hint: "· toggle the session (same as 2× tap)" },
+  { label: "round · time", hint: "· round progress and elapsed timer" },
 ];
+
+const FAQ = [
+  {
+    q: "Is this a meditation app?",
+    a: "No. It schedules breath cycles. Meditation is something you do with it.",
+  },
+  {
+    q: "Will it stop me from fainting?",
+    a: "No. The app can’t see you. If a retention feels wrong, stop.",
+  },
+  {
+    q: "Why are there no streaks?",
+    a: "Because the app works whether or not you come back. Streaks optimize for the app, not for you.",
+  },
+  {
+    q: "Can I build my own exercise?",
+    a: "Yes — any sequence of phases with any durations. The ring respects whatever you define.",
+  },
+];
+
+const Row = ({ label, hint }: { label: string; hint: string }) => (
+  <View style={tw`flex-row items-center py-4 border-b border-mb-line`}>
+    <View style={tw`flex-1`}>
+      <Text
+        style={[
+          tw`font-display text-[16px] text-mb-fg uppercase`,
+          { letterSpacing: -0.3 },
+        ]}
+      >
+        {label}
+      </Text>
+    </View>
+    <Text
+      style={[
+        tw`font-mono text-[9px] text-mb-mute uppercase max-w-[60%] text-right`,
+        { letterSpacing: 1.8 },
+      ]}
+    >
+      {hint}
+    </Text>
+  </View>
+);
 
 export const Help = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={tw`flex-1 bg-black`}>
-      <SafeAreaView style={tw`flex-1`}>
-        <View
-          style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
-        >
+    <View style={tw`flex-1 bg-mb-bg`}>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        {/* Top nav */}
+        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
-          <Text style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}>
-            Help
+          <Text
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+              { letterSpacing: 3 },
+            ]}
+          >
+            · manual
           </Text>
-          <View style={tw`h-10 w-10`} />
+          <View style={tw`w-10`} />
         </View>
 
-        <ScrollView style={tw`flex-1 px-6 pt-6`}>
-          <Text style={tw`text-base font-inter text-neutral-400 mb-8`}>
-            Control your breathing exercises with simple gestures. Pause at any
-            time to access additional options from the menu.
+        <ScrollView
+          contentContainerStyle={tw`px-6 pb-10`}
+          showsVerticalScrollIndicator={false}
+        >
+          <Overline accent right="rtfm">How it works</Overline>
+          <View style={tw`mt-5 mb-5`}>
+            <BigTitle size={36} accent>{`Everything\nis a gesture`}</BigTitle>
+          </View>
+          <Text
+            style={tw`font-inter text-sm text-mb-mute leading-relaxed mb-6`}
+          >
+            Mid Breath hides its UI during practice so nothing competes with
+            your attention. Everything is reachable without looking.
           </Text>
 
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mb-4`}
-          >
-            Gestures
-          </Text>
-          {GESTURES.map((item) => (
-            <View key={item.gesture} style={tw`flex-row py-3`}>
-              <Text style={tw`text-sm font-inter text-neutral-200 w-36`}>
-                {item.gesture}
+          <Overline>Gestures</Overline>
+          {GESTURES.map((g) => (
+            <Row key={g.label} label={g.label} hint={g.hint} />
+          ))}
+
+          <View style={tw`mt-8`}>
+            <Overline>Session controls</Overline>
+          </View>
+          {CONTROLS.map((c) => (
+            <Row key={c.label} label={c.label} hint={c.hint} />
+          ))}
+
+          <View style={tw`mt-8`}>
+            <Overline>FAQ</Overline>
+          </View>
+          {FAQ.map((item) => (
+            <View
+              key={item.q}
+              style={tw`py-4 border-b border-mb-line`}
+            >
+              <Text
+                style={[
+                  tw`font-display text-[15px] text-mb-fg uppercase mb-2`,
+                  { letterSpacing: -0.3 },
+                ]}
+              >
+                — {item.q}
               </Text>
-              <Text style={tw`text-sm font-inter text-neutral-400 flex-1`}>
-                {item.action}
+              <Text
+                style={tw`font-inter text-sm text-mb-mute leading-relaxed`}
+              >
+                {item.a}
               </Text>
             </View>
           ))}
-
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-4`}
-          >
-            While Paused
-          </Text>
-          {PAUSED_ACTIONS.map((item) => (
-            <View key={item.label} style={tw`flex-row py-3`}>
-              <Text style={tw`text-sm font-inter text-neutral-200 w-36`}>
-                {item.label}
-              </Text>
-              <Text style={tw`text-sm font-inter text-neutral-400 flex-1`}>
-                {item.action}
-              </Text>
-            </View>
-          ))}
-
-          <View style={tw`h-8`} />
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

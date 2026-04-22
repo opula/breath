@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
@@ -9,13 +9,34 @@ import { useBackgroundAudio } from "../../hooks/useBackgroundAudio";
 import { calculateExerciseDuration } from "../../services/BackgroundAudio/exerciseEligibility";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 import { HorizontalDial } from "../../components/HorizontalDial";
-import { Icon } from "../../components/Icon";
 import tw from "../../utils/tw";
+import { Overline } from "../../components/Overline";
+import { BigTitle } from "../../components/BigTitle";
 
 const formatTime = (secs: number) => {
   const { minutes, seconds } = convertSecondsToHHMM(Math.floor(secs));
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
+
+const DialGroup = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <View style={tw`mt-5`}>
+    <Text
+      style={[
+        tw`font-mono text-[9px] text-mb-mute uppercase mb-2`,
+        { letterSpacing: 2 },
+      ]}
+    >
+      · {label}
+    </Text>
+    {children}
+  </View>
+);
 
 interface Props {
   navigation: NavigationProp<MainStackParams, "BackgroundAudio">;
@@ -23,6 +44,7 @@ interface Props {
 }
 
 export const BackgroundAudio = ({ navigation, route }: Props) => {
+  const insets = useSafeAreaInsets();
   const exercise = useParametrizedAppSelector(
     exerciseByIdSelector,
     route.params.id,
@@ -70,11 +92,8 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   }, [generate, loops, volume, delay]);
 
   const handlePlayPause = useCallback(() => {
-    if (isPlaying) {
-      pause();
-    } else {
-      play();
-    }
+    if (isPlaying) pause();
+    else play();
   }, [isPlaying, pause, play]);
 
   if (!exercise) return null;
@@ -82,63 +101,67 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   const showConfig = !isGenerating && !isGenerated;
 
   return (
-    <View style={tw`flex-1 bg-black`}>
-      <SafeAreaView style={tw`flex-1 px-4`}>
-        {/* Header */}
-        <View
-          style={tw`flex-row px-0 pb-2 justify-between items-center border-b border-neutral-800`}
-        >
+    <View style={tw`flex-1 bg-mb-bg`}>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        {/* Top nav */}
+        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
           <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+              { letterSpacing: 3 },
+            ]}
             numberOfLines={1}
           >
-            {exercise.name}
+            · background audio
           </Text>
-          <View style={tw`h-10 w-10`} />
+          <View style={tw`w-10`} />
         </View>
 
-        <View style={tw`flex-1`}>
-          {/* Config — hidden once generating/generated */}
+        <View style={tw`flex-1 px-6`}>
+          <Overline accent right={`${exercise.seq.length} phases`}>
+            Render
+          </Overline>
+          <View style={tw`mt-5`}>
+            <BigTitle size={36} accent>{exercise.name}</BigTitle>
+          </View>
+
+          {/* Config */}
           {showConfig && (
             <>
-              <View style={tw`mt-8 pl-4`}>
-                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                  Loops
-                </Text>
+              <DialGroup label="Loops">
                 <HorizontalDial
                   min={1}
                   max={maxLoops}
                   step={1}
-                  suffix="x"
+                  suffix="×"
                   defaultValue={loops}
                   onChange={setLoops}
                 />
-              </View>
-
-              <View style={tw`mt-6 pl-4`}>
-                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                  Delay
-                </Text>
+              </DialGroup>
+              <DialGroup label="Delay">
                 <HorizontalDial
                   min={0}
                   max={60}
                   step={1}
-                  suffix="sec"
+                  suffix="s"
                   defaultValue={delay}
                   onChange={setDelay}
                 />
-              </View>
-
-              <View style={tw`mt-6 pl-4`}>
-                <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                  Volume
-                </Text>
+              </DialGroup>
+              <DialGroup label="Volume">
                 <HorizontalDial
                   min={10}
                   max={200}
@@ -147,35 +170,55 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                   defaultValue={volume}
                   onChange={setVolume}
                 />
-              </View>
+              </DialGroup>
 
-              <View style={tw`mt-12 items-center`}>
+              {/* Total duration readout */}
+              <View style={tw`mt-8 items-center`}>
                 <Text
                   style={[
-                    tw`text-3xl font-inter text-white`,
-                    { fontVariant: ["tabular-nums"] },
+                    tw`font-mono text-[9px] text-mb-mute uppercase`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  · total
+                </Text>
+                <Text
+                  style={[
+                    tw`font-display text-[64px] text-mb-fg mt-2`,
+                    {
+                      letterSpacing: -2,
+                      lineHeight: 64,
+                      fontVariant: ["tabular-nums"],
+                    },
                   ]}
                 >
                   {durationDisplay}
-                </Text>
-                <Text style={tw`text-xs font-inter text-neutral-500 mt-1`}>
-                  Total time
                 </Text>
               </View>
 
               <View style={tw`flex-1`} />
 
-              <Text style={tw`text-sm font-inter text-neutral-400 px-2 mb-6`}>
-                Creates an audio version of this exercise that keeps playing
-                even when you leave the app. Works alongside other audio.
+              <Text
+                style={tw`font-inter text-xs text-mb-mute leading-relaxed my-6`}
+              >
+                Builds an audio track of this exercise that keeps playing even
+                when you leave the app. Works alongside other audio.
               </Text>
 
               <Pressable
-                style={tw`bg-white bg-opacity-10 rounded-full py-3 items-center active:opacity-80 mb-4`}
                 onPress={handleGenerate}
+                style={({ pressed }) => [
+                  tw`border border-mb-accent py-4 items-center mb-4`,
+                  pressed && tw`opacity-70`,
+                ]}
               >
-                <Text style={tw`text-sm font-inter text-white font-medium`}>
-                  Generate
+                <Text
+                  style={[
+                    tw`font-mono text-mb-accent uppercase text-[11px]`,
+                    { letterSpacing: 3 },
+                  ]}
+                >
+                  generate →
                 </Text>
               </Pressable>
             </>
@@ -184,9 +227,14 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
           {/* Generating */}
           {isGenerating && (
             <View style={tw`flex-1 justify-center items-center`}>
-              <ActivityIndicator size="large" color="white" />
-              <Text style={tw`text-xs font-inter text-neutral-500 mt-3`}>
-                Generating...
+              <ActivityIndicator size="large" color="#6FE7FF" />
+              <Text
+                style={[
+                  tw`font-mono text-[10px] text-mb-mute uppercase mt-4`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                · generating
               </Text>
             </View>
           )}
@@ -194,45 +242,49 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
           {/* Player */}
           {isGenerated && !isGenerating && (
             <>
-              {/* Centered play/pause */}
               <View style={tw`flex-1 justify-center items-center`}>
                 <Pressable
-                  style={tw`active:opacity-80`}
                   onPress={handlePlayPause}
+                  style={({ pressed }) => [
+                    tw`w-32 h-32 rounded-full border border-mb-line-strong items-center justify-center`,
+                    pressed && tw`opacity-70`,
+                  ]}
                 >
-                  <Icon
-                    name={isPlaying ? "pause-circle" : "play-circle"}
-                    size={72}
-                    color="white"
-                  />
+                  <Text
+                    style={[
+                      tw`font-display text-mb-accent uppercase`,
+                      { fontSize: 24, letterSpacing: -0.5 },
+                    ]}
+                  >
+                    {isPlaying ? "pause" : "play"}
+                  </Text>
                 </Pressable>
               </View>
 
-              {/* Progress */}
-              <View style={tw`px-2 mb-2`}>
+              <View style={tw`mb-4`}>
                 <View
-                  style={tw`w-full h-1 bg-white bg-opacity-10 rounded-full overflow-hidden`}
+                  style={tw`w-full h-[2px] bg-mb-line overflow-hidden`}
                 >
                   <View
                     style={[
-                      tw`h-full bg-white rounded-full`,
+                      tw`h-full bg-mb-accent`,
                       { width: `${Math.min(progress * 100, 100)}%` },
                     ]}
                   />
                 </View>
-                <View style={tw`flex-row justify-between mt-1`}>
+                <View style={tw`flex-row justify-between mt-2`}>
                   <Text
                     style={[
-                      tw`text-[10px] font-inter text-neutral-500`,
-                      { fontVariant: ["tabular-nums"] },
+                      tw`font-mono text-[10px] text-mb-mute`,
+                      { letterSpacing: 2, fontVariant: ["tabular-nums"] },
                     ]}
                   >
                     {formatTime(elapsedSeconds)}
                   </Text>
                   <Text
                     style={[
-                      tw`text-[10px] font-inter text-neutral-500`,
-                      { fontVariant: ["tabular-nums"] },
+                      tw`font-mono text-[10px] text-mb-mute`,
+                      { letterSpacing: 2, fontVariant: ["tabular-nums"] },
                     ]}
                   >
                     {formatTime(totalSeconds)}
@@ -240,26 +292,37 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              {/* Restart */}
               <Pressable
-                style={tw`items-center py-3 active:opacity-80 mb-2`}
                 onPress={restart}
+                style={({ pressed }) => [
+                  tw`items-center py-4 mb-4`,
+                  pressed && tw`opacity-70`,
+                ]}
               >
-                <Text style={[tw`text-xs font-inter`, { color: "#6FE7FF" }]}>
-                  Restart
+                <Text
+                  style={[
+                    tw`font-mono text-mb-accent uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  · restart
                 </Text>
               </Pressable>
             </>
           )}
-        </View>
 
-        {/* Footer */}
-        <View style={tw`items-center pb-2`}>
-          <Text style={tw`text-[10px] font-inter text-neutral-600`}>
-            Audio will continue in the background
-          </Text>
+          <View style={tw`items-center pb-4`}>
+            <Text
+              style={[
+                tw`font-mono text-mb-dim uppercase text-[9px]`,
+                { letterSpacing: 2 },
+              ]}
+            >
+              · audio continues in the background
+            </Text>
+          </View>
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

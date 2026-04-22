@@ -1,17 +1,16 @@
-import React, {memo, useEffect, useRef, useState} from 'react';
-import {View, TextInput} from 'react-native';
-import tw from '../../utils/tw';
-import {useDebouncedCallback} from 'use-debounce';
-import {useAppDispatch} from '../../hooks/store';
-import {editExerciseName} from '../../state/exercises.reducer';
-import {useParametrizedAppSelector} from '../../utils/selectors';
-import {exerciseNameByIdSelector} from '../../state/exercises.selectors';
+import React, { memo, useEffect, useRef, useState } from "react";
+import { View, TextInput } from "react-native";
+import tw from "../../utils/tw";
+import { useAppDispatch } from "../../hooks/store";
+import { editExerciseName } from "../../state/exercises.reducer";
+import { useParametrizedAppSelector } from "../../utils/selectors";
+import { exerciseNameByIdSelector } from "../../state/exercises.selectors";
 
 interface Props {
   exerciseId: string;
 }
 
-export const EditName = memo(({exerciseId}: Props) => {
+export const EditName = memo(({ exerciseId }: Props) => {
   const dispatch = useAppDispatch();
   const exerciseName = useParametrizedAppSelector(
     exerciseNameByIdSelector,
@@ -34,15 +33,18 @@ export const EditName = memo(({exerciseId}: Props) => {
   );
 
   return (
-    <View style={tw`border-b border-neutral-800 pb-1`}>
+    <View style={tw`border-b border-mb-line pb-2`}>
       <TextInput
-        style={tw`text-base font-inter text-white py-2`}
+        style={[
+          tw`font-display text-mb-fg uppercase py-2`,
+          { fontSize: 40, letterSpacing: -1.5, lineHeight: 44 },
+        ]}
         value={name}
-        onChangeText={name => {
+        onChangeText={(name) => {
           setName(name);
           nameRef.current = name;
         }}
-        placeholderTextColor="#737373"
+        placeholderTextColor="#6E6E74"
       />
     </View>
   );

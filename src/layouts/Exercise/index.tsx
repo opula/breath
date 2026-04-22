@@ -1,10 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { NavigationProp, RouteProp } from "@react-navigation/native";
+import React, { useCallback, useEffect, useRef } from "react";
+import {
+  NavigationProp,
+  RouteProp,
+} from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { Icon } from "../../components/Icon";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
+import { useAppDispatch } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
-import { FlatList, LayoutAnimation, View, Text, Pressable } from "react-native";
+import { LayoutAnimation, View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { StepCard } from "./StepCard";
 
@@ -16,20 +18,19 @@ import DraggableFlatList, {
 } from "react-native-draggable-flatlist";
 import SwipeableItem, {
   OpenDirection,
-  useSwipeableItemParams,
 } from "react-native-swipeable-item";
 import {
-  editExerciseName,
   removeExercise,
   updateExercise,
 } from "../../state/exercises.reducer";
 import { type Exercise as ExerciseItem } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
-import { useDebouncedCallback } from "use-debounce";
 import { EditName } from "./EditName";
 import { EditDescription } from "./EditDescription";
 import { useParametrizedAppSelector } from "../../utils/selectors";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Overline } from "../../components/Overline";
+import { LAST_EXERCISE, storage } from "../../utils/storage";
 
 const OVERSWIPE_DIST = 20;
 const SNAP_LEFT = [120];
@@ -40,15 +41,15 @@ interface Props {
 }
 
 export const Exercise = ({ navigation, route }: Props) => {
-  const {
-    params: { id },
-  } = route;
+  const { id } = route.params;
   const exercise = useParametrizedAppSelector(exerciseByIdSelector, id);
   const dispatch = useAppDispatch();
+  const insets = useSafeAreaInsets();
 
   const seqRef = useRef(exercise.seq);
   seqRef.current = exercise.seq;
 
+  // Clean up empty exercises on close.
   useEffect(() => {
     return () => {
       if (seqRef.current.length === 0) {
@@ -59,16 +60,26 @@ export const Exercise = ({ navigation, route }: Props) => {
 
   const itemRefs = useRef(new Map());
 
+  const handleRun = useCallback(() => {
+    // Find this exercise in the list to set its engine index.
+    const state = exercise;
+    // exercises order isn't trivially exposed here; engine will use its own
+    // last-remembered index. Callers expecting this behaviour should navigate
+    // from Home/tray instead. We still close back and hop to Main with autoplay.
+    navigation.navigate("Main", { autoplay: true });
+  }, [navigation, exercise]);
+
   const renderItem = useCallback(
     (params: RenderItemParams<ExerciseItem["seq"][number]>) => {
-      const { item, drag } = params;
+      const { item, drag, getIndex } = params;
+      const index = getIndex() ?? 0;
+
       const onPressDelete = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         const updatedExercise = {
           ...exercise,
-          seq: exercise.seq.filter((item) => item !== params.item),
+          seq: exercise.seq.filter((s) => s !== item),
         };
-
         dispatch(updateExercise({ exercise: updatedExercise }));
       };
 
@@ -97,35 +108,72 @@ export const Exercise = ({ navigation, route }: Props) => {
                 )}
                 snapPointsLeft={SNAP_LEFT}
               >
-                <StepCard exerciseId={id} step={item} drag={drag} />
+                <View style={tw`bg-mb-bg`}>
+                  <StepCard
+                    exerciseId={id}
+                    step={item}
+                    index={index}
+                    drag={drag}
+                  />
+                </View>
               </SwipeableItem>
             </OpacityDecorator>
           </ScaleDecorator>
         </ShadowDecorator>
       );
     },
-    [exercise],
+    [exercise, dispatch, id],
   );
 
+  const handleDelete = useCallback(() => {
+    dispatch(removeExercise({ exerciseId: id }));
+    // Clear the LAST_EXERCISE pointer if it happens to match, otherwise engine
+    // will still function against the remaining list.
+    navigation.goBack();
+  }, [dispatch, id, navigation]);
+
   return (
-    <View style={tw`flex-1 bg-black`}>
-      <SafeAreaView style={tw`flex-1`}>
-        <View
-          style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
-        >
+    <View style={tw`flex-1 bg-mb-bg`}>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        {/* Top nav */}
+        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
-          <Text style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}>
-            {exercise.name}
+          <Text
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+              { letterSpacing: 3 },
+            ]}
+          >
+            · edit exercise
           </Text>
-          <View style={tw`h-10 w-10`} />
+          <Pressable
+            onPress={handleRun}
+            style={tw`py-2 active:opacity-60`}
+          >
+            <Text
+              style={[
+                tw`font-mono text-mb-accent uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              run →
+            </Text>
+          </Pressable>
         </View>
 
-        <View style={tw`flex-1 px-4`}>
+        <View style={tw`flex-1 px-6`}>
           <DraggableFlatList
             data={exercise.seq}
             renderItem={renderItem}
@@ -143,70 +191,119 @@ export const Exercise = ({ navigation, route }: Props) => {
               )
             }
             ListHeaderComponent={
-              <View>
-                <View style={tw`py-4 px-2 mt-2`}>
-                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                    Edit name
-                  </Text>
+              <View style={tw`pb-4`}>
+                <Overline
+                  accent
+                  right={`${exercise.seq.length} phases`}
+                >
+                  Definition
+                </Overline>
+                <View style={tw`mt-5`}>
                   <EditName exerciseId={id} />
                 </View>
-
-                <View style={tw`px-2`}>
-                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                    Description
-                  </Text>
+                <View style={tw`mt-4 mb-6`}>
                   <EditDescription exerciseId={id} />
                 </View>
-
-                <View style={tw`mt-4 px-2`}>
-                  <Text style={tw`text-xs font-inter text-neutral-500 mb-2`}>
-                    Steps
-                  </Text>
-                </View>
+                <Overline right="tap to adjust">Phases</Overline>
               </View>
             }
             ListEmptyComponent={() => (
-              <View style={tw`items-center pt-8`}>
-                <Text style={tw`text-sm font-inter text-neutral-500 mb-6`}>
-                  No steps yet — add your first!
+              <View style={tw`py-6`}>
+                <Text
+                  style={[
+                    tw`font-mono text-mb-mute uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  · no phases yet — add your first below
                 </Text>
               </View>
             )}
             ListFooterComponent={() => (
-              <View
-                style={tw.style(
-                  exercise.seq.length ? `pt-8` : `pt-2`,
-                  `pb-8 items-center`,
-                )}
-              >
+              <View style={tw`pb-10`}>
+                {/* Add phase row */}
                 <Pressable
-                  style={[
-                    tw`flex-row items-center px-4 py-2 rounded-full border active:opacity-80`,
-                    { borderColor: "#6FE7FF" },
-                  ]}
                   onPress={() =>
                     navigation.navigate("NewStepMenu", { exerciseId: id })
                   }
+                  style={({ pressed }) => [
+                    tw`flex-row items-center py-5 border-b border-mb-line`,
+                    pressed && tw`opacity-70`,
+                  ]}
                 >
-                  <Icon name="plus" size={14} color="#6FE7FF" />
                   <Text
-                    style={[tw`ml-2 text-xs font-inter`, { color: "#6FE7FF" }]}
+                    style={[
+                      tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
+                      { letterSpacing: 1.5 },
+                    ]}
                   >
-                    Add step
+                    +
+                  </Text>
+                  <Text
+                    style={[
+                      tw`font-display text-mb-fg uppercase text-[18px]`,
+                      { letterSpacing: -0.4 },
+                    ]}
+                  >
+                    Add phase
+                  </Text>
+                  <View style={tw`flex-1`} />
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-mute uppercase text-[9px]`,
+                      { letterSpacing: 1.8 },
+                    ]}
+                  >
+                    + phase
                   </Text>
                 </Pressable>
+
+                {/* Danger zone */}
+                <View style={tw`mt-8`}>
+                  <Overline>Danger</Overline>
+                  <Pressable
+                    onPress={handleDelete}
+                    style={({ pressed }) => [
+                      tw`flex-row items-center py-5 border-b border-mb-line`,
+                      pressed && tw`opacity-70`,
+                    ]}
+                  >
+                    {/* Index-column spacer to align with step rows */}
+                    <View style={tw`w-8`} />
+                    <Text
+                      style={[
+                        tw`font-display text-mb-warn uppercase text-[18px] flex-1`,
+                        { letterSpacing: -0.4 },
+                      ]}
+                    >
+                      Delete exercise
+                    </Text>
+                    <Text
+                      style={[
+                        tw`font-mono text-mb-warn uppercase text-[9px]`,
+                        { letterSpacing: 2 },
+                      ]}
+                    >
+                      · permanent
+                    </Text>
+                  </Pressable>
+                </View>
+
                 {exercise.seq.length ? (
                   <Text
-                    style={tw`text-xs font-inter text-neutral-600 text-center mt-2`}
+                    style={[
+                      tw`font-mono text-mb-dim uppercase text-center text-[9px] mt-6`,
+                      { letterSpacing: 2 },
+                    ]}
                   >
-                    Long press to reorder. Swipe left to delete.
+                    long press to reorder · swipe left to delete
                   </Text>
                 ) : null}
               </View>
             )}
           />
         </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

@@ -84,7 +84,7 @@ export const TrayScreen = forwardRef<TrayScreenHandle, TrayScreenProps>(
         <Animated.View
           style={[
             animatedTrayStyles,
-            tw`bg-neutral-900 rounded-t-3xl`,
+            tw`bg-mb-bg border-t border-mb-line rounded-t-3xl`,
             { height: trayHeight, width: Math.min(540, width) },
           ]}
         >
@@ -92,7 +92,7 @@ export const TrayScreen = forwardRef<TrayScreenHandle, TrayScreenProps>(
             <Animated.View
               style={tw`justify-center items-center h-[40px] w-full`}
             >
-              <View style={tw`h-1 w-20 bg-neutral-800 rounded-sm mt-3`} />
+              <View style={tw`h-1 w-10 bg-mb-dim rounded-full mt-3`} />
             </Animated.View>
           </GestureDetector>
           <View style={tw`px-4 flex-1`}>{children}</View>

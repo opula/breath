@@ -1,18 +1,18 @@
-import React from 'react';
-import {Text, Pressable, View} from 'react-native';
-import {Icon} from '../../components/Icon';
-import tw from '../../utils/tw';
-import {MusicFile} from '../../types/music';
+import React from "react";
+import { Text, Pressable, View } from "react-native";
+import tw from "../../utils/tw";
+import { MusicFile } from "../../types/music";
 
 const formatTrackName = (filename: string) =>
   filename
-    .replace(/\.[^.]+$/, '')
-    .replace(/[-_]+/g, ' ')
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
     .trim();
 
 interface MusicTrackItemProps {
   item: MusicFile;
+  index: number;
   isActive: boolean;
   isPlaying: boolean;
   onPress: () => void;
@@ -20,32 +20,46 @@ interface MusicTrackItemProps {
 
 export const MusicTrackItem = ({
   item,
+  index,
   isActive,
   isPlaying,
   onPress,
 }: MusicTrackItemProps) => {
   return (
     <Pressable
-      style={tw`flex-row items-center px-4 py-3 active:opacity-80`}
-      onPress={onPress}>
-      <View style={tw`w-6 items-center`}>
-        {isActive && (
-          <Icon
-            name={isPlaying ? 'pause' : 'play'}
-            color="#6FE7FF"
-            size={14}
-          />
-        )}
-      </View>
+      onPress={onPress}
+      style={({ pressed }) => [
+        tw`flex-row items-center py-4 border-b border-mb-line`,
+        pressed && tw`opacity-70`,
+      ]}
+    >
       <Text
         style={[
-          tw`flex-1 ml-2 text-sm font-inter ${
-            isActive ? 'text-white' : 'text-neutral-400'
-          }`,
-          isActive && {color: '#6FE7FF'},
+          tw`font-mono text-[10px] uppercase w-8`,
+          isActive ? tw`text-mb-accent` : tw`text-mb-mute`,
+          { letterSpacing: 1.5 },
         ]}
-        numberOfLines={1}>
+      >
+        {String(index + 1).padStart(2, "0")}
+      </Text>
+      <Text
+        style={[
+          tw`font-display uppercase text-[18px] flex-1`,
+          isActive ? tw`text-mb-accent` : tw`text-mb-fg`,
+          { letterSpacing: -0.4 },
+        ]}
+        numberOfLines={1}
+      >
         {formatTrackName(item.name)}
+      </Text>
+      <Text
+        style={[
+          tw`font-mono text-[10px] uppercase ml-3`,
+          isActive ? tw`text-mb-accent` : tw`text-mb-mute`,
+          { letterSpacing: 2 },
+        ]}
+      >
+        {isActive ? (isPlaying ? "▶ playing" : "paused") : "play"}
       </Text>
     </Pressable>
   );

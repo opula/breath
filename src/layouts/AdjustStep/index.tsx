@@ -1,14 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TrayScreen } from "../../components/TrayScreen";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, Text, TextInput, Keyboard, Pressable, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Keyboard,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import tw from "../../utils/tw";
 import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
 import { Exercise } from "../../types/exercise";
-import { capitalize } from "lodash";
 import {
   updateExerciseStepCount,
   updateExerciseStepRamp,
@@ -18,23 +24,69 @@ import {
 import Decimal from "decimal.js";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import { convertSecondsToHHMM } from "../../utils/pretty";
+import { Overline } from "../../components/Overline";
 
 interface Props {
   route: RouteProp<MainStackParams, "AdjustStep">;
 }
 
 const breathLabels = ["Inhale", "Hold", "Exhale", "Hold"];
+const SINGLE_PRESETS = [2, 4, 6, 8, 12, 20];
+
+const DialGroup = ({
+  label,
+  children,
+  disabled = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) => (
+  <View
+    style={[tw`mt-5`, disabled ? tw`opacity-40` : undefined]}
+    pointerEvents={disabled ? "none" : "auto"}
+  >
+    <Text
+      style={[
+        tw`font-mono text-[9px] text-mb-mute uppercase mb-2`,
+        { letterSpacing: 2 },
+      ]}
+    >
+      · {label}
+    </Text>
+    {children}
+  </View>
+);
+
+const BigTitleLabel = ({ children }: { children: React.ReactNode }) => (
+  <Text
+    style={[
+      tw`font-display text-mb-fg uppercase mt-4`,
+      { fontSize: 40, letterSpacing: -1.2, lineHeight: 44 },
+    ]}
+    numberOfLines={1}
+  >
+    {children}
+  </Text>
+);
+
+const displayKind = (type: string) => {
+  if (type === "double-inhale") return "Double inhale";
+  if (type === "repeat") return "Repeat";
+  if (type === "text") return "Message";
+  return type;
+};
 
 export const AdjustStep = ({ route }: Props) => {
   const { exerciseId, stepId } = route.params;
   const { bottom } = useSafeAreaInsets();
-  const exercise = useAppSelector((state) =>
-    exerciseByIdSelector(state, exerciseId),
+  const exercise = useAppSelector((s) =>
+    exerciseByIdSelector(s, exerciseId),
   );
   const dispatch = useAppDispatch();
 
   const step = useMemo(
-    () => exercise.seq.find((step) => step.id === stepId),
+    () => exercise.seq.find((s) => s.id === stepId),
     [exercise, stepId],
   );
   const { type, value, count } = step || {};
@@ -45,7 +97,7 @@ export const AdjustStep = ({ route }: Props) => {
   const isRepeat = type === "repeat";
   const isSingle = type === "exhale" || type === "hold" || type === "inhale";
 
-  const totalDuration = useMemo(() => {
+  const totalBreathDuration = useMemo(() => {
     if (!isBreath || !Array.isArray(value) || !count) return null;
     const sum = value.reduce((acc: number, v: number) => acc + v, 0);
     return count * sum;
@@ -53,18 +105,16 @@ export const AdjustStep = ({ route }: Props) => {
 
   if (isBreath) {
     return (
-      <TrayScreen trayHeight={570 + bottom}>
-        <View style={tw`pt-4 px-2 pb-4`}>
-          <Text style={tw`text-base font-inter text-white text-center`}>
-            {capitalize(type)}
-          </Text>
+      <TrayScreen trayHeight={640 + bottom}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={tw`pt-2 pb-6 px-2`}>
+            <Overline accent right={`kind · ${type}`}>
+              Adjusting phase
+            </Overline>
+            <BigTitleLabel>Breath cycle</BigTitleLabel>
 
-          <View style={tw`gap-y-6 my-4`}>
             {breathLabels.map((label, index) => (
-              <View key={`breath-${index}`}>
-                <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                  {label}
-                </Text>
+              <DialGroup key={`breath-${index}`} label={label}>
                 <HorizontalDial
                   min={0}
                   max={30}
@@ -78,137 +128,134 @@ export const AdjustStep = ({ route }: Props) => {
                         stepId,
                         value: (value as number[]).map((v, i) =>
                           i === index
-                            ? new Decimal(newValue)
-                                .toDecimalPlaces(1)
-                                .toNumber()
+                            ? new Decimal(newValue).toDecimalPlaces(1).toNumber()
                             : v,
                         ),
                       }),
                     );
                   }}
                 />
-              </View>
+              </DialGroup>
             ))}
 
-            <View>
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Count
-              </Text>
+            <DialGroup label="Count">
               <HorizontalDial
                 min={0}
                 max={1000}
                 step={1}
-                suffix="x"
+                suffix="×"
                 zeroLabel="∞"
                 defaultValue={count ?? 0}
-                onChange={(newValue: number) => {
+                onChange={(v) =>
                   dispatch(
                     updateExerciseStepCount({
                       exerciseId,
                       stepId,
-                      count: Math.round(newValue),
+                      count: Math.round(v),
                     }),
-                  );
-                }}
+                  )
+                }
               />
-            </View>
+            </DialGroup>
 
-            <View
-              style={!count ? tw`opacity-50` : undefined}
-              pointerEvents={!count ? "none" : "auto"}
-            >
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Ramp
-              </Text>
+            <DialGroup label="Ramp" disabled={!count}>
               <HorizontalDial
                 min={1}
                 max={3}
                 step={0.1}
-                suffix="x"
+                suffix="×"
                 defaultValue={step?.ramp ?? 1}
-                onChange={(newValue: number) => {
+                onChange={(v) =>
                   dispatch(
                     updateExerciseStepRamp({
                       exerciseId,
                       stepId,
-                      ramp: new Decimal(newValue)
-                        .toDecimalPlaces(1)
-                        .toNumber(),
+                      ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
                     }),
-                  );
-                }}
+                  )
+                }
               />
+            </DialGroup>
+
+            <View style={tw`mt-8 items-center`}>
+              {totalBreathDuration && totalBreathDuration > 0 ? (
+                <Text
+                  style={[
+                    tw`font-mono text-mb-mute uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  {(() => {
+                    const { minutes, seconds } =
+                      convertSecondsToHHMM(totalBreathDuration);
+                    return minutes > 0
+                      ? `total · ${minutes}m ${seconds}s`
+                      : `total · ${seconds}s`;
+                  })()}
+                </Text>
+              ) : (
+                <Text
+                  style={[
+                    tw`font-mono text-mb-mute uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  · at your discretion
+                </Text>
+              )}
             </View>
           </View>
-          <View style={tw`mt-3 items-center`}>
-            {totalDuration !== null && totalDuration > 0 ? (
-              <Text style={tw`text-sm font-inter text-neutral-400 font-bold`}>
-                {(() => {
-                  const { minutes, seconds } =
-                    convertSecondsToHHMM(totalDuration);
-                  if (minutes > 0) {
-                    return `${minutes} minutes, ${seconds} seconds`;
-                  }
-                  return `${seconds} seconds`;
-                })()}
-              </Text>
-            ) : (
-              <Text style={tw`text-sm font-inter text-neutral-400`}>
-                At your discretion
-              </Text>
-            )}
-          </View>
-        </View>
+        </ScrollView>
       </TrayScreen>
     );
   }
 
   if (isDoubleInhale) {
     const doubleVal = (value as number[] | undefined) ?? [1.5, 0.3, 1.5];
-    const doubleLabels = ["First Inhale", "Pause", "Second Inhale"];
+    const doubleLabels = ["First inhale", "Pause", "Second inhale"];
     const totalSec = doubleVal.reduce((a, v) => a + v, 0);
 
     return (
-      <TrayScreen trayHeight={380 + bottom}>
-        <View style={tw`pt-4 px-2 pb-4`}>
-          <Text style={tw`text-base font-inter text-white text-center`}>
-            Double Inhale
-          </Text>
+      <TrayScreen trayHeight={460 + bottom}>
+        <View style={tw`pt-2 pb-6 px-2`}>
+          <Overline accent right={`kind · ${type}`}>
+            Adjusting phase
+          </Overline>
+          <BigTitleLabel>Double inhale</BigTitleLabel>
 
-          <View style={tw`gap-y-6 my-4`}>
-            {doubleLabels.map((label, index) => (
-              <View key={`di-${index}`}>
-                <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                  {label}
-                </Text>
-                <HorizontalDial
-                  min={0}
-                  max={10}
-                  step={0.1}
-                  suffix="s"
-                  defaultValue={doubleVal[index] ?? 0}
-                  onChange={(newValue: number) => {
-                    dispatch(
-                      updateExerciseStepValue({
-                        exerciseId,
-                        stepId,
-                        value: doubleVal.map((v, i) =>
-                          i === index
-                            ? new Decimal(newValue)
-                                .toDecimalPlaces(1)
-                                .toNumber()
-                            : v,
-                        ),
-                      }),
-                    );
-                  }}
-                />
-              </View>
-            ))}
-          </View>
-          <View style={tw`mt-3 items-center`}>
-            <Text style={tw`text-sm font-inter text-neutral-400`}>
-              {`${totalSec.toFixed(1)}s total`}
+          {doubleLabels.map((label, index) => (
+            <DialGroup key={`di-${index}`} label={label}>
+              <HorizontalDial
+                min={0}
+                max={10}
+                step={0.1}
+                suffix="s"
+                defaultValue={doubleVal[index] ?? 0}
+                onChange={(v) =>
+                  dispatch(
+                    updateExerciseStepValue({
+                      exerciseId,
+                      stepId,
+                      value: doubleVal.map((x, i) =>
+                        i === index
+                          ? new Decimal(v).toDecimalPlaces(1).toNumber()
+                          : x,
+                      ),
+                    }),
+                  )
+                }
+              />
+            </DialGroup>
+          ))}
+
+          <View style={tw`mt-8 items-center`}>
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 2 },
+              ]}
+            >
+              total · {totalSec.toFixed(1)}s
             </Text>
           </View>
         </View>
@@ -220,154 +267,214 @@ export const AdjustStep = ({ route }: Props) => {
     const lookback = (value as number[] | undefined)?.[0] ?? 1;
 
     return (
-      <TrayScreen trayHeight={350 + bottom}>
-        <View style={tw`pt-4 px-2 pb-4`}>
-          <Text style={tw`text-base font-inter text-white text-center`}>
-            Repeat
-          </Text>
+      <TrayScreen trayHeight={440 + bottom}>
+        <View style={tw`pt-2 pb-6 px-2`}>
+          <Overline accent right={`kind · ${type}`}>
+            Adjusting phase
+          </Overline>
+          <BigTitleLabel>Repeat</BigTitleLabel>
 
-          <View style={tw`gap-y-6 my-4`}>
-            <View>
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Lookback
-              </Text>
-              <HorizontalDial
-                min={1}
-                max={20}
-                step={1}
-                suffix=" steps"
-                defaultValue={lookback}
-                onChange={(newValue: number) => {
-                  dispatch(
-                    updateExerciseStepValue({
-                      exerciseId,
-                      stepId,
-                      value: [Math.round(newValue)],
-                    }),
-                  );
-                }}
-              />
-            </View>
+          <DialGroup label="Lookback">
+            <HorizontalDial
+              min={1}
+              max={20}
+              step={1}
+              suffix=" steps"
+              defaultValue={lookback}
+              onChange={(v) =>
+                dispatch(
+                  updateExerciseStepValue({
+                    exerciseId,
+                    stepId,
+                    value: [Math.round(v)],
+                  }),
+                )
+              }
+            />
+          </DialGroup>
 
-            <View>
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Count
-              </Text>
-              <HorizontalDial
-                min={1}
-                max={1000}
-                step={1}
-                suffix="x"
-                defaultValue={count ?? 1}
-                onChange={(newValue: number) => {
-                  dispatch(
-                    updateExerciseStepCount({
-                      exerciseId,
-                      stepId,
-                      count: Math.round(newValue),
-                    }),
-                  );
-                }}
-              />
-            </View>
+          <DialGroup label="Count">
+            <HorizontalDial
+              min={1}
+              max={1000}
+              step={1}
+              suffix="×"
+              defaultValue={count ?? 1}
+              onChange={(v) =>
+                dispatch(
+                  updateExerciseStepCount({
+                    exerciseId,
+                    stepId,
+                    count: Math.round(v),
+                  }),
+                )
+              }
+            />
+          </DialGroup>
 
-            <View
-              style={!count || count <= 1 ? tw`opacity-50` : undefined}
-              pointerEvents={!count || count <= 1 ? "none" : "auto"}
-            >
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Ramp
-              </Text>
-              <HorizontalDial
-                min={1}
-                max={3}
-                step={0.1}
-                suffix="x"
-                defaultValue={step?.ramp ?? 1}
-                onChange={(newValue: number) => {
-                  dispatch(
-                    updateExerciseStepRamp({
-                      exerciseId,
-                      stepId,
-                      ramp: new Decimal(newValue)
-                        .toDecimalPlaces(1)
-                        .toNumber(),
-                    }),
-                  );
-                }}
-              />
-            </View>
-          </View>
+          <DialGroup label="Ramp" disabled={!count || count <= 1}>
+            <HorizontalDial
+              min={1}
+              max={3}
+              step={0.1}
+              suffix="×"
+              defaultValue={step?.ramp ?? 1}
+              onChange={(v) =>
+                dispatch(
+                  updateExerciseStepRamp({
+                    exerciseId,
+                    stepId,
+                    ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
+                  }),
+                )
+              }
+            />
+          </DialGroup>
         </View>
       </TrayScreen>
     );
   }
 
   if (isText) {
-    return <AdjustTextStep step={step!} exerciseId={exerciseId} stepId={stepId} bottom={bottom} />;
+    return (
+      <AdjustTextStep
+        step={step!}
+        exerciseId={exerciseId}
+        stepId={stepId}
+        bottom={bottom}
+      />
+    );
   }
 
+  // Single (inhale / exhale / hold)
   return (
-    <TrayScreen trayHeight={250 + bottom}>
-      <View style={tw`pt-4 px-2`}>
-        <Text style={tw`text-base font-inter text-white text-center`}>
-          {capitalize(type)}
-        </Text>
+    <TrayScreen trayHeight={430 + bottom}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={tw`pt-2 pb-6 px-2`}>
+          <Overline accent right={`kind · ${type}`}>
+            Adjusting phase
+          </Overline>
+          <BigTitleLabel>{displayKind(type ?? "")}</BigTitleLabel>
 
-        {isSingle ? (
-          <View style={tw`gap-y-6 my-4`}>
-            <View>
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Duration
-              </Text>
-              <HorizontalDial
-                min={0}
-                max={1000}
-                step={1}
-                suffix="s"
-                zeroLabel="∞"
-                defaultValue={count ?? 0}
-                onChange={(newValue: number) => {
-                  dispatch(
-                    updateExerciseStepCount({
-                      exerciseId,
-                      stepId,
-                      count: Math.round(newValue),
-                    }),
-                  );
-                }}
-              />
-            </View>
-
-            <View
-              style={!count ? tw`opacity-50` : undefined}
-              pointerEvents={!count ? "none" : "auto"}
+          {/* Big numeric readout */}
+          <View style={tw`mt-6 items-center`}>
+            <Text
+              style={[
+                tw`font-display text-mb-fg`,
+                {
+                  fontSize: 88,
+                  letterSpacing: -3,
+                  lineHeight: 92,
+                  fontVariant: ["tabular-nums"],
+                },
+              ]}
             >
-              <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-                Ramp
-              </Text>
-              <HorizontalDial
-                min={1}
-                max={3}
-                step={0.1}
-                suffix="x"
-                defaultValue={step?.ramp ?? 1}
-                onChange={(newValue: number) => {
-                  dispatch(
-                    updateExerciseStepRamp({
-                      exerciseId,
-                      stepId,
-                      ramp: new Decimal(newValue)
-                        .toDecimalPlaces(1)
-                        .toNumber(),
-                    }),
-                  );
-                }}
-              />
-            </View>
+              {count && count > 0 ? count : "∞"}
+              {count && count > 0 ? (
+                <Text
+                  style={[
+                    tw`font-display text-mb-mute`,
+                    { fontSize: 28, letterSpacing: -1 },
+                  ]}
+                >
+                  s
+                </Text>
+              ) : null}
+            </Text>
           </View>
-        ) : null}
-      </View>
+
+          {isSingle ? (
+            <>
+              <DialGroup label="Duration">
+                <HorizontalDial
+                  min={0}
+                  max={1000}
+                  step={1}
+                  suffix="s"
+                  zeroLabel="∞"
+                  defaultValue={count ?? 0}
+                  onChange={(v) =>
+                    dispatch(
+                      updateExerciseStepCount({
+                        exerciseId,
+                        stepId,
+                        count: Math.round(v),
+                      }),
+                    )
+                  }
+                />
+              </DialGroup>
+
+              {/* Quick presets */}
+              <View style={tw`mt-5`}>
+                <Text
+                  style={[
+                    tw`font-mono text-[9px] text-mb-mute uppercase mb-2`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  · quick presets
+                </Text>
+                <View style={tw`flex-row`}>
+                  {SINGLE_PRESETS.map((p, i) => {
+                    const active = count === p;
+                    return (
+                      <Pressable
+                        key={p}
+                        onPress={() =>
+                          dispatch(
+                            updateExerciseStepCount({
+                              exerciseId,
+                              stepId,
+                              count: p,
+                            }),
+                          )
+                        }
+                        style={({ pressed }) => [
+                          tw.style(
+                            `flex-1 py-3 items-center border-mb-line`,
+                            i > 0 ? `border-l` : undefined,
+                          ),
+                          pressed && tw`opacity-70`,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            tw`font-display uppercase text-[16px]`,
+                            active ? tw`text-mb-accent` : tw`text-mb-fg`,
+                            { letterSpacing: -0.4 },
+                          ]}
+                        >
+                          {p}s
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <DialGroup label="Ramp" disabled={!count}>
+                <HorizontalDial
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  suffix="×"
+                  defaultValue={step?.ramp ?? 1}
+                  onChange={(v) =>
+                    dispatch(
+                      updateExerciseStepRamp({
+                        exerciseId,
+                        stepId,
+                        ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
+                      }),
+                    )
+                  }
+                />
+              </DialGroup>
+            </>
+          ) : null}
+        </View>
+      </ScrollView>
     </TrayScreen>
   );
 };
@@ -402,44 +509,49 @@ const AdjustTextStep = ({
   );
 
   return (
-    <TrayScreen trayHeight={500 + bottom}>
+    <TrayScreen trayHeight={560 + bottom}>
       <ScrollView
-        style={tw`pt-4 px-2 pb-4`}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         scrollEnabled={false}
       >
-        <View style={tw`flex-row justify-between items-center`}>
-          <Text style={tw`text-base font-inter text-white`}>
-            Message
-          </Text>
-          <Pressable onPress={Keyboard.dismiss} hitSlop={8}>
-            <Text style={[tw`text-sm font-inter`, { color: isFocused ? "#6FE7FF" : "#a3a3a3" }]}>Done</Text>
-          </Pressable>
-        </View>
+        <View style={tw`pt-2 pb-6 px-2`}>
+          <Overline accent right={`kind · text`}>
+            Adjusting phase
+          </Overline>
+          <BigTitleLabel>Message</BigTitleLabel>
 
-        <View style={tw`gap-y-6 my-4`}>
-          <View style={tw`border-b border-neutral-800`}>
-            <TextInput
-              style={tw`text-base font-inter text-white py-2`}
-              value={text}
-              onChangeText={(val) => {
-                setText(val);
-                textRef.current = val;
-              }}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              autoFocus={!step.text}
-              placeholder="Enter message"
-              placeholderTextColor="#737373"
-              multiline
-            />
-          </View>
+          <DialGroup label="Text">
+            <View style={tw`flex-row items-center border-b border-mb-line`}>
+              <TextInput
+                style={tw`flex-1 font-inter text-mb-fg py-2 text-base`}
+                value={text}
+                onChangeText={(val) => {
+                  setText(val);
+                  textRef.current = val;
+                }}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                autoFocus={!step.text}
+                placeholder="Enter a message…"
+                placeholderTextColor="#6E6E74"
+                multiline
+              />
+              <Pressable onPress={Keyboard.dismiss} hitSlop={8}>
+                <Text
+                  style={[
+                    tw`font-mono uppercase text-[10px] ml-2`,
+                    isFocused ? tw`text-mb-accent` : tw`text-mb-mute`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  done
+                </Text>
+              </Pressable>
+            </View>
+          </DialGroup>
 
-          <View>
-            <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-              Duration
-            </Text>
+          <DialGroup label="Duration">
             <HorizontalDial
               min={0}
               max={1000}
@@ -447,44 +559,36 @@ const AdjustTextStep = ({
               suffix="s"
               zeroLabel="∞"
               defaultValue={step.count ?? 0}
-              onChange={(newValue: number) => {
+              onChange={(v) =>
                 dispatch(
                   updateExerciseStepCount({
                     exerciseId,
                     stepId,
-                    count: Math.round(newValue),
+                    count: Math.round(v),
                   }),
-                );
-              }}
+                )
+              }
             />
-          </View>
+          </DialGroup>
 
-          <View
-            style={!step.count ? tw`opacity-50` : undefined}
-            pointerEvents={!step.count ? "none" : "auto"}
-          >
-            <Text style={tw`text-xs font-inter text-neutral-400 mb-2`}>
-              Ramp
-            </Text>
+          <DialGroup label="Ramp" disabled={!step.count}>
             <HorizontalDial
               min={1}
               max={3}
               step={0.1}
-              suffix="x"
+              suffix="×"
               defaultValue={step.ramp ?? 1}
-              onChange={(newValue: number) => {
+              onChange={(v) =>
                 dispatch(
                   updateExerciseStepRamp({
                     exerciseId,
                     stepId,
-                    ramp: new Decimal(newValue)
-                      .toDecimalPlaces(1)
-                      .toNumber(),
+                    ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
                   }),
-                );
-              }}
+                )
+              }
             />
-          </View>
+          </DialGroup>
         </View>
       </ScrollView>
     </TrayScreen>

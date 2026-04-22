@@ -27,11 +27,12 @@ import { MusicHelp } from "../layouts/MusicHelp";
 import { BackgroundAudio } from "../layouts/BackgroundAudio";
 import { FileTransfer } from "../layouts/FileTransfer";
 import { AddMusic } from "../layouts/AddMusic";
+import { ExerciseActions } from "../layouts/ExerciseActions";
 
 export type MainStackParams = {
   Welcome: undefined;
   Home: undefined;
-  Main: undefined;
+  Main: { autoplay?: boolean } | undefined;
   MusicControls: undefined;
   MusicHelp: undefined;
   Scenes: undefined;
@@ -45,6 +46,7 @@ export type MainStackParams = {
   BackgroundAudio: { id: string };
   FileTransfer: undefined;
   AddMusic: undefined;
+  ExerciseActions: { exerciseId: string };
 };
 
 const Stack = createStackNavigator<MainStackParams>();
@@ -141,6 +143,7 @@ export const MainStack = () => {
         <Stack.Screen name="Settings" component={Settings} />
         <Stack.Screen name="AdjustStep" component={AdjustStep} />
         <Stack.Screen name="NewStepMenu" component={NewStepMenu} />
+        <Stack.Screen name="ExerciseActions" component={ExerciseActions} />
       </Stack.Group>
     </Stack.Navigator>
   );

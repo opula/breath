@@ -6,13 +6,14 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
 import { musicFilesSelector } from "../../state/musicLibrary.selectors";
-import { Icon } from "../../components/Icon";
 import tw from "../../utils/tw";
+import { Overline } from "../../components/Overline";
+import { BigTitle } from "../../components/BigTitle";
 
 const SAMPLE_TRACKS = [
   {
@@ -25,44 +26,52 @@ const SAMPLE_TRACKS = [
   },
 ];
 
-const ADDING_MUSIC = [
-  {
-    method: "WiFi Transfer",
-    description:
-      "Scan a QR code from another device on the same WiFi network, then drag and drop audio files through your browser.",
-  },
-  {
-    method: "Paste URL",
-    description:
-      "Copy a link to an audio file, then tap Paste URL. The file will be downloaded and added to your library.",
-  },
-  {
-    method: "Pick File",
-    description:
-      "Choose an audio file from your device storage to add to your library.",
-  },
+const ADDING = [
+  { label: "WiFi transfer", hint: "· upload via browser on a nearby device" },
+  { label: "Paste URL", hint: "· download an audio link from your clipboard" },
+  { label: "Pick file", hint: "· choose an audio file from this phone" },
 ];
 
 const PLAYBACK = [
-  { action: "Play a track", description: "Tap any track in your library" },
-  {
-    action: "Adjust volume",
-    description: "Use the dial at the bottom to set playback volume",
-  },
-  {
-    action: "Remove a track",
-    description: "Swipe a track to the left to reveal the delete button",
-  },
+  { label: "Tap a track", hint: "· starts playback in the background" },
+  { label: "Volume dial", hint: "· set the level on the Sound screen" },
+  { label: "Swipe left", hint: "· reveal delete on a track" },
 ];
 
 const TIPS = [
-  "Music plays alongside exercise sounds and continues between exercises.",
-  "Supported formats include MP3, M4A, WAV, and other common audio types.",
-  "Tracks are saved locally so they work offline after downloading.",
+  "Music plays alongside exercise sounds and continues between sessions.",
+  "MP3, M4A, WAV and other common audio types are supported.",
+  "Tracks are saved locally and work offline after downloading.",
 ];
+
+const Row = ({ label, hint }: { label: string; hint: string }) => (
+  <View
+    style={tw`flex-row items-center py-4 border-b border-mb-line`}
+  >
+    <View style={tw`flex-1`}>
+      <Text
+        style={[
+          tw`font-display text-[16px] text-mb-fg uppercase`,
+          { letterSpacing: -0.3 },
+        ]}
+      >
+        {label}
+      </Text>
+    </View>
+    <Text
+      style={[
+        tw`font-mono text-[9px] text-mb-mute uppercase max-w-[55%] text-right`,
+        { letterSpacing: 1.8 },
+      ]}
+    >
+      {hint}
+    </Text>
+  </View>
+);
 
 export const MusicHelp = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { downloadUrl, isDownloading } = useAudioPlayer();
   const files = useSelector(musicFilesSelector);
 
@@ -72,89 +81,102 @@ export const MusicHelp = () => {
   );
 
   return (
-    <View style={tw`flex-1 bg-black`}>
-      <SafeAreaView style={tw`flex-1`}>
-        <View
-          style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
-        >
+    <View style={tw`flex-1 bg-mb-bg`}>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        {/* Top nav */}
+        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
-          <Text style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}>
-            Music Help
+          <Text
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+              { letterSpacing: 3 },
+            ]}
+          >
+            · music manual
           </Text>
-          <View style={tw`h-10 w-10`} />
+          <View style={tw`w-10`} />
         </View>
 
         <ScrollView
-          style={tw`flex-1 px-6 pt-6`}
+          contentContainerStyle={tw`px-6 pb-10`}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={tw`text-base font-inter text-neutral-400 mb-8`}>
-            Add your own music to play during breathing exercises. Tracks play
-            in the background alongside exercise sounds.
+          <Overline accent>Music</Overline>
+          <View style={tw`mt-5 mb-5`}>
+            <BigTitle size={40} accent>{`Bring\nyour own`}</BigTitle>
+          </View>
+          <Text
+            style={tw`font-inter text-sm text-mb-mute leading-relaxed mb-6`}
+          >
+            Add tracks to play during breathing exercises. Music sits
+            underneath the exercise sounds and continues between sessions.
           </Text>
 
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mb-4`}
-          >
-            Adding Music
-          </Text>
-          {ADDING_MUSIC.map((item) => (
-            <View key={item.method} style={tw`flex-row py-3`}>
-              <Text style={tw`text-sm font-inter text-neutral-200 w-36`}>
-                {item.method}
-              </Text>
-              <Text style={tw`text-sm font-inter text-neutral-400 flex-1`}>
-                {item.description}
-              </Text>
-            </View>
+          <Overline>Adding music</Overline>
+          {ADDING.map((r) => (
+            <Row key={r.label} label={r.label} hint={r.hint} />
           ))}
 
-          {/* Sample tracks */}
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-2`}
-          >
-            Sample Tracks
-          </Text>
-          <Text style={tw`text-sm font-inter text-neutral-400 mb-4`}>
-            Try these free tracks to get started.
-          </Text>
+          <View style={tw`mt-8`}>
+            <Overline right="free to add">Sample tracks</Overline>
+          </View>
           {SAMPLE_TRACKS.map((track) => {
             const alreadyAdded = hasTrack(track.name);
             return (
               <View
                 key={track.name}
-                style={tw`flex-row items-center py-3 justify-between`}
+                style={tw`flex-row items-center py-4 border-b border-mb-line`}
               >
                 <Text
-                  style={[tw`text-sm font-inter flex-1 mr-4`, { color: '#6FE7FF' }]}
+                  style={[
+                    tw`font-display text-[16px] text-mb-fg uppercase flex-1`,
+                    { letterSpacing: -0.3 },
+                  ]}
                   numberOfLines={1}
                 >
                   {track.name}
                 </Text>
                 {alreadyAdded ? (
-                  <Text style={tw`text-xs font-inter text-neutral-600`}>
-                    Added
+                  <Text
+                    style={[
+                      tw`font-mono text-[10px] text-mb-mute uppercase`,
+                      { letterSpacing: 2 },
+                    ]}
+                  >
+                    · added
                   </Text>
                 ) : (
                   <Pressable
-                    style={tw`flex-row items-center justify-center w-18 h-8 rounded-full border border-neutral-600 active:opacity-80`}
                     onPress={() => downloadUrl(track.url)}
                     disabled={isDownloading}
+                    style={({ pressed }) => [
+                      tw`px-3 py-1 border border-mb-accent`,
+                      pressed && tw`opacity-70`,
+                    ]}
                   >
                     {isDownloading ? (
-                      <ActivityIndicator size="small" color="white" />
+                      <ActivityIndicator size="small" color="#6FE7FF" />
                     ) : (
-                      <>
-                        <Icon name="download" size={14} color="white" />
-                        <Text style={tw`ml-2 text-xs font-inter text-white`}>
-                          Add
-                        </Text>
-                      </>
+                      <Text
+                        style={[
+                          tw`font-mono text-[10px] text-mb-accent uppercase`,
+                          { letterSpacing: 2 },
+                        ]}
+                      >
+                        add
+                      </Text>
                     )}
                   </Pressable>
                 )}
@@ -162,39 +184,35 @@ export const MusicHelp = () => {
             );
           })}
 
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-4`}
-          >
-            Playback
-          </Text>
-          {PLAYBACK.map((item) => (
-            <View key={item.action} style={tw`flex-row py-3`}>
-              <Text style={tw`text-sm font-inter text-neutral-200 w-36`}>
-                {item.action}
-              </Text>
-              <Text style={tw`text-sm font-inter text-neutral-400 flex-1`}>
-                {item.description}
-              </Text>
-            </View>
+          <View style={tw`mt-8`}>
+            <Overline>Playback</Overline>
+          </View>
+          {PLAYBACK.map((r) => (
+            <Row key={r.label} label={r.label} hint={r.hint} />
           ))}
 
-          <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 mt-8 mb-4`}
-          >
-            Tips
-          </Text>
+          <View style={tw`mt-8`}>
+            <Overline>Tips</Overline>
+          </View>
           {TIPS.map((tip, i) => (
-            <View key={i} style={tw`flex-row py-2`}>
-              <Text style={tw`text-sm font-inter text-neutral-400`}>
-                {"\u2022  "}
+            <View key={i} style={tw`flex-row py-3 border-b border-mb-line`}>
+              <Text
+                style={[
+                  tw`font-mono text-[9px] text-mb-mute uppercase w-8 pt-[2px]`,
+                  { letterSpacing: 1.5 },
+                ]}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </Text>
+              <Text
+                style={tw`font-inter text-sm text-mb-mute leading-relaxed flex-1`}
+              >
                 {tip}
               </Text>
             </View>
           ))}
-
-          <View style={tw`h-8`} />
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

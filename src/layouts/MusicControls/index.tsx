@@ -1,11 +1,6 @@
 import React, { useCallback } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  FlatList,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, Pressable, FlatList } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
 import { useSelector } from "react-redux";
@@ -13,23 +8,20 @@ import {
   musicFilesSelector,
   activeFileIdSelector,
 } from "../../state/musicLibrary.selectors";
-import { Icon } from "../../components/Icon";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
 import SwipeableItem from "react-native-swipeable-item";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe/SwipeRightRemove";
 import { MusicTrackItem } from "./MusicTrackItem";
 import { MusicFile } from "../../types/music";
+import { Overline } from "../../components/Overline";
+import { BigTitle } from "../../components/BigTitle";
 
 export const MusicControls = () => {
   const navigation = useNavigation();
-  const {
-    isPlaying,
-    volume,
-    setVolume,
-    playFile,
-    deleteFile,
-  } = useAudioPlayer();
+  const insets = useSafeAreaInsets();
+  const { isPlaying, volume, setVolume, playFile, deleteFile } =
+    useAudioPlayer();
 
   const files = useSelector(musicFilesSelector);
   const activeFileId = useSelector(activeFileIdSelector);
@@ -42,7 +34,7 @@ export const MusicControls = () => {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: MusicFile }) => (
+    ({ item, index }: { item: MusicFile; index: number }) => (
       <SwipeableItem
         item={item}
         snapPointsLeft={[120]}
@@ -53,9 +45,10 @@ export const MusicControls = () => {
           />
         )}
       >
-        <View>
+        <View style={tw`bg-mb-bg`}>
           <MusicTrackItem
             item={item}
+            index={index}
             isActive={item.id === activeFileId}
             isPlaying={item.id === activeFileId && isPlaying}
             onPress={() => playFile(item.id)}
@@ -69,73 +62,145 @@ export const MusicControls = () => {
   const keyExtractor = useCallback((item: MusicFile) => item.id, []);
 
   return (
-    <View style={tw`flex-1 bg-black bg-opacity-50`}>
-      <SafeAreaView style={tw`flex-1`}>
-        {/* Header */}
-        <View
-          style={tw`flex-row px-4 pb-2 justify-between items-center border-b border-neutral-800`}
-        >
+    <View style={tw`flex-1 bg-mb-bg`}>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        {/* Top nav */}
+        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
-          <Text style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}>
-            Music
+          <Text
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+              { letterSpacing: 3 },
+            ]}
+          >
+            · sound
           </Text>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.navigate("MusicHelp" as never)}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="help" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              help
+            </Text>
           </Pressable>
         </View>
 
-        {/* Library list */}
-        {files.length === 0 ? (
-          <View style={tw`flex-1 items-center justify-center`}>
-            <Text style={tw`text-base font-inter text-neutral-500`}>
-              No tracks yet
-            </Text>
+        {/* Hero + volume */}
+        <View style={tw`px-6 pt-2 pb-5`}>
+          <Overline accent right="external · looped">Background</Overline>
+          <View style={tw`mt-5`}>
+            <BigTitle size={44} accent>{`Sound\nor silence`}</BigTitle>
           </View>
-        ) : (
-          <View style={tw`flex-1`}>
+
+          {/* Volume */}
+          <View style={tw`mt-6`}>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text
+                style={[
+                  tw`font-mono text-[9px] text-mb-mute uppercase`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                · volume
+              </Text>
+              <Text
+                style={[
+                  tw`font-mono text-[10px] text-mb-fg`,
+                  { letterSpacing: 2, fontVariant: ["tabular-nums"] },
+                ]}
+              >
+                {String(Math.round(volume * 100)).padStart(3, "0")} / 100
+              </Text>
+            </View>
+            <View style={tw`mt-2`}>
+              <HorizontalDial
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                defaultValue={Math.round(volume * 100)}
+                onChange={onVolumeChange}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Library list */}
+        <View style={tw`flex-1 px-6`}>
+          <Overline right={`${files.length} tracks`}>Library</Overline>
+
+          {/* Add music row always at top */}
+          <Pressable
+            onPress={() => navigation.navigate("AddMusic" as never)}
+            style={({ pressed }) => [
+              tw`flex-row items-center py-4 border-b border-mb-line`,
+              pressed && tw`opacity-70`,
+            ]}
+          >
+            <Text
+              style={[
+                tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
+                { letterSpacing: 1.5 },
+              ]}
+            >
+              +
+            </Text>
+            <Text
+              style={[
+                tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
+                { letterSpacing: -0.4 },
+              ]}
+            >
+              Add music
+            </Text>
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 2 },
+              ]}
+            >
+              wifi · url · file
+            </Text>
+          </Pressable>
+
+          {files.length === 0 ? (
+            <View style={tw`py-6`}>
+              <Text
+                style={[
+                  tw`font-mono text-[10px] text-mb-mute uppercase`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                · no tracks yet — add one above
+              </Text>
+            </View>
+          ) : (
             <FlatList
               data={files}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
+              showsVerticalScrollIndicator={false}
             />
-          </View>
-        )}
-
-        {/* Volume dial */}
-        <View style={tw`py-6 border-t border-neutral-800 pl-8`}>
-          <HorizontalDial
-            min={0}
-            max={100}
-            step={1}
-            suffix="%"
-            defaultValue={Math.round(volume * 100)}
-            onChange={onVolumeChange}
-          />
+          )}
         </View>
-
-        {/* Add music button */}
-        <View
-          style={tw`flex-row items-center justify-center pt-4 mb-2 border-t border-neutral-800`}
-        >
-          <Pressable
-            style={tw`flex-row items-center px-5 py-2 rounded-full border border-neutral-600 active:opacity-80`}
-            onPress={() => navigation.navigate("AddMusic" as never)}
-          >
-            <Icon name="plus" color="white" size={14} />
-            <Text style={tw`ml-2 text-xs font-inter text-white`}>
-              Add music
-            </Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

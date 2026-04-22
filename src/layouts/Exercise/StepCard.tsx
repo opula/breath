@@ -2,88 +2,117 @@ import React from "react";
 import { Exercise } from "../../types/exercise";
 import { Text, Pressable, View } from "react-native";
 import tw from "../../utils/tw";
-import { capitalize, sum } from "lodash";
+import { sum } from "lodash";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { convertSecondsToHHMM } from "../../utils/pretty";
 
 const stepDisplayName = (type: string) => {
-  if (type === "double-inhale") return "Double Inhale";
+  if (type === "double-inhale") return "Double inhale";
   if (type === "repeat") return "Repeat";
-  return capitalize(type);
+  if (type === "text") return "Message";
+  return type;
 };
+
+const formatValues = (values: number[]) =>
+  values
+    .map((v) => {
+      const rounded = Math.round(v * 10) / 10;
+      return rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1);
+    })
+    .join(" · ");
 
 interface Props {
   exerciseId: string;
   step: Exercise["seq"][number];
+  index: number;
   drag: () => void;
 }
 
-export const StepCard = ({ exerciseId, step, drag }: Props) => {
+export const StepCard = ({ exerciseId, step, index, drag }: Props) => {
   const navigation =
     useNavigation<NavigationProp<MainStackParams, "Exercise">>();
-  const { id, type, value, count, text } = step;
-  const prettyTime =
-    type === "breath" && convertSecondsToHHMM(count * sum(value as number[]));
+  const { id, type, value, count, text, ramp } = step;
+
+  // Build the right-aligned primary readout.
+  let primary: string;
+  if (type === "breath" && Array.isArray(value)) {
+    primary = `${formatValues(value)}s`;
+  } else if (type === "double-inhale" && Array.isArray(value)) {
+    primary = `${formatValues(value)}s`;
+  } else if (type === "repeat") {
+    primary = `${count ?? 1}×`;
+  } else if (type === "text") {
+    primary = count ? `${count}s` : "∞";
+  } else {
+    // inhale / exhale / hold
+    primary = count ? `${count}s` : "∞";
+  }
+
+  // Build an optional subtitle with count/ramp/etc. Kept terse so it never
+  // competes with the primary label visually.
+  const subParts: string[] = [];
+  if (type === "breath" && count) {
+    subParts.push(`${count}× repetitions`);
+  } else if (type === "repeat" && Array.isArray(value)) {
+    subParts.push(`lookback ${value[0] ?? 1}`);
+  } else if (type === "text" && text) {
+    subParts.push(`"${text}"`);
+  }
+  if (ramp && ramp > 1) subParts.push(`ramp ${ramp}×`);
+  const subtitle = subParts.join(" · ");
 
   return (
     <Pressable
-      style={tw`bg-black px-2`}
+      style={({ pressed }) => [
+        tw`flex-row items-center py-5 border-b border-mb-line`,
+        pressed && tw`opacity-70`,
+      ]}
       onLongPress={drag}
-      onPress={() => {
-        navigation.navigate("AdjustStep", { exerciseId, stepId: id });
-      }}
+      onPress={() =>
+        navigation.navigate("AdjustStep", { exerciseId, stepId: id })
+      }
     >
-      <View style={tw`border-b border-neutral-800 py-4`}>
-        <Text style={tw`text-base font-inter text-white`}>
+      <Text
+        style={[
+          tw`font-mono text-[10px] text-mb-mute uppercase w-8`,
+          { letterSpacing: 1.5 },
+        ]}
+      >
+        {String(index + 1).padStart(2, "0")}
+      </Text>
+
+      <View style={tw`flex-1`}>
+        <Text
+          style={[
+            tw`font-display text-[18px] text-mb-fg uppercase`,
+            { letterSpacing: -0.4 },
+          ]}
+          numberOfLines={1}
+        >
           {stepDisplayName(type)}
         </Text>
-        {type === "breath" && prettyTime ? (
-          <>
-            <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-              {(value as number[]).map((secs) => `${secs}s`).join(" · ")}
-            </Text>
-            <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-              {count
-                ? `Do ${count} repetitions for a total of ${prettyTime.minutes} min, ${prettyTime.seconds} sec.`
-                : "At your discretion."}
-            </Text>
-          </>
-        ) : null}
-        {type === "double-inhale" && Array.isArray(value) ? (
-          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-            {`${value[0]}s inhale · ${value[1]}s pause · ${value[2]}s inhale`}
-          </Text>
-        ) : null}
-        {type === "exhale" || type === "hold" || type === "inhale" ? (
-          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-            {count ? `For a count of ${count} seconds.` : "At your discretion."}
-          </Text>
-        ) : null}
-
-        {type === "text" ? (
-          <>
-            <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-              {`"${text}"`}
-            </Text>
-            <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-              {count ? `For ${count} seconds.` : "For as long as you need."}
-            </Text>
-          </>
-        ) : null}
-
-        {type === "repeat" && Array.isArray(value) ? (
-          <Text style={tw`text-xs font-inter text-neutral-300 mt-2`}>
-            {`Repeat previous ${value[0]} step${value[0] === 1 ? "" : "s"}, ${count}x`}
-          </Text>
-        ) : null}
-
-        {step.ramp && step.ramp > 1 ? (
-          <Text style={tw`text-xs font-inter text-neutral-400 mt-2`}>
-            {`Ramp ${step.ramp}x`}
+        {subtitle ? (
+          <Text
+            style={[
+              tw`font-mono text-[9px] text-mb-mute uppercase mt-1`,
+              { letterSpacing: 1.8 },
+            ]}
+            numberOfLines={1}
+          >
+            {subtitle}
           </Text>
         ) : null}
       </View>
+
+      <Text
+        style={[
+          tw`font-display text-[15px] text-mb-accent uppercase ml-3`,
+          { letterSpacing: -0.3 },
+        ]}
+        numberOfLines={1}
+      >
+        {primary}
+      </Text>
     </Pressable>
   );
 };

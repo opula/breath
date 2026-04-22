@@ -9,7 +9,6 @@ import { useParametrizedAppSelector } from "../../utils/selectors";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
 import { View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
-import { Icon } from "../../components/Icon";
 import {
   Canvas,
   Fill,
@@ -527,30 +526,45 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
   }, []);
 
   return (
-    <View style={tw`flex-1 bg-black`}>
+    <View style={tw`flex-1 bg-mb-bg`}>
       <SafeAreaView style={tw`flex-1 px-4`}>
-        <View style={tw`flex-row px-4 justify-between items-center`}>
+        <View style={tw`flex-row items-center justify-between px-2 py-3`}>
           <Pressable
-            style={tw`h-10 w-10 items-center justify-center active:opacity-80`}
             onPress={() => navigation.goBack()}
+            style={tw`py-2 active:opacity-60`}
           >
-            <Icon name="close" size={20} color="white" />
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
+            >
+              ← back
+            </Text>
           </Pressable>
           <Text
-            style={tw`text-sm font-inter font-medium text-neutral-200 uppercase tracking-widest`}
+            numberOfLines={1}
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px] py-2 max-w-[60%]`,
+              { letterSpacing: 3 },
+            ]}
           >
-            {exercise.name}
+            · {exercise.name}
           </Text>
-
-          <View style={tw`h-10 w-10 items-center justify-center`}></View>
+          <View style={tw`w-10`} />
         </View>
 
         <View style={tw`flex-1`}>
-          <View style={tw`flex-row h-10 items-center px-6`}>
+          <View style={tw`flex-row h-6 items-center px-4 mt-2`}>
             {Array.from({ length: totalSteps }, (_, index) => (
               <View
                 key={`${index}-step`}
-                style={tw`${index !== 0 ? "ml-1" : ""} ${index !== totalSteps - 1 ? "mr-1" : ""} flex-1 h-1 rounded-sm ${currentIndex >= index ? "bg-neutral-200" : "bg-neutral-700"}`}
+                style={tw.style(
+                  `flex-1 h-[2px]`,
+                  index !== 0 && "ml-1",
+                  index !== totalSteps - 1 && "mr-1",
+                  currentIndex >= index ? "bg-mb-accent" : "bg-mb-line",
+                )}
               />
             ))}
           </View>
@@ -559,9 +573,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             {showingDescription ? (
               <View style={tw`px-8 items-center justify-center`}>
                 <Text
-                  style={[
-                    tw`text-base font-inter text-center text-neutral-200 leading-relaxed`,
-                  ]}
+                  style={tw`text-base font-inter text-center text-mb-fg leading-relaxed`}
                 >
                   {exercise.description}
                 </Text>
@@ -575,27 +587,41 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             ) : isRepeat ? (
               <View style={tw`px-8 items-center justify-center`}>
                 <Text
-                  style={tw`text-base font-inter text-center text-neutral-200 mb-2`}
+                  style={[
+                    tw`font-display text-[22px] text-mb-fg uppercase text-center`,
+                    { letterSpacing: -0.4 },
+                  ]}
                 >
                   {label}
                 </Text>
                 <Text
-                  style={tw`text-sm font-inter text-center text-neutral-400`}
+                  style={[
+                    tw`font-mono text-[10px] text-mb-mute uppercase text-center mt-2`,
+                    { letterSpacing: 2 },
+                  ]}
                 >
                   {sublabel}
                 </Text>
               </View>
             ) : (
               <View
-                style={tw`${isText ? "h-36 w-36" : "h-24 w-24"} items-center justify-center`}
+                style={tw.style(
+                  isText ? "h-36 w-36" : "h-24 w-24",
+                  "items-center justify-center",
+                )}
               >
                 <Text
                   style={[
-                    tw`${isText ? "text-base" : "text-xl"} font-inter text-center text-neutral-200 mb-2`,
-                    {
-                      fontVariant: isText ? [] : ["tabular-nums"],
-                      fontStyle: isText ? "italic" : undefined,
-                    },
+                    isText
+                      ? tw`font-inter text-base text-mb-fg text-center`
+                      : tw`font-display text-mb-fg uppercase text-center`,
+                    isText
+                      ? { fontStyle: "italic" }
+                      : {
+                          fontSize: 16,
+                          letterSpacing: -0.3,
+                          fontVariant: ["tabular-nums"],
+                        },
                   ]}
                 >
                   {label}
@@ -604,10 +630,8 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                   <View style={tw`absolute inset-x-0 bottom-[22px]`}>
                     <Text
                       style={[
-                        tw`text-xs font-inter text-center text-neutral-400`,
-                        {
-                          fontVariant: ["tabular-nums"],
-                        },
+                        tw`font-mono text-[10px] text-mb-mute uppercase text-center`,
+                        { letterSpacing: 2, fontVariant: ["tabular-nums"] },
                       ]}
                     >
                       {sublabel}
@@ -619,83 +643,65 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
           </View>
 
           <View style={tw`justify-end items-center mb-2 h-16`}>
-            {showingDescription ? (
-              <Text
-                style={tw`text-[10px] font-inter text-neutral-400 text-center`}
-              >
-                Tap to continue
-              </Text>
-            ) : currentType === "breath" ? (
-              <>
-                <Text
-                  style={tw`text-xs font-inter text-white text-center`}
-                >{`Maintain a breathing cycle of: ${
-                  currentValue![0]
-                }s · ${currentValue![1]}s · ${currentValue![2]}s · ${
-                  currentValue![3]
-                }s`}</Text>
-                <Text
-                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
-                >
-                  {currentCount
-                    ? `Repeat ${currentCount} times`
-                    : `Will repeat until you tap to continue`}
-                </Text>
-              </>
-            ) : currentType === "hold" ? (
-              <>
-                <Text style={tw`text-xs font-inter text-white text-center`}>
-                  {currentCount
+            {(() => {
+              const hint = (primary: string, secondary?: string) => (
+                <>
+                  <Text
+                    style={tw`font-inter text-sm text-mb-fg text-center`}
+                  >
+                    {primary}
+                  </Text>
+                  {secondary ? (
+                    <Text
+                      style={[
+                        tw`font-mono text-[10px] text-mb-mute uppercase text-center mt-2`,
+                        { letterSpacing: 2 },
+                      ]}
+                    >
+                      {secondary}
+                    </Text>
+                  ) : null}
+                </>
+              );
+
+              if (showingDescription)
+                return hint("", "· tap to continue");
+              if (currentType === "breath")
+                return hint(
+                  `Maintain a breathing cycle of ${currentValue![0]}s · ${currentValue![1]}s · ${currentValue![2]}s · ${currentValue![3]}s`,
+                  currentCount
+                    ? `repeat ${currentCount}×`
+                    : "· will repeat until you tap",
+                );
+              if (currentType === "hold")
+                return hint(
+                  currentCount
                     ? `Hold for ${currentCount} seconds`
-                    : "Hold as long as you can"}
-                </Text>
-                {!currentCount ? (
-                  <Text
-                    style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
-                  >
-                    {`Tap to continue`}
-                  </Text>
-                ) : null}
-              </>
-            ) : currentType === "inhale" || currentType === "exhale" ? (
-              <Text style={tw`text-xs font-inter text-white text-center`}>
-                {`${capitalize(currentType)} for ${currentCount} seconds`}
-              </Text>
-            ) : currentType === "double-inhale" ? (
-              <>
-                <Text style={tw`text-xs font-inter text-white text-center`}>
-                  {currentValue
+                    : "Hold as long as you can",
+                  !currentCount ? "· tap to continue" : undefined,
+                );
+              if (currentType === "inhale" || currentType === "exhale")
+                return hint(
+                  `${capitalize(currentType)} for ${currentCount} seconds`,
+                );
+              if (currentType === "double-inhale")
+                return hint(
+                  currentValue
                     ? `${currentValue[0]}s inhale · ${currentValue[1]}s pause · ${currentValue[2]}s inhale`
-                    : "Double inhale"}
-                </Text>
-                <Text
-                  style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
-                >
-                  Tap to continue
-                </Text>
-              </>
-            ) : currentType === "text" ? (
-              <>
-                <Text style={tw`text-xs font-inter text-white text-center`}>
-                  {currentCount
+                    : "Double inhale",
+                  "· tap to continue",
+                );
+              if (currentType === "text")
+                return hint(
+                  currentCount
                     ? `Will show text for ${currentCount} seconds`
-                    : "Will show text for as long as you like"}
-                </Text>
-                {!currentCount ? (
-                  <Text
-                    style={tw`text-[10px] font-inter text-neutral-400 text-center mt-2`}
-                  >
-                    {`Tap to continue`}
-                  </Text>
-                ) : null}
-              </>
-            ) : currentType === "repeat" ? (
-              <Text
-                style={tw`text-[10px] font-inter text-neutral-400 text-center`}
-              >
-                Tap to continue
-              </Text>
-            ) : null}
+                    : "Will show text for as long as you like",
+                  !currentCount ? "· tap to continue" : undefined,
+                );
+              if (currentType === "repeat")
+                return hint("", "· tap to continue");
+              return null;
+            })()}
           </View>
 
           <View style={tw`absolute inset-0 flex-row`}>
@@ -717,11 +723,14 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               }}
             >
               {currentIndex ? (
-                <Icon
-                  name="chevron-left"
-                  color="rgba(255,255,255,.2)"
-                  size={24}
-                />
+                <Text
+                  style={[
+                    tw`font-mono text-mb-dim uppercase text-[14px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  ←
+                </Text>
               ) : null}
             </Pressable>
             <Pressable
@@ -735,11 +744,14 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                 }
               }}
             >
-              <Icon
-                name="chevron-right"
-                color="rgba(255,255,255,.2)"
-                size={24}
-              />
+              <Text
+                style={[
+                  tw`font-mono text-mb-dim uppercase text-[14px]`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                →
+              </Text>
             </Pressable>
           </View>
         </View>

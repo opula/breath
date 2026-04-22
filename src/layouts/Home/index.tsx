@@ -39,12 +39,11 @@ export const Home = ({ navigation }: Props) => {
       storage.set(LAST_EXERCISE, index);
       dispatch(setLastPlayed(exerciseId));
     }
-    navigation.navigate("Main");
+    navigation.navigate("Main", { autoplay: true });
   };
 
   const handleLongPressExercise = (exerciseId: string) => {
-    // Phase 3 will swap this for the ExerciseActions tray.
-    navigation.navigate("Exercise", { id: exerciseId });
+    navigation.navigate("ExerciseActions", { exerciseId });
   };
 
   const handleNewExercise = () => {
@@ -80,8 +79,8 @@ export const Home = ({ navigation }: Props) => {
           contentContainerStyle={tw`px-6 pb-8`}
           showsVerticalScrollIndicator={false}
         >
-          <Overline right={`${exercises.length} · tap plays · hold for more`}>
-            Library
+          <Overline right={`tap to play · hold for more`}>
+            Library ({exercises.length})
           </Overline>
 
           {sorted.map((ex, i) => (
