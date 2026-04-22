@@ -32,14 +32,8 @@ import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
-import {
-  hasSeenTutorialSelector,
-  isPausedSelector,
-} from "../../state/configuration.selectors";
-import {
-  dismissTutorial as dismissTutorialAction,
-  setPause as setPauseAction,
-} from "../../state/configuration.reducer";
+import { isPausedSelector } from "../../state/configuration.selectors";
+import { setPause as setPauseAction } from "../../state/configuration.reducer";
 import { MainStackParams } from "../../navigation";
 
 const CHROME_TIMEOUT_MS = 4000;
@@ -54,14 +48,12 @@ export const Main = () => {
   const isAppActive = useAppIsActive();
   const insets = useSafeAreaInsets();
   const isPaused = useAppSelector(isPausedSelector);
-  const hasSeenTutorial = useAppSelector(hasSeenTutorialSelector);
 
   const setPause = useCallback(
     (status: boolean) => {
       dispatch(setPauseAction(status));
-      if (!hasSeenTutorial) dispatch(dismissTutorialAction());
     },
-    [dispatch, hasSeenTutorial],
+    [dispatch],
   );
 
   const {

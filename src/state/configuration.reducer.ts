@@ -7,7 +7,6 @@ interface ConfigurationState {
   bgSourceIndex: number;
   soundsEnabled: boolean;
   hapticsEnabled: boolean;
-  hasSeenTutorial: boolean;
 }
 
 const initialState: ConfigurationState = {
@@ -16,7 +15,6 @@ const initialState: ConfigurationState = {
   bgSourceIndex: 12,
   soundsEnabled: true,
   hapticsEnabled: true,
-  hasSeenTutorial: false,
 };
 
 export const configurationSlice = createSlice({
@@ -41,9 +39,6 @@ export const configurationSlice = createSlice({
     updateSource(state, action: PayloadAction<number>) {
       state.bgSourceIndex = action.payload;
     },
-    dismissTutorial(state) {
-      state.hasSeenTutorial = true;
-    },
   },
 });
 
@@ -64,5 +59,4 @@ export const {
   toggleSounds,
   toggleHaptics,
   updateSource,
-  dismissTutorial,
 } = configurationSlice.actions;

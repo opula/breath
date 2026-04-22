@@ -14,6 +14,3 @@ export const soundsEnabledSelector = (state: RootState) =>
 
 export const hapticsEnabledSelector = (state: RootState) =>
   state.configuration.hapticsEnabled;
-
-export const hasSeenTutorialSelector = (state: RootState) =>
-  state.configuration.hasSeenTutorial;

@@ -1,8 +1,5 @@
 import React, { Ref, useRef, useState } from "react";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import {
   Platform,
@@ -16,28 +13,35 @@ import {
   PORTRAIT,
 } from "@hortau/react-native-orientation-locker";
 import { useSharedValue } from "react-native-reanimated";
-import { AnimatePresence, MotiView } from "moti";
 import { NavigationProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { HAS_COMPLETED_WELCOME, storage } from "../../utils/storage";
-import { Pagination } from "./Pagination";
 import { WelcomeBackground } from "./Background";
 import tw from "../../utils/tw";
+import { Overline } from "../../components/Overline";
+import { BigTitle } from "../../components/BigTitle";
 
-const cards = [
+type Card = {
+  kind: string;
+  title: string;
+  body: string;
+};
+
+const cards: Card[] = [
   {
-    title: "Breathe with purpose",
-    message:
-      "Calm down, focus up, or push your limits. Find the technique that fits the moment.",
+    kind: "What this is",
+    title: "Breathing,\nnot breathwork.",
+    body: "Fifteen exercises. No feeds, no streak-shaming. One tap to start, one tap to stop. Everything else is dials.",
   },
   {
-    title: "Total control",
-    message:
-      "Adjust every tick of every step. Chain them together into a complete session. Build the perfect practice.",
+    kind: "How it guides you",
+    title: "A ring that\nbreathes\nwith you.",
+    body: "The inner disc grows on inhale and shrinks on exhale. The accent arc counts down the current phase. Numbers for precision, not for gamification.",
   },
   {
-    title: "Start now",
-    message: "Pick a technique and tap to get started. It's that simple.",
+    kind: "Safety",
+    title: "Sit, or\nlie down.",
+    body: "Some of these exercises can make you dizzy. Never practice in water or while driving. If a session feels wrong, stop. You are never behind.",
   },
 ];
 
@@ -47,45 +51,99 @@ interface Props {
 
 export const Welcome = ({ navigation }: Props) => {
   const { height, width } = useWindowDimensions();
-  const { top, bottom } = useSafeAreaInsets();
-  const PAGE_HEIGHT = height - top - bottom;
+  const insets = useSafeAreaInsets();
+  const PAGE_HEIGHT = height - insets.top - insets.bottom;
   const progressValue = useSharedValue(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef<ICarouselInstance>(undefined);
 
   const isLastCard = currentIndex === cards.length - 1;
 
+  const handleAdvance = () => {
+    if (isLastCard) {
+      storage.set(HAS_COMPLETED_WELCOME, true);
+      navigation.navigate("Home");
+    } else {
+      setCurrentIndex(currentIndex + 1);
+      carouselRef.current?.next();
+    }
+  };
+
   return (
-    <View style={tw`flex-1 bg-black`}>
+    <View style={tw`flex-1 bg-mb-bg`}>
       <View style={tw`absolute inset-0`}>
         <WelcomeBackground />
       </View>
-      <View style={tw`absolute inset-0 bg-black opacity-85`} />
+      <View style={tw`absolute inset-0 bg-mb-bg opacity-80`} />
 
       {Platform.OS !== "web" ? (
         <OrientationLocker orientation={PORTRAIT} />
       ) : null}
 
-      <SafeAreaView style={{ flex: 1 }}>
+      <View
+        style={[tw`flex-1`, { paddingTop: insets.top }]}
+      >
+        {/* Top nav: index indicator + skip */}
+        <View
+          style={tw`flex-row items-center justify-between px-6 py-3`}
+        >
+          <Text
+            style={[
+              tw`font-mono text-mb-mute uppercase text-[10px]`,
+              { letterSpacing: 3 },
+            ]}
+          >
+            intro {String(currentIndex + 1).padStart(2, "0")}
+            <Text style={tw`text-mb-dim`}> / {cards.length}</Text>
+          </Text>
+          {!isLastCard ? (
+            <Pressable
+              onPress={() => {
+                storage.set(HAS_COMPLETED_WELCOME, true);
+                navigation.navigate("Home");
+              }}
+              style={tw`py-2 active:opacity-60`}
+            >
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute uppercase text-[10px]`,
+                  { letterSpacing: 3 },
+                ]}
+              >
+                skip
+              </Text>
+            </Pressable>
+          ) : (
+            <View style={tw`w-10`} />
+          )}
+        </View>
+
         <Carousel
           ref={carouselRef as Ref<ICarouselInstance>}
           loop={false}
           vertical={false}
-          height={PAGE_HEIGHT}
+          height={PAGE_HEIGHT - 120}
           width={width}
           data={cards}
           onSnapToItem={setCurrentIndex}
-          renderItem={({ item }) => (
-            <View style={tw`flex-1 px-8 items-center justify-end pb-48`}>
-              <Text
-                style={tw`text-3xl font-inter font-bold text-white text-center`}
+          renderItem={({ item, index }: { item: Card; index: number }) => (
+            <View style={tw`flex-1 px-6 pt-6`}>
+              <Overline
+                accent
+                right={`· ${String(index + 1).padStart(2, "0")}`}
               >
-                {item.title}
-              </Text>
+                {item.kind}
+              </Overline>
+              <View style={tw`mt-10`}>
+                <BigTitle size={42}>{item.title}</BigTitle>
+              </View>
               <Text
-                style={tw`text-base font-inter text-neutral-400 text-center mt-4`}
+                style={[
+                  tw`font-inter text-base text-mb-mute leading-relaxed mt-7`,
+                  { maxWidth: 360 },
+                ]}
               >
-                {item.message}
+                {item.body}
               </Text>
             </View>
           )}
@@ -93,68 +151,52 @@ export const Welcome = ({ navigation }: Props) => {
             (progressValue.value = absoluteProgress)
           }
         />
-      </SafeAreaView>
 
-      <View style={[tw`absolute left-0 right-0`, { bottom: bottom + 120 }]}>
-        <Pagination count={cards.length} progressValue={progressValue} />
-      </View>
-
-      <AnimatePresence exitBeforeEnter>
-        {isLastCard ? (
-          <MotiView
-            style={[
-              tw`absolute left-0 right-0 items-center justify-center`,
-              { bottom: bottom + 16 },
-            ]}
-            key={"start"}
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 300 } }}
-          >
-            <Pressable
-              style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
-              onPress={() => {
-                navigation.navigate("Home");
-                storage.set(HAS_COMPLETED_WELCOME, true);
-              }}
-            >
-              <Text
+        {/* Progress segments + CTA */}
+        <View
+          style={[tw`px-6`, { paddingBottom: insets.bottom + 12 }]}
+        >
+          <View style={tw`flex-row mb-5`}>
+            {cards.map((_, i) => (
+              <View
+                key={i}
                 style={[
-                  tw`text-base font-inter font-bold`,
-                  { color: "#6FE7FF" },
+                  tw.style(
+                    "flex-1 h-[2px]",
+                    i === 0 ? "" : "ml-2",
+                    i <= currentIndex ? "bg-mb-accent" : "bg-mb-line",
+                  ),
                 ]}
-              >
-                Get started
-              </Text>
-            </Pressable>
-          </MotiView>
-        ) : (
-          <MotiView
-            style={[
-              tw`absolute left-0 right-0 items-center justify-center`,
-              { bottom: bottom + 16 },
+              />
+            ))}
+          </View>
+
+          <Pressable
+            onPress={handleAdvance}
+            style={({ pressed }) => [
+              tw`flex-row items-center justify-between py-5 border-t border-b border-mb-line`,
+              pressed && tw`opacity-70`,
             ]}
-            key={"next"}
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 300 } }}
           >
-            <Pressable
-              style={tw`py-3 px-6 bg-neutral-800 rounded-full active:opacity-80`}
-              onPress={() => {
-                setCurrentIndex(currentIndex + 1);
-                carouselRef.current?.next();
-              }}
+            <Text
+              style={[
+                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                { letterSpacing: 3 },
+              ]}
             >
-              <Text style={tw`text-base font-inter font-bold text-white`}>
-                Next
-              </Text>
-            </Pressable>
-          </MotiView>
-        )}
-      </AnimatePresence>
+              · {isLastCard ? "begin" : "continue"}
+            </Text>
+            <Text
+              style={[
+                tw`font-display text-mb-accent uppercase`,
+                { fontSize: 22, letterSpacing: -0.5 },
+              ]}
+            >
+              {isLastCard ? "ENTER ↵" : "NEXT →"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 };
