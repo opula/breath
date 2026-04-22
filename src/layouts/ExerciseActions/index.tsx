@@ -138,7 +138,7 @@ export const ExerciseActions = () => {
     {
       key: "play",
       label: "Play now",
-      hint: "· start the session",
+      hint: "start the session",
       tone: "accent",
       right: "▶",
       onPick: handlePlay,
@@ -147,15 +147,15 @@ export const ExerciseActions = () => {
       key: "fav",
       label: isFavorite ? "Unfavorite" : "Favorite",
       hint: isFavorite
-        ? "· remove from top of library"
-        : "· pin to the top of the library",
+        ? "remove from top of library"
+        : "pin to the top of the library",
       right: isFavorite ? "★" : "☆",
       onPick: handleFavorite,
     },
     {
       key: "edit",
       label: "Edit phases",
-      hint: "· change durations or steps",
+      hint: "change durations or steps",
       right: "→",
       onPick: handleEdit,
     },
@@ -164,7 +164,7 @@ export const ExerciseActions = () => {
           {
             key: "audio",
             label: "Background audio",
-            hint: "· ambient bed during practice",
+            hint: "ambient bed during practice",
             right: "→",
             onPick: handleBgAudio,
           } as Action,
@@ -173,7 +173,7 @@ export const ExerciseActions = () => {
     {
       key: "del",
       label: "Delete",
-      hint: "· remove from library",
+      hint: "remove from library",
       tone: "danger" as const,
       right: "✕",
       onPick: handleDelete,

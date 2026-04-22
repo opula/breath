@@ -52,7 +52,7 @@ const DialGroup = ({
         { letterSpacing: 2 },
       ]}
     >
-      · {label}
+      {label}
     </Text>
     {children}
   </View>
@@ -189,8 +189,8 @@ export const AdjustStep = ({ route }: Props) => {
                     const { minutes, seconds } =
                       convertSecondsToHHMM(totalBreathDuration);
                     return minutes > 0
-                      ? `total · ${minutes}m ${seconds}s`
-                      : `total · ${seconds}s`;
+                      ? `total ${minutes}m ${seconds}s`
+                      : `total ${seconds}s`;
                   })()}
                 </Text>
               ) : (
@@ -200,7 +200,7 @@ export const AdjustStep = ({ route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  · at your discretion
+                  at your discretion
                 </Text>
               )}
             </View>
@@ -255,7 +255,7 @@ export const AdjustStep = ({ route }: Props) => {
                 { letterSpacing: 2 },
               ]}
             >
-              total · {totalSec.toFixed(1)}s
+              total {totalSec.toFixed(1)}s
             </Text>
           </View>
         </View>
@@ -413,7 +413,7 @@ export const AdjustStep = ({ route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  · quick presets
+                  quick presets
                 </Text>
                 <View style={tw`flex-row`}>
                   {SINGLE_PRESETS.map((p, i) => {

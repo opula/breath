@@ -118,7 +118,7 @@ export const FileTransfer = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · wifi transfer
+            wifi transfer
           </Text>
           <View style={tw`w-10`} />
         </View>
@@ -143,7 +143,7 @@ export const FileTransfer = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · starting server
+                starting server
               </Text>
             </View>
           )}
@@ -164,7 +164,7 @@ export const FileTransfer = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · connect to a network to use transfer
+                connect to a network to use transfer
               </Text>
             </View>
           )}
@@ -195,7 +195,7 @@ export const FileTransfer = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · scan from any device on the same wifi
+                scan from any device on the same wifi
               </Text>
 
               <View style={tw`items-center`}>
@@ -223,7 +223,7 @@ export const FileTransfer = () => {
                       { letterSpacing: 2 },
                     ]}
                   >
-                    {copied ? "· copied" : "copy url"}
+                    {copied ? "copied" : "copy url"}
                   </Text>
                 </Pressable>
                 <Pressable

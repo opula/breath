@@ -7,16 +7,16 @@ import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
 
 const GESTURES = [
-  { label: "Single tap", hint: "· start or advance to the next phase" },
-  { label: "Double tap", hint: "· pause or resume the session" },
-  { label: "Long press", hint: "· reset the session to the start" },
-  { label: "Swipe up / down", hint: "· change the current exercise" },
+  { label: "Single tap", hint: "start or advance to the next phase" },
+  { label: "Double tap", hint: "pause or resume the session" },
+  { label: "Long press", hint: "reset the session to the start" },
+  { label: "Swipe up / down", hint: "change the current exercise" },
 ];
 
 const CONTROLS = [
-  { label: "← library", hint: "· return to the exercise list" },
-  { label: "pause · resume", hint: "· toggle the session (same as 2× tap)" },
-  { label: "round · time", hint: "· round progress and elapsed timer" },
+  { label: "← library", hint: "return to the exercise list" },
+  { label: "pause · resume", hint: "toggle the session (same as 2× tap)" },
+  { label: "round · time", hint: "round progress and elapsed timer" },
 ];
 
 const FAQ = [
@@ -89,7 +89,7 @@ export const Help = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · manual
+            manual
           </Text>
           <View style={tw`w-10`} />
         </View>

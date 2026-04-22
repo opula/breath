@@ -156,7 +156,7 @@ export const Exercise = ({ navigation, route }: Props) => {
               { letterSpacing: 3 },
             ]}
           >
-            · edit exercise
+            edit exercise
           </Text>
           <Pressable
             onPress={handleRun}
@@ -215,7 +215,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  · no phases yet — add your first below
+                  no phases yet — add your first below
                 </Text>
               </View>
             )}
@@ -284,7 +284,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                         { letterSpacing: 2 },
                       ]}
                     >
-                      · permanent
+                      permanent
                     </Text>
                   </Pressable>
                 </View>

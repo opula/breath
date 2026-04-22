@@ -130,7 +130,7 @@ export const Welcome = ({ navigation }: Props) => {
             <View style={tw`flex-1 px-6 pt-6`}>
               <Overline
                 accent
-                right={`· ${String(index + 1).padStart(2, "0")}`}
+                right={String(index + 1).padStart(2, "0")}
               >
                 {item.kind}
               </Overline>
@@ -184,7 +184,7 @@ export const Welcome = ({ navigation }: Props) => {
                 { letterSpacing: 3 },
               ]}
             >
-              · {isLastCard ? "begin" : "continue"}
+              {isLastCard ? "begin" : "continue"}
             </Text>
             <Text
               style={[

@@ -23,7 +23,7 @@ export const AddMusic = () => {
     {
       key: "wifi",
       label: "WiFi transfer",
-      hint: "· upload from any device on your network",
+      hint: "upload from any device on your network",
       onPick: () => {
         navigation.goBack();
         navigation.navigate("FileTransfer" as never);
@@ -32,7 +32,7 @@ export const AddMusic = () => {
     {
       key: "url",
       label: "Download from URL",
-      hint: "· paste a link from your clipboard",
+      hint: "paste a link from your clipboard",
       onPick: () => {
         navigation.goBack();
         pasteUrl();
@@ -41,7 +41,7 @@ export const AddMusic = () => {
     {
       key: "file",
       label: "Browse on device",
-      hint: "· pick an audio file from this phone",
+      hint: "pick an audio file from this phone",
       onPick: () => {
         navigation.goBack();
         pickLocalFile();

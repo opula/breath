@@ -24,13 +24,13 @@ const OPTIONS: {
   label: string;
   hint: string;
 }[] = [
-  { type: "breath", label: "Breath cycle", hint: "· four-phase inhale/hold/exhale/hold" },
-  { type: "inhale", label: "Inhale", hint: "· single timed inhale" },
-  { type: "hold", label: "Hold", hint: "· retention at current lung state" },
-  { type: "exhale", label: "Exhale", hint: "· single timed exhale" },
-  { type: "double-inhale", label: "Double inhale", hint: "· two inhales with a pause" },
-  { type: "text", label: "Message", hint: "· display an instructional prompt" },
-  { type: "repeat", label: "Repeat", hint: "· loop previous phases" },
+  { type: "breath", label: "Breath cycle", hint: "four-phase inhale/hold/exhale/hold" },
+  { type: "inhale", label: "Inhale", hint: "single timed inhale" },
+  { type: "hold", label: "Hold", hint: "retention at current lung state" },
+  { type: "exhale", label: "Exhale", hint: "single timed exhale" },
+  { type: "double-inhale", label: "Double inhale", hint: "two inhales with a pause" },
+  { type: "text", label: "Message", hint: "display an instructional prompt" },
+  { type: "repeat", label: "Repeat", hint: "loop previous phases" },
 ];
 
 export const NewStepMenu = ({ navigation, route }: Props) => {

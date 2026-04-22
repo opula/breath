@@ -32,7 +32,7 @@ const DialGroup = ({
         { letterSpacing: 2 },
       ]}
     >
-      · {label}
+      {label}
     </Text>
     {children}
   </View>
@@ -125,7 +125,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
             ]}
             numberOfLines={1}
           >
-            · background audio
+            background audio
           </Text>
           <View style={tw`w-10`} />
         </View>
@@ -180,7 +180,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  · total
+                  total
                 </Text>
                 <Text
                   style={[
@@ -234,7 +234,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · generating
+                generating
               </Text>
             </View>
           )}
@@ -305,7 +305,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  · restart
+                  restart
                 </Text>
               </Pressable>
             </>
@@ -318,7 +318,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                 { letterSpacing: 2 },
               ]}
             >
-              · audio continues in the background
+              audio continues in the background
             </Text>
           </View>
         </View>

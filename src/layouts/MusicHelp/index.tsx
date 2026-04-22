@@ -27,15 +27,15 @@ const SAMPLE_TRACKS = [
 ];
 
 const ADDING = [
-  { label: "WiFi transfer", hint: "· upload via browser on a nearby device" },
-  { label: "Paste URL", hint: "· download an audio link from your clipboard" },
-  { label: "Pick file", hint: "· choose an audio file from this phone" },
+  { label: "WiFi transfer", hint: "upload via browser on a nearby device" },
+  { label: "Paste URL", hint: "download an audio link from your clipboard" },
+  { label: "Pick file", hint: "choose an audio file from this phone" },
 ];
 
 const PLAYBACK = [
-  { label: "Tap a track", hint: "· starts playback in the background" },
-  { label: "Volume dial", hint: "· set the level on the Sound screen" },
-  { label: "Swipe left", hint: "· reveal delete on a track" },
+  { label: "Tap a track", hint: "starts playback in the background" },
+  { label: "Volume dial", hint: "set the level on the Sound screen" },
+  { label: "Swipe left", hint: "reveal delete on a track" },
 ];
 
 const TIPS = [
@@ -104,7 +104,7 @@ export const MusicHelp = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · music manual
+            music manual
           </Text>
           <View style={tw`w-10`} />
         </View>
@@ -155,7 +155,7 @@ export const MusicHelp = () => {
                       { letterSpacing: 2 },
                     ]}
                   >
-                    · added
+                    added
                   </Text>
                 ) : (
                   <Pressable

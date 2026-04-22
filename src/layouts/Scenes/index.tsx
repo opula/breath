@@ -102,7 +102,7 @@ export const Scenes = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · scenes
+            scenes
           </Text>
           <View style={tw`w-10`} />
         </View>

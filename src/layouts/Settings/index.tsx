@@ -99,7 +99,7 @@ const AboutRow = ({ label, value }: { label: string; value: string }) => (
         { letterSpacing: 2 },
       ]}
     >
-      · {value}
+      {value}
     </Text>
   </View>
 );
@@ -138,7 +138,7 @@ export const Settings = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · settings
+            settings
           </Text>
           <Pressable
             onPress={() => navigation.navigate("Help")}
@@ -171,13 +171,13 @@ export const Settings = () => {
           <Overline>Feedback</Overline>
           <ToggleRow
             label="Sounds"
-            hint="· phase transition audio cues"
+            hint="phase transition audio cues"
             enabled={soundsEnabled}
             onPress={() => dispatch(toggleSounds())}
           />
           <ToggleRow
             label="Haptics"
-            hint="· a small tap on every phase change"
+            hint="a small tap on every phase change"
             enabled={hapticsEnabled}
             onPress={() => dispatch(toggleHaptics())}
           />
@@ -188,7 +188,7 @@ export const Settings = () => {
           </View>
           <ToggleRow
             label="Grayscale"
-            hint="· desaturate the ambient scene"
+            hint="desaturate the ambient scene"
             enabled={isGrayscale}
             onPress={() => dispatch(toggleGrayscale())}
           />

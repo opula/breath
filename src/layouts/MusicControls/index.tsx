@@ -85,7 +85,7 @@ export const MusicControls = () => {
               { letterSpacing: 3 },
             ]}
           >
-            · sound
+            sound
           </Text>
           <Pressable
             onPress={() => navigation.navigate("MusicHelp" as never)}
@@ -118,7 +118,7 @@ export const MusicControls = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · volume
+                volume
               </Text>
               <Text
                 style={[
@@ -188,7 +188,7 @@ export const MusicControls = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                · no tracks yet — add one above
+                no tracks yet — add one above
               </Text>
             </View>
           ) : (

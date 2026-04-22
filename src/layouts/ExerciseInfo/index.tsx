@@ -549,7 +549,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               { letterSpacing: 3 },
             ]}
           >
-            · {exercise.name}
+            {exercise.name}
           </Text>
           <View style={tw`w-10`} />
         </View>
@@ -665,20 +665,20 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               );
 
               if (showingDescription)
-                return hint("", "· tap to continue");
+                return hint("", "tap to continue");
               if (currentType === "breath")
                 return hint(
                   `Maintain a breathing cycle of ${currentValue![0]}s · ${currentValue![1]}s · ${currentValue![2]}s · ${currentValue![3]}s`,
                   currentCount
                     ? `repeat ${currentCount}×`
-                    : "· will repeat until you tap",
+                    : "will repeat until you tap",
                 );
               if (currentType === "hold")
                 return hint(
                   currentCount
                     ? `Hold for ${currentCount} seconds`
                     : "Hold as long as you can",
-                  !currentCount ? "· tap to continue" : undefined,
+                  !currentCount ? "tap to continue" : undefined,
                 );
               if (currentType === "inhale" || currentType === "exhale")
                 return hint(
@@ -689,17 +689,17 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                   currentValue
                     ? `${currentValue[0]}s inhale · ${currentValue[1]}s pause · ${currentValue[2]}s inhale`
                     : "Double inhale",
-                  "· tap to continue",
+                  "tap to continue",
                 );
               if (currentType === "text")
                 return hint(
                   currentCount
                     ? `Will show text for ${currentCount} seconds`
                     : "Will show text for as long as you like",
-                  !currentCount ? "· tap to continue" : undefined,
+                  !currentCount ? "tap to continue" : undefined,
                 );
               if (currentType === "repeat")
-                return hint("", "· tap to continue");
+                return hint("", "tap to continue");
               return null;
             })()}
           </View>

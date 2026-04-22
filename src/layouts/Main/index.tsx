@@ -246,7 +246,7 @@ export const Main = () => {
                 { letterSpacing: 3 },
               ]}
             >
-              · tap to begin
+              tap to begin
             </Text>
           )}
         </View>
