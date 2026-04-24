@@ -3,39 +3,38 @@ import { View, Text, Pressable, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import tw from "../../utils/tw";
-import { backgrounds } from "../Main/sources";
+import { backgroundSources, NO_BACKGROUND_SOURCE_ID } from "../Main/sources";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import { sourceIndexSelector } from "../../state/configuration.selectors";
+import { sourceIdSelector } from "../../state/configuration.selectors";
 import { updateSource } from "../../state/configuration.reducer";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
+import type { SceneSourceId } from "../../backgrounds/metadata";
 
 const formatSceneName = (name: string) =>
   name.replace(/([a-z])([A-Z])/g, "$1 $2");
 
-type SortedScene = { name: string; originalIndex: number };
-
-const NONE_INDEX = -1;
+type SortedScene = { id: SceneSourceId; name: string };
 
 const sortedBackgrounds: SortedScene[] = [
-  ...(backgrounds as unknown as string[])
-    .map((name, originalIndex) => ({ name, originalIndex }))
+  ...backgroundSources
+    .map((source) => ({ id: source.id, name: source.name }))
     .sort((a, b) => a.name.localeCompare(b.name)),
-  { name: "Black", originalIndex: NONE_INDEX },
+  { id: NO_BACKGROUND_SOURCE_ID, name: "Black" },
 ];
 
 export const Scenes = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const activeIndex = useAppSelector(sourceIndexSelector);
+  const activeSourceId = useAppSelector(sourceIdSelector);
 
   const renderItem = useCallback(
     ({ item, index }: { item: SortedScene; index: number }) => {
-      const isActive = item.originalIndex === activeIndex;
+      const isActive = item.id === activeSourceId;
       return (
         <Pressable
-          onPress={() => dispatch(updateSource(item.originalIndex))}
+          onPress={() => dispatch(updateSource(item.id))}
           style={({ pressed }) => [
             tw`flex-row items-center py-4 border-b border-mb-line`,
             pressed && tw`opacity-70`,
@@ -70,13 +69,10 @@ export const Scenes = () => {
         </Pressable>
       );
     },
-    [activeIndex, dispatch],
+    [activeSourceId, dispatch],
   );
 
-  const keyExtractor = useCallback(
-    (item: SortedScene) => String(item.originalIndex),
-    [],
-  );
+  const keyExtractor = useCallback((item: SortedScene) => item.id, []);
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>

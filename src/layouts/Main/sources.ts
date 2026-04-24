@@ -1,17 +1,56 @@
-export const backgrounds = [
-  "Aurora",
-  "Circular",
-  "Echo",
-  "Rorschach",
-  "Starfield",
-  "Waves",
-  "Wormhole",
-  "DitherPulse",
-  "Particles",
-  "Terrain",
-  "DotGrid",
-  "GameOfLife",
-  "SinPulse",
-] as const;
+import type { ComponentType } from "react";
+import { Aurora } from "../../backgrounds/Aurora";
+import { Wormhole } from "../../backgrounds/Wormhole";
+import { Starfield } from "../../backgrounds/Starfield";
+import { Rorschach } from "../../backgrounds/Rorschach";
+import { Waves } from "../../backgrounds/Waves";
+import { Circular } from "../../backgrounds/Circular";
+import { Echo } from "../../backgrounds/Echo";
+import { DitherPulse } from "../../backgrounds/DitherPulse";
+import { Particles } from "../../backgrounds/Particles";
+import { Terrain } from "../../backgrounds/Terrain";
+import { DotGrid } from "../../backgrounds/DotGrid";
+import { GameOfLife } from "../../backgrounds/GameOfLife";
+import { SinPulse } from "../../backgrounds/SinPulse";
+import {
+  BACKGROUND_SOURCE_DEFINITIONS,
+  type BackgroundSourceId,
+} from "../../backgrounds/metadata";
 
-export const TOTAL_BACKGROUNDS = backgrounds.length;
+export {
+  DEFAULT_BACKGROUND_SOURCE_ID,
+  NO_BACKGROUND_SOURCE_ID,
+  type BackgroundSourceId,
+  type SceneSourceId,
+} from "../../backgrounds/metadata";
+
+type BackgroundProps = { grayscale?: boolean };
+
+const BackgroundComponentById = {
+  aurora: Aurora,
+  circular: Circular,
+  echo: Echo,
+  rorschach: Rorschach,
+  starfield: Starfield,
+  waves: Waves,
+  wormhole: Wormhole,
+  "dither-pulse": DitherPulse,
+  particles: Particles,
+  terrain: Terrain,
+  "dot-grid": DotGrid,
+  "game-of-life": GameOfLife,
+  "sin-pulse": SinPulse,
+} satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
+
+export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({
+  ...source,
+  Component: BackgroundComponentById[source.id],
+}));
+
+export const backgroundSourceById = Object.fromEntries(
+  backgroundSources.map((source) => [source.id, source]),
+) as Record<BackgroundSourceId, (typeof backgroundSources)[number]>;
+
+export const backgrounds = backgroundSources.map((source) => source.name);
+
+export const TOTAL_BACKGROUNDS = backgroundSources.length;

@@ -25,6 +25,7 @@ import {
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Constants ---
 const TAU = 6.28318;
@@ -206,10 +207,9 @@ export const Starfield = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "Starfield",
     });
 
     return () => {

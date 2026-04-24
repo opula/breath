@@ -22,6 +22,7 @@ import {
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Constants ---
 const NOISE_SCALE = 5.5;
@@ -196,10 +197,9 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "Waves",
     });
 
     return () => {

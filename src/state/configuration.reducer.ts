@@ -1,18 +1,27 @@
-import {PayloadAction, createSlice} from '@reduxjs/toolkit';
-import {reduxStorage} from '../storage';
-import {PersistConfig, persistReducer} from 'redux-persist';
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { reduxStorage } from "../storage";
+import { PersistConfig, persistReducer } from "redux-persist";
+import type { PersistedState } from "redux-persist/es/types";
+import {
+  DEFAULT_BACKGROUND_SOURCE_ID,
+  getBackgroundSourceIdByIndex,
+  isSceneSourceId,
+  type SceneSourceId,
+} from "../backgrounds/metadata";
+
 interface ConfigurationState {
   isPaused: boolean;
   isGrayscale: boolean;
-  bgSourceIndex: number;
+  bgSourceId: SceneSourceId;
   soundsEnabled: boolean;
   hapticsEnabled: boolean;
+  bgSourceIndex?: number;
 }
 
 const initialState: ConfigurationState = {
   isPaused: true,
   isGrayscale: false,
-  bgSourceIndex: 12,
+  bgSourceId: DEFAULT_BACKGROUND_SOURCE_ID,
   soundsEnabled: true,
   hapticsEnabled: true,
 };
@@ -36,16 +45,45 @@ export const configurationSlice = createSlice({
     toggleHaptics(state) {
       state.hapticsEnabled = !state.hapticsEnabled;
     },
-    updateSource(state, action: PayloadAction<number>) {
-      state.bgSourceIndex = action.payload;
+    updateSource(state, action: PayloadAction<SceneSourceId>) {
+      state.bgSourceId = action.payload;
+      delete state.bgSourceIndex;
     },
   },
 });
 
+type PersistedConfigurationState = PersistedState &
+  Partial<ConfigurationState> & {
+    bgSourceIndex?: number;
+  };
+
+const migrateConfigurationState = async (
+  state: PersistedState,
+): Promise<PersistedState> => {
+  if (!state) {
+    return state;
+  }
+
+  const migrated = { ...(state as PersistedConfigurationState) };
+
+  if (!isSceneSourceId(migrated.bgSourceId)) {
+    migrated.bgSourceId =
+      typeof migrated.bgSourceIndex === "number"
+        ? getBackgroundSourceIdByIndex(migrated.bgSourceIndex)
+        : DEFAULT_BACKGROUND_SOURCE_ID;
+  }
+
+  delete migrated.bgSourceIndex;
+
+  return migrated as PersistedState;
+};
+
 const persistConfig: PersistConfig<ConfigurationState> = {
-  key: 'configuration',
+  key: "configuration",
   storage: reduxStorage,
-  blacklist: ['isPaused'],
+  blacklist: ["isPaused"],
+  version: 1,
+  migrate: migrateConfigurationState,
 };
 
 export const configurationReducer = persistReducer(

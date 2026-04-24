@@ -24,6 +24,7 @@ import {
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Constants ---
 const TWO_PI = 6.2831853;
@@ -150,10 +151,9 @@ export const Echo = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "Echo",
     });
 
     return () => {

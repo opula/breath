@@ -8,6 +8,7 @@ import { pass } from "three/tsl";
 import { bloom } from "three/addons/tsl/display/BloomNode";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 const radius = 3;
 const tubeLength = 200;
@@ -166,10 +167,9 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "Wormhole",
     });
 
     return () => {

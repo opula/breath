@@ -22,6 +22,7 @@ import {
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Parameters ---
 const SEED = 42.17;
@@ -194,10 +195,9 @@ export const Rorschach = ({ grayscale = false }: { grayscale?: boolean }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "Rorschach",
     });
 
     return () => {

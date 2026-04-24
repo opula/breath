@@ -1,50 +1,28 @@
 import React, { memo } from "react";
 import { MotiView } from "moti";
 import tw from "../../utils/tw";
-import { Aurora } from "../../backgrounds/Aurora";
-import { Wormhole } from "../../backgrounds/Wormhole";
-import { Starfield } from "../../backgrounds/Starfield";
-import { Rorschach } from "../../backgrounds/Rorschach";
-import { Waves } from "../../backgrounds/Waves";
-import { Circular } from "../../backgrounds/Circular";
-import { Echo } from "../../backgrounds/Echo";
-import { DitherPulse } from "../../backgrounds/DitherPulse";
-import { Particles } from "../../backgrounds/Particles";
-import { Terrain } from "../../backgrounds/Terrain";
-import { DotGrid } from "../../backgrounds/DotGrid";
-import { GameOfLife } from "../../backgrounds/GameOfLife";
-import { SinPulse } from "../../backgrounds/SinPulse";
 import { useAppSelector } from "../../hooks/store";
 import {
   isGrayscaleSelector,
-  sourceIndexSelector,
+  sourceIdSelector,
 } from "../../state/configuration.selectors";
-
-const BackgroundComponents = [
-  Aurora,
-  Circular,
-  Echo,
-  Rorschach,
-  Starfield,
-  Waves,
-  Wormhole,
-  DitherPulse,
-  Particles,
-  Terrain,
-  DotGrid,
-  GameOfLife,
-  SinPulse,
-] as const;
+import {
+  backgroundSourceById,
+  DEFAULT_BACKGROUND_SOURCE_ID,
+  NO_BACKGROUND_SOURCE_ID,
+} from "./sources";
 
 export const Background = memo(() => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
-  const sourceIndex = useAppSelector(sourceIndexSelector);
+  const sourceId = useAppSelector(sourceIdSelector);
 
-  if (sourceIndex === -1) {
+  if (sourceId === NO_BACKGROUND_SOURCE_ID) {
     return null;
   }
 
-  const ActiveBackground = BackgroundComponents[sourceIndex] ?? Wormhole;
+  const ActiveBackground =
+    backgroundSourceById[sourceId]?.Component ??
+    backgroundSourceById[DEFAULT_BACKGROUND_SOURCE_ID].Component;
 
   return (
     <MotiView

@@ -22,6 +22,7 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 
 import { makeWebGPURenderer } from "../../lib/make-webgpu-renderer";
+import { startWebGPUAnimationLoop } from "../../lib/start-webgpu-animation-loop";
 
 // --- TSL shader functions ---
 
@@ -128,10 +129,9 @@ export const BreathRing = ({ breath }: { breath: SharedValue<number> }) => {
       context!.present();
     }
 
-    renderer.init().then(() => {
-      if (!disposed) {
-        renderer.setAnimationLoop(animate);
-      }
+    startWebGPUAnimationLoop(renderer, animate, {
+      isDisposed: () => disposed,
+      label: "BreathRing",
     });
 
     return () => {
