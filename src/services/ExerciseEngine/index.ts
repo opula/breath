@@ -55,7 +55,7 @@ export class ExerciseEngine {
   }
 
   pause(): void {
-    if (this.destroyed) return;
+    if (this.destroyed || this.seqIndex === -1) return;
     if (this.isHapticsEnabled()) this.callbacks.onHaptic();
     this.scheduler.toggle();
     const isPaused = !this.scheduler.active();
@@ -116,9 +116,8 @@ export class ExerciseEngine {
       return;
     }
 
-    // Paused — toggle resume
+    // Paused sessions resume only through the explicit pause/resume control.
     if (!this.scheduler.active()) {
-      this.toggle();
       return;
     }
 

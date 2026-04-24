@@ -29,6 +29,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const [isText, setText] = useState(false);
   const [isHIE, setHIE] = useState(false);
   const [canAdvance, setCanAdvance] = useState(false);
+  const [isStarted, setStarted] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
   const [repeatRound, setRepeatRound] = useState('');
 
@@ -36,18 +37,13 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const onPauseRef = useRef(onPause);
   onPauseRef.current = onPause;
 
-  const debouncedClearName = useDebouncedCallback(() => {
-    setExerciseName('');
-  }, 2000);
-
   const debouncedClearRepeat = useDebouncedCallback(() => {
     setRepeatRound('');
   }, 2000);
 
   const showName = useCallback((name: string) => {
     setExerciseName(name);
-    debouncedClearName();
-  }, [debouncedClearName]);
+  }, []);
 
   const engineRef = useRef<ExerciseEngine | null>(null);
 
@@ -124,6 +120,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
 
     const handleGoto = (index: number) => {
       engine.setExercise(index);
+      setStarted(engine.isStarted());
       showName(engine.getExerciseName());
     };
     exerciseEmitter.on(Ops.GOTO_SEQUENCE, handleGoto);
@@ -131,32 +128,45 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     return () => {
       exerciseEmitter.off(Ops.GOTO_SEQUENCE, handleGoto);
       engine.destroy();
+      onPauseRef.current?.(true);
     };
   }, [engine, showName]);
 
-  const handleTap = useCallback(() => {
-    const wasStarted = engine.isStarted();
+  const handleStart = useCallback(() => {
+    if (engine.isStarted()) return;
     engine.advance();
-    if (!wasStarted || !engine.isActive()) {
+    setStarted(engine.isStarted());
+    showName(engine.getExerciseName());
+  }, [engine, showName]);
+
+  const handleTap = useCallback(() => {
+    if (!engine.isStarted()) return;
+    engine.advance();
+    setStarted(engine.isStarted());
+    if (!engine.isActive()) {
       showName(engine.getExerciseName());
     }
   }, [engine, showName]);
 
   const handlePauseResume = useCallback(() => {
+    if (!engine.isStarted()) return;
     engine.toggle();
-    if (engine.isActive()) {
-      showName(engine.getExerciseName());
-    }
+    setStarted(engine.isStarted());
+    showName(engine.getExerciseName());
   }, [engine, showName]);
 
   const handleLongPress = useCallback(() => {
+    if (!engine.isStarted()) return;
     engine.reset();
-  }, [engine]);
+    setStarted(engine.isStarted());
+    showName(engine.getExerciseName());
+  }, [engine, showName]);
 
   const handleNextExercise = useCallback(
     (delta: number) => {
       if (engine.isActive()) return;
       engine.nextExercise(delta);
+      setStarted(engine.isStarted());
       showName(engine.getExerciseName());
     },
     [engine, showName],
@@ -169,9 +179,11 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     isText,
     isHIE,
     canAdvance,
+    isStarted,
     exerciseName,
     repeatRound,
     iBreath,
+    handleStart,
     handleTap,
     handlePauseResume,
     handleLongPress,

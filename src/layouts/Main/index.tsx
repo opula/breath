@@ -9,10 +9,7 @@ import React, {
 import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
 import { runOnJS } from "react-native-reanimated";
-import {
-  Gesture,
-  GestureDetector,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   NavigationProp,
@@ -60,9 +57,11 @@ export const Main = () => {
     isBreathing,
     isText,
     canAdvance,
+    isStarted,
     exerciseName,
     repeatRound,
     iBreath,
+    handleStart,
     handleTap,
     handlePauseResume,
     handleLongPress,
@@ -90,10 +89,10 @@ export const Main = () => {
   useEffect(() => {
     if (!autoplay) return;
     const timer = setTimeout(() => {
-      if (!labelRef.current) handleTap();
+      if (!labelRef.current) handleStart();
     }, 500);
     return () => clearTimeout(timer);
-  }, [autoplay, handleTap]);
+  }, [autoplay, handleStart]);
 
   // Auto-fading chrome: show on mount and any gesture; hide after timeout.
   // First session gets a longer window so the legend is readable; subsequent
@@ -129,6 +128,12 @@ export const Main = () => {
     const id = setInterval(() => setElapsed((e) => e + 0.1), 100);
     return () => clearInterval(id);
   }, [isPaused]);
+
+  useEffect(() => {
+    if (!isStarted || !isPaused) return;
+    setShowChrome(true);
+    if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
+  }, [isPaused, isStarted]);
 
   const singleTap = useMemo(
     () =>
@@ -166,6 +171,48 @@ export const Main = () => {
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
+  const showIndefiniteHint = isStarted && canAdvance && !isPaused;
+  const showCenterHints =
+    isStarted && (showChrome || showIndefiniteHint || isPaused);
+  const primaryHint = showIndefiniteHint
+    ? "tap to continue"
+    : "tap 2x to pause / resume";
+  const hintShadow = {
+    textShadowColor: "rgba(0,0,0,0.85)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  };
+  const renderCenterHints = () =>
+    showCenterHints ? (
+      <View
+        style={[
+          tw`absolute left-0 right-0 items-center px-8`,
+          { top: "50%", marginTop: isText ? 86 : 52 },
+        ]}
+        pointerEvents="none"
+      >
+        <Text
+          style={[
+            tw`font-mono text-mb-fg uppercase text-[9px] text-center`,
+            hintShadow,
+            { letterSpacing: 2.2 },
+          ]}
+        >
+          {primaryHint}
+        </Text>
+        {!showIndefiniteHint ? (
+          <Text
+            style={[
+              tw`font-mono uppercase text-[8px] text-center mt-2`,
+              hintShadow,
+              { color: "rgba(242,242,239,0.78)", letterSpacing: 1.8 },
+            ]}
+          >
+            hold to restart
+          </Text>
+        ) : null}
+      </View>
+    ) : null;
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
@@ -183,16 +230,6 @@ export const Main = () => {
               >
                 {label}
               </Text>
-              {canAdvance && !isPaused ? (
-                <Text
-                  style={[
-                    tw`font-mono text-mb-accent uppercase text-[9px] mt-6`,
-                    { letterSpacing: 2.5 },
-                  ]}
-                >
-                  tap to continue
-                </Text>
-              ) : null}
             </View>
           ) : label ? (
             <View style={tw`items-center justify-center`}>
@@ -221,31 +258,14 @@ export const Main = () => {
                     {sublabel}
                   </Text>
                 ) : null}
-                {canAdvance && !isPaused ? (
-                  <Text
-                    style={[
-                      tw`font-mono text-mb-accent uppercase text-[9px] mt-3`,
-                      { letterSpacing: 2.5 },
-                    ]}
-                  >
-                    tap to continue
-                  </Text>
-                ) : null}
               </View>
             </View>
-          ) : // <Text
-          //   style={[
-          //     tw`font-mono text-mb-mute uppercase text-[10px]`,
-          //     { letterSpacing: 3 },
-          //   ]}
-          // >
-          //   tap to begin
-          // </Text>
-          null}
+          ) : null}
+          {renderCenterHints()}
         </View>
       </GestureDetector>
 
-      {/* Top chrome — exit, exercise name, pause toggle */}
+      {/* Top chrome — exit and exercise name */}
       <AnimatePresence>
         {showChrome ? (
           <MotiView
@@ -256,13 +276,13 @@ export const Main = () => {
             transition={{ opacity: { type: "timing", duration: 400 } }}
             pointerEvents="box-none"
             style={[
-              tw`absolute left-0 right-0 flex-row items-center justify-between px-6`,
+              tw`absolute left-0 right-0 flex-row items-start px-6`,
               { top: insets.top + 4 },
             ]}
           >
             <Pressable
               onPress={() => navigation.navigate("Home")}
-              style={tw`py-2 active:opacity-50`}
+              style={[tw`py-2 active:opacity-50`, { flex: 1, minWidth: 0 }]}
             >
               <Text
                 style={[
@@ -273,33 +293,18 @@ export const Main = () => {
                 ← library
               </Text>
             </Pressable>
-            <Text
-              numberOfLines={1}
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px] py-2 max-w-[50%]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              {exerciseName || ""}
-            </Text>
-            <View style={tw`py-2 items-end`} pointerEvents="none">
+            <View style={{ flex: 1.2, minWidth: 0, alignItems: "center" }}>
               <Text
+                numberOfLines={1}
                 style={[
-                  tw`font-mono text-mb-mute uppercase text-[9px]`,
-                  { letterSpacing: 2.5 },
+                  tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
+                  { letterSpacing: 3 },
                 ]}
               >
-                double tap to pause / resume
-              </Text>
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute uppercase text-[9px] mt-1`,
-                  { letterSpacing: 2.5 },
-                ]}
-              >
-                hold to restart
+                {exerciseName || ""}
               </Text>
             </View>
+            <View style={{ flex: 1, minWidth: 0 }} pointerEvents="none" />
           </MotiView>
         ) : null}
       </AnimatePresence>
@@ -329,14 +334,18 @@ export const Main = () => {
                 {repeatRound || ""}
               </Text>
             </View>
-            {/* <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 2 },
-              ]}
-            >
-              {isPaused ? "TAP TO RESUME" : "DOUBLE TAP TO PAUSE"}
-            </Text> */}
+            <View style={tw`flex-1 items-center`}>
+              {isStarted && isPaused ? (
+                <Text
+                  style={[
+                    tw`font-mono text-mb-accent uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  paused
+                </Text>
+              ) : null}
+            </View>
             <View style={tw`flex-1 items-end`}>
               <Text
                 style={[

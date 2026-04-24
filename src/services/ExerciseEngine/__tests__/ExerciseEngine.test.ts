@@ -357,7 +357,7 @@ describe('ExerciseEngine', () => {
       expect(callbacks.pauseChanges).toContain(false);
     });
 
-    it('toggles pause when paused', () => {
+    it('does not resume when paused', () => {
       const scheduler = createMockScheduler();
       const callbacks = createMockCallbacks();
       const engine = new ExerciseEngine([hieExercise], scheduler, callbacks);
@@ -368,8 +368,9 @@ describe('ExerciseEngine', () => {
       callbacks.pauseChanges.length = 0;
 
       engine.advance();
-      // Should have toggled
-      expect(callbacks.hapticCount).toBeGreaterThan(0);
+      expect(scheduler.isRunning).toBe(false);
+      expect(callbacks.hapticCount).toBe(0);
+      expect(callbacks.pauseChanges).toEqual([]);
     });
 
     it('advances on count===0 step', () => {
