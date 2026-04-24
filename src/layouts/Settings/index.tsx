@@ -14,19 +14,20 @@ import {
   toggleSounds,
   toggleHaptics,
 } from "../../state/configuration.reducer";
-import { accentColorSelector } from "../../state/accent.selectors";
-import { setAccentColor } from "../../state/accent.reducer";
+// Accent picker is parked — see note below the Display group.
+// import { accentColorSelector } from "../../state/accent.selectors";
+// import { setAccentColor } from "../../state/accent.reducer";
 import { MainStackParams } from "../../navigation";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
 
-const ACCENTS = [
-  { id: "mint", hex: "#6FE7FF" },
-  { id: "amber", hex: "#FFB545" },
-  { id: "rose", hex: "#FF8FA3" },
-  { id: "lime", hex: "#C8F26D" },
-  { id: "paper", hex: "#EDEDEA" },
-];
+// const ACCENTS = [
+//   { id: "mint", hex: "#6FE7FF" },
+//   { id: "amber", hex: "#FFB545" },
+//   { id: "rose", hex: "#FF8FA3" },
+//   { id: "lime", hex: "#C8F26D" },
+//   { id: "paper", hex: "#EDEDEA" },
+// ];
 
 const ToggleRow = ({
   label,
@@ -110,7 +111,7 @@ export const Settings = () => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
-  const accentColor = useAppSelector(accentColorSelector);
+  // const accentColor = useAppSelector(accentColorSelector);
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
@@ -193,8 +194,12 @@ export const Settings = () => {
             onPress={() => dispatch(toggleGrayscale())}
           />
 
-          {/* Accent picker */}
-          <View style={tw`mt-8`}>
+          {/* Accent picker — hidden until runtime palette swap is wired.
+              `mb-accent` resolves via twrnc at compile time, so selecting a new
+              hex persists to Redux but doesn't actually repaint the app. Re-enable
+              once accent is threaded through a hook + inline styles at every call
+              site (~34 tw usages + 9 raw hex refs, see notes). */}
+          {/* <View style={tw`mt-8`}>
             <Overline>Accent color</Overline>
           </View>
           <View style={tw`flex-row py-4 border-b border-mb-line`}>
@@ -241,7 +246,7 @@ export const Settings = () => {
                 </Pressable>
               );
             })}
-          </View>
+          </View> */}
 
           {/* About group */}
           <View style={tw`mt-8`}>
