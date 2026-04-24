@@ -32,6 +32,7 @@ import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
 
 const CHROME_TIMEOUT_MS = 6000;
 const FIRST_SESSION_CHROME_TIMEOUT_MS = 12000;
+const HINT_TIMEOUT_MS = 4000;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
 export const Main = () => {
@@ -78,6 +79,14 @@ export const Main = () => {
       clearTimeout(timer);
       deactivateKeepAwake();
     };
+  }, []);
+
+  // Defer mounting the Background so WebGPU init doesn't compete with the
+  // navigation transition / first engine tick.
+  const [mountBackground, setMountBackground] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setMountBackground(true), 50);
+    return () => clearTimeout(id);
   }, []);
 
   // Autoplay: when navigated here with autoplay=true (from Home tap or tray
@@ -135,14 +144,37 @@ export const Main = () => {
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
   }, [isPaused, isStarted]);
 
+  // Center hints auto-fade after 4s. Re-reveal on gesture / relevant state.
+  const [showHints, setShowHints] = useState(false);
+  const hintsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealHints = useCallback(() => {
+    setShowHints(true);
+    if (hintsTimerRef.current) clearTimeout(hintsTimerRef.current);
+    hintsTimerRef.current = setTimeout(
+      () => setShowHints(false),
+      HINT_TIMEOUT_MS,
+    );
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hintsTimerRef.current) clearTimeout(hintsTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isStarted) revealHints();
+  }, [isStarted, isPaused, canAdvance, revealHints]);
+
   const singleTap = useMemo(
     () =>
       Gesture.Tap().onEnd((_, success) => {
         if (!success) return;
         if (!canAdvance) runOnJS(revealChrome)();
+        runOnJS(revealHints)();
         runOnJS(handleTap)();
       }),
-    [canAdvance, handleTap, revealChrome],
+    [canAdvance, handleTap, revealChrome, revealHints],
   );
 
   const doubleTap = useMemo(
@@ -152,9 +184,10 @@ export const Main = () => {
         .onEnd((_, success) => {
           if (!success) return;
           runOnJS(revealChrome)();
+          runOnJS(revealHints)();
           runOnJS(handlePauseResume)();
         }),
-    [handlePauseResume, revealChrome],
+    [handlePauseResume, revealChrome, revealHints],
   );
 
   const longPress = useMemo(
@@ -162,9 +195,10 @@ export const Main = () => {
       Gesture.LongPress().onEnd((_, success) => {
         if (!success) return;
         runOnJS(revealChrome)();
+        runOnJS(revealHints)();
         runOnJS(handleLongPress)();
       }),
-    [handleLongPress, revealChrome],
+    [handleLongPress, revealChrome, revealHints],
   );
 
   const gesture = Gesture.Exclusive(doubleTap, longPress, singleTap);
@@ -172,51 +206,60 @@ export const Main = () => {
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
   const showIndefiniteHint = isStarted && canAdvance && !isPaused;
-  const showCenterHints =
-    isStarted && (showChrome || showIndefiniteHint || isPaused);
+  const showCenterHints = isStarted && showHints;
   const primaryHint = showIndefiniteHint
-    ? "tap to continue"
+    ? "tap when you're ready to continue"
     : "tap 2x to pause / resume";
   const hintShadow = {
     textShadowColor: "rgba(0,0,0,0.85)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   };
-  const renderCenterHints = () =>
-    showCenterHints ? (
-      <View
-        style={[
-          tw`absolute left-0 right-0 items-center px-8`,
-          { top: "50%", marginTop: isText ? 86 : 52 },
-        ]}
-        pointerEvents="none"
-      >
-        <Text
+  const renderCenterHints = () => (
+    <AnimatePresence>
+      {showCenterHints ? (
+        <MotiView
+          key="center-hints"
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ opacity: { type: "timing", duration: 400 } }}
+          pointerEvents="none"
           style={[
-            tw`font-mono text-mb-fg uppercase text-[9px] text-center`,
-            hintShadow,
-            { letterSpacing: 2.2 },
+            tw`absolute left-0 right-0 items-center px-8`,
+            { top: "50%", marginTop: isText ? 86 : 52 },
           ]}
         >
-          {primaryHint}
-        </Text>
-        {!showIndefiniteHint ? (
           <Text
             style={[
-              tw`font-mono uppercase text-[8px] text-center mt-2`,
+              tw`font-mono text-mb-fg uppercase text-[9px] text-center`,
               hintShadow,
-              { color: "rgba(242,242,239,0.78)", letterSpacing: 1.8 },
+              { letterSpacing: 2.2 },
             ]}
           >
-            hold to restart
+            {primaryHint}
           </Text>
-        ) : null}
-      </View>
-    ) : null;
+          {!showIndefiniteHint ? (
+            <Text
+              style={[
+                tw`font-mono uppercase text-[8px] text-center mt-2`,
+                hintShadow,
+                { color: "rgba(242,242,239,0.78)", letterSpacing: 1.8 },
+              ]}
+            >
+              hold to restart
+            </Text>
+          ) : null}
+        </MotiView>
+      ) : null}
+    </AnimatePresence>
+  );
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
-      <AnimatePresence>{isAppActive ? <Background /> : null}</AnimatePresence>
+      <AnimatePresence>
+        {isAppActive && mountBackground ? <Background /> : null}
+      </AnimatePresence>
 
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center`}>
