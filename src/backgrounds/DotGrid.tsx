@@ -78,7 +78,13 @@ const hash12 = Fn(([p]: [ReturnType<typeof float>]) => {
 
 // ─── Component ──────────────────────────────────────────────────────
 
-export const DotGrid = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const DotGrid = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -207,6 +213,7 @@ export const DotGrid = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "DotGrid",
+      onReady,
     });
 
     return () => {

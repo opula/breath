@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { MotiView } from "moti";
 import tw from "../../utils/tw";
 import { useAppSelector } from "../../hooks/store";
@@ -10,7 +10,34 @@ import {
   backgroundSourceById,
   DEFAULT_BACKGROUND_SOURCE_ID,
   NO_BACKGROUND_SOURCE_ID,
+  type BackgroundSourceId,
 } from "./sources";
+
+const BackgroundSurface = ({
+  isGrayscale,
+  sourceId,
+}: {
+  isGrayscale: boolean;
+  sourceId: BackgroundSourceId;
+}) => {
+  const [isReady, setIsReady] = useState(false);
+  const handleReady = useCallback(() => setIsReady(true), []);
+  const ActiveBackground =
+    backgroundSourceById[sourceId]?.Component ??
+    backgroundSourceById[DEFAULT_BACKGROUND_SOURCE_ID].Component;
+
+  return (
+    <MotiView
+      from={{ opacity: 0 }}
+      animate={{ opacity: isReady ? 1 : 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ opacity: { type: "timing", duration: 300 } }}
+      style={tw`flex-1`}
+    >
+      <ActiveBackground grayscale={isGrayscale} onReady={handleReady} />
+    </MotiView>
+  );
+};
 
 export const Background = memo(() => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
@@ -20,19 +47,11 @@ export const Background = memo(() => {
     return null;
   }
 
-  const ActiveBackground =
-    backgroundSourceById[sourceId]?.Component ??
-    backgroundSourceById[DEFAULT_BACKGROUND_SOURCE_ID].Component;
-
   return (
-    <MotiView
-      from={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ opacity: { type: "timing", duration: 300 } }}
-      style={tw`flex-1`}
-    >
-      <ActiveBackground grayscale={isGrayscale} />
-    </MotiView>
+    <BackgroundSurface
+      key={sourceId}
+      isGrayscale={isGrayscale}
+      sourceId={sourceId}
+    />
   );
 });

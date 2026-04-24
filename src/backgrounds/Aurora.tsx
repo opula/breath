@@ -73,7 +73,13 @@ const auroraLayer = Fn(
 
 // --- Component ---
 
-export const Aurora = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Aurora = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -178,6 +184,7 @@ export const Aurora = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Aurora",
+      onReady,
     });
 
     return () => {

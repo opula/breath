@@ -54,7 +54,13 @@ const CELL_SIZE = PLANE_SIZE / SEGMENTS;
 // Echo-inspired cosine palette
 const TWO_PI = 6.2831853;
 
-export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Terrain = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -420,6 +426,7 @@ export const Terrain = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Terrain",
+      onReady,
     });
 
     return () => {

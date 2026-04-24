@@ -139,10 +139,10 @@ export const Main = () => {
     () =>
       Gesture.Tap().onEnd((_, success) => {
         if (!success) return;
-        runOnJS(revealChrome)();
+        if (!canAdvance) runOnJS(revealChrome)();
         runOnJS(handleTap)();
       }),
-    [handleTap, revealChrome],
+    [canAdvance, handleTap, revealChrome],
   );
 
   const doubleTap = useMemo(

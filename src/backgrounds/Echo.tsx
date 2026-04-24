@@ -69,7 +69,13 @@ const noise = Fn(([st]: [ReturnType<typeof vec2>]) => {
 
 // --- Component ---
 
-export const Echo = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Echo = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -154,6 +160,7 @@ export const Echo = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Echo",
+      onReady,
     });
 
     return () => {

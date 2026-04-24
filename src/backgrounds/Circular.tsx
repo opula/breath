@@ -124,7 +124,13 @@ const bandContribution = Fn(
 
 // --- Component ---
 
-export const Circular = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Circular = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -220,6 +226,7 @@ export const Circular = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Circular",
+      onReady,
     });
 
     return () => {

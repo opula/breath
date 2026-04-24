@@ -87,7 +87,13 @@ const layeredNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 // --- Component ---
 
-export const Rorschach = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Rorschach = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -198,6 +204,7 @@ export const Rorschach = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Rorschach",
+      onReady,
     });
 
     return () => {

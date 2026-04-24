@@ -24,7 +24,7 @@ export {
   type SceneSourceId,
 } from "../../backgrounds/metadata";
 
-type BackgroundProps = { grayscale?: boolean };
+type BackgroundProps = { grayscale?: boolean; onReady?: () => void };
 
 const BackgroundComponentById = {
   aurora: Aurora,

@@ -168,7 +168,13 @@ const borderBeam = Fn(
 
 // --- Component ---
 
-export const DitherPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const DitherPulse = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -252,6 +258,7 @@ export const DitherPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "DitherPulse",
+      onReady,
     });
 
     return () => {

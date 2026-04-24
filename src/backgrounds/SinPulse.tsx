@@ -67,7 +67,13 @@ const fragColor = Fn(
   },
 );
 
-export const SinPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const SinPulse = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -124,6 +130,7 @@ export const SinPulse = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "SinPulse",
+      onReady,
     });
 
     return () => {

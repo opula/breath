@@ -32,7 +32,7 @@ const TAU = 6.28318;
 const STAR_GLOW = 0.025;
 const CANVAS_VIEW = 20.0;
 const BASE_VELOCITY = 0.025;
-const NUM_LAYERS = 6;
+const NUM_LAYERS = 4;
 
 // --- TSL shader functions ---
 
@@ -117,7 +117,13 @@ const starLayer = Fn(
 
 // --- Component ---
 
-export const Starfield = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Starfield = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -153,7 +159,7 @@ export const Starfield = ({ grayscale = false }: { grayscale?: boolean }) => {
     // Time advancement
     const t = timeU.mul(BASE_VELOCITY);
 
-    // Accumulate 6 depth layers (unrolled)
+    // Accumulate depth layers
     let col = vec3(0.0, 0.0, 0.0);
     for (let layerIdx = 0; layerIdx < NUM_LAYERS; layerIdx++) {
       const i = layerIdx / NUM_LAYERS;
@@ -210,6 +216,7 @@ export const Starfield = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Starfield",
+      onReady,
     });
 
     return () => {

@@ -83,7 +83,13 @@ const curlNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 // --- Component ---
 
-export const Particles = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Particles = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -255,6 +261,7 @@ export const Particles = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Particles",
+      onReady,
     });
 
     return () => {

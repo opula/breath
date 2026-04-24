@@ -21,7 +21,13 @@ const radialSegments = 96;
 const lengthSegments = 2048;
 const MAX_DELTA_SECONDS = 0.1; // clamp large frame gaps on app resume
 
-export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Wormhole = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -170,6 +176,7 @@ export const Wormhole = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Wormhole",
+      onReady,
     });
 
     return () => {

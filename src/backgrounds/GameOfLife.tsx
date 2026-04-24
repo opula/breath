@@ -46,7 +46,13 @@ const COLOR_D = vec3(0.0, 0.5, 0.667);
 
 // ─── Component ──────────────────────────────────────────────────────
 
-export const GameOfLife = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const GameOfLife = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -218,6 +224,7 @@ export const GameOfLife = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "GameOfLife",
+      onReady,
     });
 
     return () => {

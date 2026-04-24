@@ -80,7 +80,13 @@ const getFlow = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 // --- Component ---
 
-export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
+export const Waves = ({
+  grayscale = false,
+  onReady,
+}: {
+  grayscale?: boolean;
+  onReady?: () => void;
+}) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
   grayscaleRef.current = grayscale;
@@ -200,6 +206,7 @@ export const Waves = ({ grayscale = false }: { grayscale?: boolean }) => {
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
       label: "Waves",
+      onReady,
     });
 
     return () => {
