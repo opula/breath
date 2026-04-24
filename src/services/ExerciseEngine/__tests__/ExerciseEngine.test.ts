@@ -327,7 +327,7 @@ describe('ExerciseEngine', () => {
       engine.start();
 
       const firstBreathState = callbacks.states.find((s) => s.isBreathing);
-      expect(firstBreathState?.sublabel).toMatch(/n°/);
+      expect(firstBreathState?.sublabel).toMatch(/breath \d/);
     });
   });
 
@@ -640,7 +640,7 @@ describe('ExerciseEngine', () => {
 
       // First loop: count = Math.round(2 * (1 + 0 * 0.5)) = 2
       const firstSublabel = callbacks.states.find((s) => s.isBreathing)?.sublabel;
-      expect(firstSublabel).toBe('n° 2');
+      expect(firstSublabel).toBe('breath 1 / 2');
 
       // Run until exactly one wrap occurs
       while (engine.getSequenceLoop() === 0 && scheduler.jobs.length > 0) {
@@ -652,7 +652,7 @@ describe('ExerciseEngine', () => {
       // Second loop: count = Math.round(2 * (1 + 1 * 0.5)) = 3
       const secondLoopStates = callbacks.states.filter((s) => s.isBreathing);
       const lastBreathStart = secondLoopStates[secondLoopStates.length - 1];
-      expect(lastBreathStart?.sublabel).toMatch(/n° 3/);
+      expect(lastBreathStart?.sublabel).toMatch(/\/ 3$/);
     });
 
     it('HIE step with ramp > 1 uses increased count on second loop', () => {

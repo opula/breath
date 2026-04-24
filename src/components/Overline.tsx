@@ -18,12 +18,6 @@ export const Overline = ({
       style={tw`flex-row items-end justify-between py-3 border-b border-mb-line`}
     >
       <View style={tw`flex-row items-center gap-2`}>
-        <View
-          style={tw.style(
-            `w-[5px] h-[5px] rounded-full`,
-            accent ? `bg-mb-accent` : `bg-mb-mute`,
-          )}
-        />
         <Text
           style={[
             tw`font-mono text-[10px] uppercase text-mb-mute`,

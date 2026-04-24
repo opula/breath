@@ -94,6 +94,7 @@ export class ExerciseEngine {
         isBreathing: false,
         isText: false,
         isHIE: false,
+        canAdvance: false,
       });
       this.scheduler.stop();
       this.callbacks.onPauseChange(true);
@@ -317,10 +318,13 @@ export class ExerciseEngine {
         this.startBreathPhase(previousIndex > -1);
         this.callbacks.onStateChange({
           label: BREATH_LABELS[0],
-          sublabel: `n° ${effectiveCount ? effectiveCount : 1}`,
+          sublabel: effectiveCount
+            ? `breath 1 / ${effectiveCount}`
+            : `breath 1`,
           isBreathing: true,
           isText: false,
           isHIE: false,
+          canAdvance: effectiveCount === 0,
         });
         break;
       }
@@ -333,6 +337,7 @@ export class ExerciseEngine {
           isBreathing: false,
           isText: true,
           isHIE: false,
+          canAdvance: this.getEffectiveCount(step) === 0,
         });
         break;
 
@@ -415,7 +420,8 @@ export class ExerciseEngine {
     }
 
     // Update label/sublabel
-    const sublabel = `n° ${count ? count - completedPatterns : completedPatterns + 1}`;
+    const currentBreath = completedPatterns + 1;
+    const sublabel = count ? `breath ${currentBreath} / ${count}` : `breath ${currentBreath}`;
 
     if (this.isSoundEnabled()) {
       this.callbacks.onPlaySound(BREATH_LABELS[stepIndex] as SoundType);
@@ -427,6 +433,7 @@ export class ExerciseEngine {
       isBreathing: true,
       isText: false,
       isHIE: false,
+      canAdvance: count === 0,
     });
 
     // Schedule next step
@@ -471,6 +478,7 @@ export class ExerciseEngine {
       isBreathing: showRing,
       isText: false,
       isHIE: !showRing,
+      canAdvance: count === 0,
     });
 
     this.timedStep.execute({
@@ -483,6 +491,7 @@ export class ExerciseEngine {
           isBreathing: showRing,
           isText: false,
           isHIE: !showRing,
+          canAdvance: count === 0,
         });
       },
       onComplete: () => {
@@ -505,6 +514,7 @@ export class ExerciseEngine {
       isBreathing: true,
       isText: false,
       isHIE: false,
+      canAdvance: false,
     });
 
     // Phase 0: first inhale — animate 0 → 0.7
@@ -524,6 +534,7 @@ export class ExerciseEngine {
           isBreathing: true,
           isText: false,
           isHIE: false,
+          canAdvance: false,
         });
       },
       { priority: 1, label: 'Double-inhale pause' },
@@ -543,6 +554,7 @@ export class ExerciseEngine {
           isBreathing: true,
           isText: false,
           isHIE: false,
+          canAdvance: false,
         });
       },
       { priority: 1, label: 'Double-inhale second' },
@@ -578,6 +590,7 @@ export class ExerciseEngine {
           isBreathing: false,
           isText: true,
           isHIE: false,
+          canAdvance: count === 0,
         });
       },
       onComplete: () => {

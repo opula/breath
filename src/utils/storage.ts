@@ -6,6 +6,7 @@ export const reduxPersistedStorage = createMMKV({
 });
 
 export const HAS_COMPLETED_WELCOME = 'HAS_COMPLETED_WELCOME';
+export const HAS_SEEN_MAIN_CONTROLS = 'HAS_SEEN_MAIN_CONTROLS';
 
 export const LAST_SOURCE = 'LAST_SOURCE';
 export const LAST_EXERCISE = 'LAST_EXERCISE';

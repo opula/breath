@@ -82,9 +82,7 @@ const ToggleRow = ({
 );
 
 const AboutRow = ({ label, value }: { label: string; value: string }) => (
-  <View
-    style={tw`flex-row items-center py-3 border-b border-mb-line`}
-  >
+  <View style={tw`flex-row items-center py-3 border-b border-mb-line`}>
     <Text
       style={[
         tw`font-display text-[15px] text-mb-fg uppercase flex-1`,
@@ -161,9 +159,11 @@ export const Settings = () => {
         >
           {/* Hero */}
           <View style={tw`mt-2 mb-6`}>
-            <Overline accent right="v1.0">Preferences</Overline>
+            <Overline accent right="v1.0">
+              Preferences
+            </Overline>
             <View style={tw`mt-5`}>
-              <BigTitle size={44} accent>{`Calibrate\nthe app`}</BigTitle>
+              <BigTitle size={44} accent>{`Adjust\nyour flow`}</BigTitle>
             </View>
           </View>
 

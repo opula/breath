@@ -116,14 +116,14 @@ describe('TimedStepExecutor', () => {
   });
 
   describe('count-up (count === 0)', () => {
-    it('emits initial sublabel as "00"', () => {
+    it('emits initial sublabel as "+00"', () => {
       const scheduler = createMockScheduler();
       const executor = new TimedStepExecutor(scheduler);
       const onTick = jest.fn();
 
       executor.execute({ label: 'hold', count: 0, onTick, onComplete: jest.fn() });
 
-      expect(onTick).toHaveBeenCalledWith('00');
+      expect(onTick).toHaveBeenCalledWith('+00');
     });
 
     it('schedules a repeating count-up job', () => {
@@ -150,7 +150,7 @@ describe('TimedStepExecutor', () => {
       job.cb(); // tick 2
       job.cb(); // tick 3
 
-      expect(ticks).toEqual(['00', '01', '02', '03']);
+      expect(ticks).toEqual(['+00', '+01', '+02', '+03']);
     });
   });
 });

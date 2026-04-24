@@ -1,7 +1,4 @@
-import {
-  activateKeepAwakeAsync,
-  deactivateKeepAwake,
-} from "expo-keep-awake";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import React, {
   useCallback,
   useEffect,
@@ -13,7 +10,6 @@ import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
 import { runOnJS } from "react-native-reanimated";
 import {
-  Directions,
   Gesture,
   GestureDetector,
 } from "react-native-gesture-handler";
@@ -35,8 +31,10 @@ import { exercisesSelector } from "../../state/exercises.selectors";
 import { isPausedSelector } from "../../state/configuration.selectors";
 import { setPause as setPauseAction } from "../../state/configuration.reducer";
 import { MainStackParams } from "../../navigation";
+import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
 
-const CHROME_TIMEOUT_MS = 4000;
+const CHROME_TIMEOUT_MS = 6000;
+const FIRST_SESSION_CHROME_TIMEOUT_MS = 12000;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
 export const Main = () => {
@@ -61,13 +59,13 @@ export const Main = () => {
     sublabel,
     isBreathing,
     isText,
+    canAdvance,
     exerciseName,
     repeatRound,
     iBreath,
     handleTap,
-    handleDoubleTap,
+    handlePauseResume,
     handleLongPress,
-    handleNextExercise,
   } = useExerciseEngine({ exercises, onPause: setPause });
 
   // Keep the screen awake while the session is open (up to 2h).
@@ -97,7 +95,14 @@ export const Main = () => {
     return () => clearTimeout(timer);
   }, [autoplay, handleTap]);
 
-  // Auto-fading chrome: show on mount and any gesture; hide 4s later.
+  // Auto-fading chrome: show on mount and any gesture; hide after timeout.
+  // First session gets a longer window so the legend is readable; subsequent
+  // sessions shrink back to the normal timeout.
+  const chromeTimeoutRef = useRef(
+    storage.getBoolean(HAS_SEEN_MAIN_CONTROLS)
+      ? CHROME_TIMEOUT_MS
+      : FIRST_SESSION_CHROME_TIMEOUT_MS,
+  );
   const [showChrome, setShowChrome] = useState(true);
   const chromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealChrome = useCallback(() => {
@@ -105,12 +110,13 @@ export const Main = () => {
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
     chromeTimerRef.current = setTimeout(
       () => setShowChrome(false),
-      CHROME_TIMEOUT_MS,
+      chromeTimeoutRef.current,
     );
   }, []);
 
   useEffect(() => {
     revealChrome();
+    storage.set(HAS_SEEN_MAIN_CONTROLS, true);
     return () => {
       if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
     };
@@ -141,9 +147,9 @@ export const Main = () => {
         .onEnd((_, success) => {
           if (!success) return;
           runOnJS(revealChrome)();
-          runOnJS(handleDoubleTap)();
+          runOnJS(handlePauseResume)();
         }),
-    [handleDoubleTap, revealChrome],
+    [handlePauseResume, revealChrome],
   );
 
   const longPress = useMemo(
@@ -156,46 +162,14 @@ export const Main = () => {
     [handleLongPress, revealChrome],
   );
 
-  const swipeUp = useMemo(
-    () =>
-      Gesture.Fling()
-        .direction(Directions.UP)
-        .onEnd((_, success) => {
-          if (!success) return;
-          runOnJS(revealChrome)();
-          runOnJS(handleNextExercise)(1);
-        }),
-    [handleNextExercise, revealChrome],
-  );
-
-  const swipeDown = useMemo(
-    () =>
-      Gesture.Fling()
-        .direction(Directions.DOWN)
-        .onEnd((_, success) => {
-          if (!success) return;
-          runOnJS(revealChrome)();
-          runOnJS(handleNextExercise)(-1);
-        }),
-    [handleNextExercise, revealChrome],
-  );
-
-  const gesture = Gesture.Exclusive(
-    swipeUp,
-    swipeDown,
-    doubleTap,
-    longPress,
-    singleTap,
-  );
+  const gesture = Gesture.Exclusive(doubleTap, longPress, singleTap);
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
-      <AnimatePresence>
-        {isAppActive ? <Background /> : null}
-      </AnimatePresence>
+      <AnimatePresence>{isAppActive ? <Background /> : null}</AnimatePresence>
 
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center`}>
@@ -209,6 +183,16 @@ export const Main = () => {
               >
                 {label}
               </Text>
+              {canAdvance && !isPaused ? (
+                <Text
+                  style={[
+                    tw`font-mono text-mb-accent uppercase text-[9px] mt-6`,
+                    { letterSpacing: 2.5 },
+                  ]}
+                >
+                  tap to continue
+                </Text>
+              ) : null}
             </View>
           ) : label ? (
             <View style={tw`items-center justify-center`}>
@@ -237,18 +221,27 @@ export const Main = () => {
                     {sublabel}
                   </Text>
                 ) : null}
+                {canAdvance && !isPaused ? (
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-accent uppercase text-[9px] mt-3`,
+                      { letterSpacing: 2.5 },
+                    ]}
+                  >
+                    tap to continue
+                  </Text>
+                ) : null}
               </View>
             </View>
-          ) : (
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              tap to begin
-            </Text>
-          )}
+          ) : // <Text
+          //   style={[
+          //     tw`font-mono text-mb-mute uppercase text-[10px]`,
+          //     { letterSpacing: 3 },
+          //   ]}
+          // >
+          //   tap to begin
+          // </Text>
+          null}
         </View>
       </GestureDetector>
 
@@ -289,20 +282,24 @@ export const Main = () => {
             >
               {exerciseName || ""}
             </Text>
-            <Pressable
-              onPress={handleDoubleTap}
-              style={tw`py-2 active:opacity-50`}
-            >
+            <View style={tw`py-2 items-end`} pointerEvents="none">
               <Text
                 style={[
-                  tw`font-mono uppercase text-[10px]`,
-                  { letterSpacing: 3 },
-                  isPaused ? tw`text-mb-accent` : tw`text-mb-mute`,
+                  tw`font-mono text-mb-mute uppercase text-[9px]`,
+                  { letterSpacing: 2.5 },
                 ]}
               >
-                {isPaused ? "resume" : "pause"}
+                double tap to pause / resume
               </Text>
-            </Pressable>
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute uppercase text-[9px] mt-1`,
+                  { letterSpacing: 2.5 },
+                ]}
+              >
+                hold to restart
+              </Text>
+            </View>
           </MotiView>
         ) : null}
       </AnimatePresence>
@@ -322,22 +319,34 @@ export const Main = () => {
               { bottom: insets.bottom + 12 },
             ]}
           >
-            <Text
+            <View style={tw`flex-1`}>
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute uppercase text-[10px]`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                {repeatRound || ""}
+              </Text>
+            </View>
+            {/* <Text
               style={[
                 tw`font-mono text-mb-mute uppercase text-[10px]`,
                 { letterSpacing: 2 },
               ]}
             >
-              {repeatRound || ""}
-            </Text>
-            <Text
-              style={[
-                tw`font-mono text-mb-mute text-[10px]`,
-                { letterSpacing: 2 },
-              ]}
-            >
-              {mm}:{ss}
-            </Text>
+              {isPaused ? "TAP TO RESUME" : "DOUBLE TAP TO PAUSE"}
+            </Text> */}
+            <View style={tw`flex-1 items-end`}>
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute text-[10px]`,
+                  { letterSpacing: 2 },
+                ]}
+              >
+                {mm}:{ss}
+              </Text>
+            </View>
           </MotiView>
         ) : null}
       </AnimatePresence>

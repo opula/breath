@@ -10,6 +10,7 @@ export interface EngineState {
   isBreathing: boolean;
   isText: boolean;
   isHIE: boolean;
+  canAdvance: boolean;
 }
 
 export interface ExerciseEngineCallbacks {

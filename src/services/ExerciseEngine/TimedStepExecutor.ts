@@ -15,7 +15,7 @@ export class TimedStepExecutor {
   execute(config: TimedStepConfig): void {
     const { label, count, onTick, onComplete } = config;
 
-    onTick(count ? padStart(`${count}`, 2, '0') : padStart('0', 2, '0'));
+    onTick(count ? padStart(`${count}`, 2, '0') : '+00');
 
     if (count) {
       this.scheduleCountdown(count, onTick, onComplete);
@@ -52,7 +52,7 @@ export class TimedStepExecutor {
       1000,
       () => {
         counter++;
-        onTick(padStart(`${counter}`, 2, '0'));
+        onTick(`+${padStart(`${counter}`, 2, '0')}`);
       },
       { priority: 0, label: 'Count up, inf', repeat: 1000 },
     );

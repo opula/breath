@@ -113,7 +113,7 @@ export const Scenes = () => {
             Ambient
           </Overline>
           <View style={tw`mt-5`}>
-            <BigTitle size={44} accent>{`Choose\na space`}</BigTitle>
+            <BigTitle size={44} accent>{`Choose\nyour space`}</BigTitle>
           </View>
         </View>
 

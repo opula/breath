@@ -104,9 +104,11 @@ export const MusicControls = () => {
 
         {/* Hero + volume */}
         <View style={tw`px-6 pt-2 pb-5`}>
-          <Overline accent right="external · looped">Background</Overline>
+          <Overline accent right="external · looped">
+            Background
+          </Overline>
           <View style={tw`mt-5`}>
-            <BigTitle size={44} accent>{`Sound\nor silence`}</BigTitle>
+            <BigTitle size={44} accent>{`Music\nor silence`}</BigTitle>
           </View>
 
           {/* Volume */}
@@ -120,14 +122,14 @@ export const MusicControls = () => {
               >
                 volume
               </Text>
-              <Text
+              {/* <Text
                 style={[
                   tw`font-mono text-[10px] text-mb-fg`,
                   { letterSpacing: 2, fontVariant: ["tabular-nums"] },
                 ]}
               >
                 {String(Math.round(volume * 100)).padStart(3, "0")} / 100
-              </Text>
+              </Text> */}
             </View>
             <View style={tw`mt-2`}>
               <HorizontalDial
@@ -146,59 +148,58 @@ export const MusicControls = () => {
         <View style={tw`flex-1 px-6`}>
           <Overline right={`${files.length} tracks`}>Library</Overline>
 
-          {/* Add music row always at top */}
-          <Pressable
-            onPress={() => navigation.navigate("AddMusic" as never)}
-            style={({ pressed }) => [
-              tw`flex-row items-center py-4 border-b border-mb-line`,
-              pressed && tw`opacity-70`,
-            ]}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
-                { letterSpacing: 1.5 },
-              ]}
-            >
-              +
-            </Text>
-            <Text
-              style={[
-                tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
-                { letterSpacing: -0.4 },
-              ]}
-            >
-              Add music
-            </Text>
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 2 },
-              ]}
-            >
-              wifi · url · file
-            </Text>
-          </Pressable>
-
-          {files.length === 0 ? (
-            <View style={tw`py-6`}>
-              <Text
-                style={[
-                  tw`font-mono text-[10px] text-mb-mute uppercase`,
-                  { letterSpacing: 2 },
+          <FlatList
+            data={files}
+            renderItem={renderItem}
+            keyExtractor={keyExtractor}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={tw`py-6`}>
+                <Text
+                  style={[
+                    tw`font-mono text-[10px] text-mb-mute uppercase`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  no tracks yet — add one above
+                </Text>
+              </View>
+            }
+            ListFooterComponent={
+              <Pressable
+                onPress={() => navigation.navigate("AddMusic" as never)}
+                style={({ pressed }) => [
+                  tw`flex-row items-center py-4 border-b border-mb-line`,
+                  pressed && tw`opacity-70`,
                 ]}
               >
-                no tracks yet — add one above
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={files}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
+                <Text
+                  style={[
+                    tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
+                    { letterSpacing: 1.5 },
+                  ]}
+                >
+                  +
+                </Text>
+                <Text
+                  style={[
+                    tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
+                    { letterSpacing: -0.4 },
+                  ]}
+                >
+                  Add music
+                </Text>
+                <Text
+                  style={[
+                    tw`font-mono text-mb-mute uppercase text-[10px]`,
+                    { letterSpacing: 2 },
+                  ]}
+                >
+                  wifi · url · file
+                </Text>
+              </Pressable>
+            }
+          />
         </View>
       </View>
     </View>

@@ -10,11 +10,15 @@ import { ExerciseRow } from "../../components/ExerciseRow";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
 import { favoritesSelector } from "../../state/favorites.selectors";
-import { lastPlayedExerciseIdSelector } from "../../state/lastPlayed.selectors";
+import {
+  lastPlayedAtSelector,
+  lastPlayedExerciseIdSelector,
+} from "../../state/lastPlayed.selectors";
 import { setLastPlayed } from "../../state/lastPlayed.reducer";
 import { addExercise } from "../../state/exercises.reducer";
 import { MainStackParams } from "../../navigation";
 import { LAST_EXERCISE, storage } from "../../utils/storage";
+import { formatRelativeTime } from "../../utils/pretty";
 
 interface Props {
   navigation: NavigationProp<MainStackParams, "Home">;
@@ -25,6 +29,7 @@ export const Home = ({ navigation }: Props) => {
   const exercises = useAppSelector(exercisesSelector);
   const favorites = useAppSelector(favoritesSelector);
   const lastPlayed = useAppSelector(lastPlayedExerciseIdSelector);
+  const lastPlayedAt = useAppSelector(lastPlayedAtSelector);
   const insets = useSafeAreaInsets();
 
   const sorted = useMemo(() => {
@@ -32,6 +37,11 @@ export const Home = ({ navigation }: Props) => {
     const rest = exercises.filter((e) => !favorites.includes(e.id));
     return [...favs, ...rest];
   }, [exercises, favorites]);
+
+  const lastSessionLabel = useMemo(
+    () => (lastPlayedAt ? formatRelativeTime(lastPlayedAt) : null),
+    [lastPlayedAt],
+  );
 
   const handleTapExercise = (exerciseId: string) => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
@@ -56,16 +66,24 @@ export const Home = ({ navigation }: Props) => {
     <View style={tw`flex-1 bg-mb-bg`}>
       {/* Content column: fills everything above the tab strip */}
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
-        {/* Top mono label */}
+        {/* Top mono label — last session, or a welcome on first run */}
         <View style={tw`flex-row justify-between px-6 pt-2 pb-3`}>
-          <Text
-            style={[
-              tw`font-mono text-[9px] text-mb-mute uppercase`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            MID BREATH
-          </Text>
+          {lastSessionLabel ? (
+            <Text
+              numberOfLines={1}
+              style={[tw`font-mono text-[9px] uppercase`, { letterSpacing: 3 }]}
+            >
+              <Text style={tw`text-mb-mute`}>LAST SESSION · </Text>
+              <Text style={tw`text-mb-fg`}>{lastSessionLabel}</Text>
+            </Text>
+          ) : (
+            <Text
+              style={[tw`font-mono text-[9px] uppercase`, { letterSpacing: 3 }]}
+            >
+              <Text style={tw`text-mb-accent`}>WELCOME · </Text>
+              <Text style={tw`text-mb-mute`}>your first session</Text>
+            </Text>
+          )}
         </View>
 
         {/* Hero */}
@@ -99,14 +117,14 @@ export const Home = ({ navigation }: Props) => {
           <Pressable
             onPress={handleNewExercise}
             style={({ pressed }) => [
-              tw`flex-row items-center py-5 border-b border-mb-line`,
+              tw`flex-row items-center py-5`,
               pressed && tw`opacity-70`,
             ]}
           >
             <View style={tw`w-3`} />
             <Text
               style={[
-                tw`font-mono text-[10px] text-mb-accent uppercase w-8`,
+                tw`font-mono text-[10px] text-mb-accent uppercase w-5`,
                 { letterSpacing: 1.5 },
               ]}
             >
@@ -127,37 +145,44 @@ export const Home = ({ navigation }: Props) => {
       {/* Bottom tab strip — sibling of the content column so it always sits at the bottom */}
       <View
         style={[
-          tw`flex-row border-t border-mb-line bg-mb-bg`,
+          tw`flex-row items-center border-t border-mb-line bg-mb-bg`,
           { paddingBottom: insets.bottom },
         ]}
       >
         {(
           [
             { label: "Scenes", target: "Scenes" },
-            { label: "Sound", target: "MusicControls" },
+            { label: "Music", target: "MusicControls" },
             { label: "Settings", target: "Settings" },
           ] as const
         ).map((b, i) => (
-          <Pressable
-            key={b.target}
-            onPress={() => navigation.navigate(b.target)}
-            style={({ pressed }) => [
-              tw.style(
-                `flex-1 items-center py-5`,
-                i > 0 && `border-l border-mb-line`,
-              ),
-              pressed && tw`opacity-60`,
-            ]}
-          >
-            <Text
-              style={[
-                tw`font-mono text-[10px] text-mb-fg uppercase`,
-                { letterSpacing: 2.5 },
+          <React.Fragment key={b.target}>
+            {i > 0 ? (
+              <Text
+                style={tw`font-mono text-mb-accent text-[20px]`}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              >
+                ·
+              </Text>
+            ) : null}
+            <Pressable
+              onPress={() => navigation.navigate(b.target)}
+              style={({ pressed }) => [
+                tw`flex-1 items-center py-5`,
+                pressed && tw`opacity-60`,
               ]}
             >
-              {b.label}
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  tw`font-mono text-[10px] text-mb-fg uppercase`,
+                  { letterSpacing: 2.5 },
+                ]}
+              >
+                {b.label}
+              </Text>
+            </Pressable>
+          </React.Fragment>
         ))}
       </View>
     </View>

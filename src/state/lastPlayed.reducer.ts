@@ -4,10 +4,12 @@ import {PersistConfig, persistReducer} from 'redux-persist';
 
 interface LastPlayedState {
   exerciseId: string | null;
+  lastPlayedAt: number | null;
 }
 
 const initialState: LastPlayedState = {
   exerciseId: null,
+  lastPlayedAt: null,
 };
 
 export const lastPlayedSlice = createSlice({
@@ -16,6 +18,7 @@ export const lastPlayedSlice = createSlice({
   reducers: {
     setLastPlayed(state, action: PayloadAction<string>) {
       state.exerciseId = action.payload;
+      state.lastPlayedAt = Date.now();
     },
   },
 });

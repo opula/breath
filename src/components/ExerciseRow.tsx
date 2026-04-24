@@ -31,11 +31,11 @@ export const ExerciseRow = ({
       ]}
     >
       {/* Last-played marker (or spacer to keep columns aligned) */}
-      <View style={tw`w-3 items-center`}>
+      {/* <View style={tw`w-3 items-center`}>
         {isLastPlayed ? (
           <View style={tw`w-[5px] h-[5px] rounded-full bg-mb-accent`} />
         ) : null}
-      </View>
+      </View> */}
 
       {/* Numeric index */}
       <Text
@@ -51,7 +51,10 @@ export const ExerciseRow = ({
       <View style={tw`flex-1 flex-row items-center`}>
         <Text
           style={[
-            tw`font-display text-[22px] text-mb-fg uppercase`,
+            tw.style(
+              `font-display text-[22px] text-mb-fg uppercase`,
+              isLastPlayed ? `text-mb-accent` : undefined,
+            ),
             { letterSpacing: -0.5 },
           ]}
           numberOfLines={1}

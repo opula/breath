@@ -35,7 +35,7 @@ export const DynamicExercise = memo(
       repeatRound,
       iBreath,
       handleTap,
-      handleDoubleTap,
+      handlePauseResume,
       handleLongPress,
       handleNextExercise,
     } = useExerciseEngine({ exercises, onPause });
@@ -55,9 +55,9 @@ export const DynamicExercise = memo(
           .numberOfTaps(2)
           .onEnd((_, success) => {
             if (!success) return;
-            runOnJS(handleDoubleTap)();
+            runOnJS(handlePauseResume)();
           }),
-      [handleDoubleTap],
+      [handlePauseResume],
     );
 
     const longPress = useMemo(

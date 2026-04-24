@@ -28,6 +28,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const [isBreathing, setBreathing] = useState(false);
   const [isText, setText] = useState(false);
   const [isHIE, setHIE] = useState(false);
+  const [canAdvance, setCanAdvance] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
   const [repeatRound, setRepeatRound] = useState('');
 
@@ -59,6 +60,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
         setBreathing(state.isBreathing);
         setText(state.isText);
         setHIE(state.isHIE);
+        setCanAdvance(state.canAdvance);
       },
       onPlaySound(type) {
         playExerciseSound(type);
@@ -140,7 +142,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     }
   }, [engine, showName]);
 
-  const handleDoubleTap = useCallback(() => {
+  const handlePauseResume = useCallback(() => {
     engine.toggle();
     if (engine.isActive()) {
       showName(engine.getExerciseName());
@@ -166,11 +168,12 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     isBreathing,
     isText,
     isHIE,
+    canAdvance,
     exerciseName,
     repeatRound,
     iBreath,
     handleTap,
-    handleDoubleTap,
+    handlePauseResume,
     handleLongPress,
     handleNextExercise,
   };
