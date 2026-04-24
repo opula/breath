@@ -5,124 +5,154 @@ import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
 import {
-  Fn,
   float,
-  vec2,
   vec3,
+  vec4,
   sin,
-  cos,
   fract,
-  floor,
   mix,
   smoothstep,
-  length,
-  min,
-  max,
   pow,
-  clamp,
-  abs,
   dot,
-  atan2,
   uv,
   uniform,
+  attribute,
+  positionLocal,
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-// --- Constants ---
-const TWO_PI = 6.2831853;
-const ZOOM = 0.4;
-const BASE_SPEED = 0.024;
-const SPEED_VARIANCE = 0.008;
-const BAND_COUNT = 250.0;
-const MIN_RADIUS = 0.02;
-const MAX_RADIUS = 1.5;
-const CENTER_DRIFT = 0.1;
+// --- Geometry & motion params ---
+const COUNT = 100;
+const RADIUS = 7;
+const TURNS = 3;
+const TUBE_RADIUS = 0.007;
+const TUBULAR_SEGMENTS = 450;
+const RADIAL_SEGMENTS = 12;
+const CURVE_DIVISIONS = 200;
 
-// Cosine gradient palette (from Echo)
-const PAL_A = vec3(0.0, 0.5, 0.5);
-const PAL_B = vec3(0.0, 0.5, 0.5);
-const PAL_C = vec3(0.0, 0.5, 0.333);
-const PAL_D = vec3(0.0, 0.5, 0.667);
+// Initial mesh transform (from reference example)
+// const MESH_ROTATE_X = -1.1;
+// const MESH_ROTATE_Y = -0.45;
+// const MESH_OFFSET_X = -0.3;
+// const MESH_OFFSET_Y = 0.8;
 
-// --- TSL shader functions ---
+const MESH_ROTATE_X = 0;
+const MESH_ROTATE_Y = 0;
+const MESH_OFFSET_X = 0;
+const MESH_OFFSET_Y = 0;
 
-// Cosine color palette: cycles through harmonious cool tones
-const palette = Fn(([t]: [ReturnType<typeof float>]) => {
-  return PAL_A.add(PAL_B.mul(cos(float(TWO_PI).mul(PAL_C.mul(t).add(PAL_D)))));
-});
+// Animation
+const SPEED = 0.03;
+const TRAIL_LENGTH = 0.1;
+const WAVE_AMPLITUDE = 0.005;
 
-// float → float hash
-const hash11 = Fn(([pIn]: [ReturnType<typeof float>]) => {
-  const a = fract(pIn.mul(0.1031));
-  const b = a.mul(a.add(33.33));
-  const c = b.mul(b.add(b));
-  return fract(c);
-});
+// Camera
+const CAMERA_FOV = 45;
+const CAMERA_Z = 16;
 
-// float → vec2 hash
-const hash12 = Fn(([pIn]: [ReturnType<typeof float>]) => {
-  const p3 = fract(vec3(pIn.mul(0.1031), pIn.mul(0.103), pIn.mul(0.0973)));
-  const dp = dot(p3, vec3(p3.y, p3.z, p3.x).add(33.33));
-  const p3b = p3.add(dp);
-  return fract(
-    vec2(p3b.x, p3b.x).add(vec2(p3b.y, p3b.z)).mul(vec2(p3b.z, p3b.y)),
-  );
-});
+// Trail colors — cyan / magenta / electric blue / white
+const COLOR_1 = vec3(0.0, 1.0, 1.0);
+const COLOR_2 = vec3(1.0, 0.0, 1.0);
+const COLOR_3 = vec3(0.0, 0.333, 1.0);
+const COLOR_4 = vec3(1.0, 1.0, 1.0);
 
-// Compute 3 stars for one band, returns vec3 colored intensity
-const bandContribution = Fn(
-  ([bandIdx, angle, radius, timeU]: [
-    ReturnType<typeof float>,
-    ReturnType<typeof float>,
-    ReturnType<typeof float>,
-    ReturnType<typeof float>,
-  ]) => {
-    // Band center and radial falloff
-    const bandCenter = bandIdx.add(0.5).div(BAND_COUNT);
-    const bandWidth = float(1.0 / BAND_COUNT);
-    const radialDist = abs(radius.sub(bandCenter)).div(bandWidth.mul(0.5));
-    const radialFalloff = float(1.0).sub(
-      smoothstep(float(0.0), float(1.0), radialDist),
+// Inward logarithmic-ish spiral with sinusoidal z-wobble (pre-bake)
+function buildSpiralCurve(randomOffset: number) {
+  const points: THREE.Vector3[] = [];
+  for (let i = 0; i <= CURVE_DIVISIONS; i++) {
+    const t = i / CURVE_DIVISIONS;
+    const angle = t * Math.PI * 2 * TURNS + randomOffset;
+    const r = RADIUS * (1 - t);
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle);
+    const z = Math.sin(t * 12.0 + randomOffset) * 0.5 * (1.0 - t);
+    points.push(new THREE.Vector3(x, y, z));
+  }
+  return new THREE.CatmullRomCurve3(points, false, "centripetal");
+}
+
+// Merge N TubeGeometries into one BufferGeometry with per-vertex
+// aOffset / aSpeed / aColorIdx attributes (avoids needing addons/BufferGeometryUtils).
+function buildMergedSpiralGeometry() {
+  type Tube = {
+    position: Float32Array;
+    normal: Float32Array;
+    uv: Float32Array;
+    index: ArrayLike<number>;
+    offset: number;
+    speed: number;
+    colorIdx: number;
+  };
+  const tubes: Tube[] = [];
+  let totalVerts = 0;
+  let totalIndices = 0;
+
+  for (let i = 0; i < COUNT; i++) {
+    const curve = buildSpiralCurve(Math.random() * Math.PI * 2);
+    const geo = new THREE.TubeGeometry(
+      curve,
+      TUBULAR_SEGMENTS,
+      TUBE_RADIUS,
+      RADIAL_SEGMENTS,
+      false,
     );
+    const index = geo.index!.array;
+    tubes.push({
+      position: geo.attributes.position.array as Float32Array,
+      normal: geo.attributes.normal.array as Float32Array,
+      uv: geo.attributes.uv.array as Float32Array,
+      index,
+      offset: Math.random() * 100,
+      speed: 0.8 + Math.random() * 0.4,
+      colorIdx: Math.floor(Math.random() * 4),
+    });
+    totalVerts += geo.attributes.position.count;
+    totalIndices += index.length;
+    geo.dispose();
+  }
 
-    // 3 stars per band (unrolled)
-    let colorAccum = vec3(0.0, 0.0, 0.0);
-    for (let s = 0; s < 3; s++) {
-      const seed = bandIdx.mul(51.7).add(s * 137.3);
-      const rand = hash12(seed);
-      const angleOffset = rand.x.mul(TWO_PI);
-      const brightness = float(0.3).add(rand.y.mul(0.7));
-      const trailLen = float(0.08).add(hash11(seed.add(7.7)).mul(0.3));
-      const speed = float(BASE_SPEED).add(
-        hash11(seed.add(19.3)).mul(SPEED_VARIANCE),
-      );
+  const positions = new Float32Array(totalVerts * 3);
+  const normals = new Float32Array(totalVerts * 3);
+  const uvs = new Float32Array(totalVerts * 2);
+  const aOffsets = new Float32Array(totalVerts);
+  const aSpeeds = new Float32Array(totalVerts);
+  const aColorIdx = new Float32Array(totalVerts);
+  const indices =
+    totalVerts > 65535
+      ? new Uint32Array(totalIndices)
+      : new Uint16Array(totalIndices);
 
-      // Per-star color from palette
-      const starColor = palette(hash11(seed.add(42.0)));
-
-      // Animated angular position (per-star speed)
-      const angularPos = fract(
-        angle.div(TWO_PI).add(timeU.mul(speed)).add(angleOffset),
-      );
-
-      // Streak shape with sharp falloff
-      const distFromHead = min(angularPos, float(1.0).sub(angularPos));
-      const rawShape = max(
-        float(0.0),
-        float(1.0).sub(distFromHead.div(trailLen.mul(0.5))),
-      );
-      const streak = pow(rawShape, float(10.0));
-
-      colorAccum = colorAccum.add(starColor.mul(streak.mul(brightness)));
+  let vOffset = 0;
+  let iOffset = 0;
+  for (const tube of tubes) {
+    const vCount = tube.position.length / 3;
+    positions.set(tube.position, vOffset * 3);
+    normals.set(tube.normal, vOffset * 3);
+    uvs.set(tube.uv, vOffset * 2);
+    for (let j = 0; j < vCount; j++) {
+      aOffsets[vOffset + j] = tube.offset;
+      aSpeeds[vOffset + j] = tube.speed;
+      aColorIdx[vOffset + j] = tube.colorIdx;
     }
+    for (let k = 0; k < tube.index.length; k++) {
+      indices[iOffset + k] = tube.index[k] + vOffset;
+    }
+    vOffset += vCount;
+    iOffset += tube.index.length;
+  }
 
-    return colorAccum.mul(radialFalloff);
-  },
-);
-
-// --- Component ---
+  const merged = new THREE.BufferGeometry();
+  merged.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  merged.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+  merged.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  merged.setAttribute("aOffset", new THREE.BufferAttribute(aOffsets, 1));
+  merged.setAttribute("aSpeed", new THREE.BufferAttribute(aSpeeds, 1));
+  merged.setAttribute("aColorIdx", new THREE.BufferAttribute(aColorIdx, 1));
+  merged.setIndex(new THREE.BufferAttribute(indices, 1));
+  return merged;
+}
 
 export const Circular = ({
   grayscale = false,
@@ -148,77 +178,87 @@ export const Circular = ({
     const aspect = width / height;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(CAMERA_FOV, aspect, 0.1, 100);
+    camera.position.set(0, 0, CAMERA_Z);
+
     const clock = new THREE.Clock();
 
     // Uniforms
     const timeU = uniform(float(0));
-    const aspectU = uniform(float(aspect));
+    const speedU = uniform(float(SPEED));
+    const trailLenU = uniform(float(TRAIL_LENGTH));
+    const waveAmpU = uniform(float(WAVE_AMPLITUDE));
+    const grayscaleU = uniform(float(0));
 
-    // UV: center, aspect-correct, zoom
-    const uvRaw = uv();
-    const uvCentered = uvRaw.mul(2.0).sub(1.0);
-    const uvZoomed = vec2(uvCentered.x.mul(aspectU), uvCentered.y).mul(ZOOM);
+    // Per-vertex attributes
+    const aOffset = attribute("aOffset", "float");
+    const aSpeed = attribute("aSpeed", "float");
+    const aColorIdx = attribute("aColorIdx", "float");
 
-    // Drifting pole star center (slow Lissajous motion)
-    const center = vec2(
-      sin(timeU.mul(0.03)).mul(CENTER_DRIFT),
-      cos(timeU.mul(0.02)).mul(CENTER_DRIFT).add(0.02),
-    );
-    const dir = uvZoomed.sub(center);
-    const radius = length(dir);
-    const angle = atan2(dir.y, dir.x);
+    // --- Vertex: sine wave along local Z, phased by uv.x, time, and per-trail offset
+    const uvCoord = uv();
+    const wave = sin(uvCoord.x.mul(10.0).add(timeU.mul(2.0)).add(aOffset));
+    const displacedPos = positionLocal.add(vec3(0, 0, wave.mul(waveAmpU)));
 
-    // Sample 3 neighboring bands for smooth blending
-    const baseBand = floor(radius.mul(BAND_COUNT));
-    let totalColor = vec3(0.0, 0.0, 0.0);
-    for (let b = -1; b <= 1; b++) {
-      const band = baseBand.add(b);
-      totalColor = totalColor.add(
-        bandContribution(band, angle, radius, timeU),
-      );
-    }
+    // --- Fragment: inward-traveling trail along uv.x
+    const localTime = timeU.mul(speedU).mul(aSpeed);
+    const trailPos = fract(uvCoord.x.sub(localTime).add(aOffset));
 
-    // Radius masks
-    const innerMask = smoothstep(
-      float(MIN_RADIUS - 0.005),
-      float(MIN_RADIUS),
-      radius,
+    const minLen = float(0.001);
+    const effLen = mix(minLen, float(0.8), trailLenU);
+    const rawTrail = smoothstep(float(1.0).sub(effLen), float(1.0), trailPos);
+    const trailPower = mix(float(1.0), float(3.0), trailLenU);
+    const trail = pow(rawTrail, trailPower);
+
+    // Soft fade at tube start/end
+    const edgeFade = smoothstep(float(0.0), float(0.05), uvCoord.x).mul(
+      float(1.0).sub(smoothstep(float(0.95), float(1.0), uvCoord.x)),
     );
-    const outerMask = float(1.0).sub(
-      smoothstep(float(MAX_RADIUS), float(MAX_RADIUS + 0.05), radius),
-    );
-    const finalColor = clamp(
-      totalColor.mul(innerMask).mul(outerMask),
-      float(0.0),
-      float(1.0),
-    );
+
+    // Pick one of 4 colors based on per-vertex integer index (0..3)
+    const pickC1to2 = mix(COLOR_1, COLOR_2, aColorIdx.step(float(0.5)));
+    const pickC1to3 = mix(pickC1to2, COLOR_3, aColorIdx.step(float(1.5)));
+    const baseColor = mix(pickC1to3, COLOR_4, aColorIdx.step(float(2.5)));
+
+    // Brighten toward white at the trail head (pseudo-bloom without post fx)
+    const tinted = mix(baseColor, vec3(1.0, 1.0, 1.0), trail.mul(0.8));
 
     // Grayscale desaturation
-    const grayscaleU = uniform(float(0));
-    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+    const lum = dot(tinted, vec3(0.299, 0.587, 0.114));
+    const finalColor = mix(tinted, vec3(lum, lum, lum), grayscaleU);
 
-    // Material + mesh
-    const material = new MeshBasicNodeMaterial();
-    material.colorNode = outputColor;
+    const alpha = trail.mul(edgeFade);
 
-    const geometry = new THREE.PlaneGeometry(2, 2);
+    const material = new MeshBasicNodeMaterial({
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    });
+    material.positionNode = displacedPos;
+    material.colorNode = vec4(finalColor, alpha);
+
+    const geometry = buildMergedSpiralGeometry();
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.rotation.x = MESH_ROTATE_X;
+    mesh.rotation.y = MESH_ROTATE_Y;
+    mesh.position.x = MESH_OFFSET_X;
+    mesh.position.y = MESH_OFFSET_Y;
     scene.add(mesh);
 
-    // Renderer
-    const renderer = makeWebGPURenderer(context, { antialias: false });
+    const renderer = makeWebGPURenderer(context, { antialias: true });
+    renderer.toneMapping = THREE.ReinhardToneMapping;
 
     let disposed = false;
 
     function animate() {
-      if (disposed) {
-        return;
-      }
+      if (disposed) return;
       (timeU as unknown as { value: number }).value = clock.getElapsedTime();
-      (grayscaleU as unknown as { value: number }).value =
-        grayscaleRef.current ? 1.0 : 0.0;
+      (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
+        ? 1.0
+        : 0.0;
       renderer.render(scene, camera);
       context!.present();
     }

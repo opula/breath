@@ -14,6 +14,9 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "dot-grid", name: "DotGrid" },
   { id: "game-of-life", name: "GameOfLife" },
   { id: "sin-pulse", name: "SinPulse" },
+  { id: "fluid", name: "Fluid" },
+  { id: "ethereal", name: "Ethereal" },
+  { id: "dream-smoke", name: "DreamSmoke" },
 ] as const;
 
 export type BackgroundSourceDefinition =

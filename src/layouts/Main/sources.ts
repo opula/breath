@@ -12,6 +12,9 @@ import { Terrain } from "../../backgrounds/Terrain";
 import { DotGrid } from "../../backgrounds/DotGrid";
 import { GameOfLife } from "../../backgrounds/GameOfLife";
 import { SinPulse } from "../../backgrounds/SinPulse";
+import { Fluid } from "../../backgrounds/Fluid";
+import { Ethereal } from "../../backgrounds/Ethereal";
+import { DreamSmoke } from "../../backgrounds/DreamSmoke";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
   type BackgroundSourceId,
@@ -40,6 +43,9 @@ const BackgroundComponentById = {
   "dot-grid": DotGrid,
   "game-of-life": GameOfLife,
   "sin-pulse": SinPulse,
+  fluid: Fluid,
+  ethereal: Ethereal,
+  "dream-smoke": DreamSmoke,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
 export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({
