@@ -10,78 +10,116 @@ import {
   vec3,
   vec4,
   sin,
+  cos,
   fract,
   floor,
   mix,
+  smoothstep,
+  pow,
   dot,
+  mod,
   uniform,
   storage,
   instanceIndex,
   attribute,
+  positionLocal,
 } from "three/tsl";
 
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-// --- Constants ---
-const PARTICLE_COUNT = 65536;
-const SPEED = 0.4;
-const CURL_FREQ = 0.3;
-const EPSILON = 0.1;
-const DT = 0.02;
-const BOUNDARY_RADIUS = 3.5;
+// ────────────────────────────────────────────────────────────
+//  COSMIC FLIGHT — flying forward through a nebula tunnel
+// ────────────────────────────────────────────────────────────
+// The camera sits near origin looking toward -Z. Particles live in a tube
+// of radius FIELD_RADIUS stretching from z=-FIELD_LENGTH up to z=0.  Each
+// frame we advect every particle toward +Z (toward the camera); when one
+// passes z=0 we wrap it to the far end.  Color/brightness come from a
+// low-freq 3D density field sampled at the particle's current position,
+// so filaments and voids drift past at flight speed.
+// ────────────────────────────────────────────────────────────
 
-// --- TSL noise functions ---
+const PARTICLE_COUNT = 80_000;
 
-const hash31 = Fn(([p]: [ReturnType<typeof vec3>]) => {
-  return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))).mul(43758.5453));
+// Field geometry
+const FIELD_RADIUS = 6.0;
+const FIELD_LENGTH = 24.0;
+
+// Motion
+const FLIGHT_SPEED = 0.6; // units/sec forward drift
+const LATERAL_DRIFT = 0.06; // small swirling in xy
+const LATERAL_SCALE = 0.35; // freq of lateral swirl field
+const LATERAL_TIME = 0.05;
+const DT = 0.016; // compute integration step
+
+// Density field — where the nebula filaments and voids live
+const DENSITY_SCALE = 0.18;
+const DENSITY_TIME = 0.015; // slow evolution so it's not static
+const DENSITY_POWER = 2.2; // raise to power → sharper filaments, wider voids
+
+// Depth fog (kills the pop when particles wrap)
+const FOG_NEAR_END = 1.0; // fully faded closer than this
+const FOG_NEAR_START = 3.0; // fully visible beyond this (from camera)
+const FOG_FAR_START = 16.0; // fully visible up to this
+const FOG_FAR_END = FIELD_LENGTH; // fully faded past this
+
+// Twinkle
+const TWINKLE_AMP = 0.25;
+const TWINKLE_RATE = 1.8;
+
+// Brightness
+const BASE_INTENSITY = 2.8;
+
+// Camera
+const CAMERA_FOV = 65;
+const CAMERA_SWAY_AMP_X = 0.35;
+const CAMERA_SWAY_AMP_Y = 0.25;
+const CAMERA_SWAY_FREQ_X = 0.07;
+const CAMERA_SWAY_FREQ_Y = 0.09;
+const CAMERA_LOOKAT_Z = -10; // camera gazes this far into the tunnel
+
+// ────────────────────────────────────────────────────────────
+//  PALETTE — nebula temperature gradient
+// ────────────────────────────────────────────────────────────
+// voids → mid → warm filaments → hot cores
+const COLOR_VOID = vec3(0.04, 0.06, 0.18); // deep indigo
+const COLOR_MID = vec3(0.35, 0.22, 0.62); // violet
+const COLOR_WARM = vec3(0.95, 0.45, 0.25); // orange
+const COLOR_HOT = vec3(1.0, 0.88, 0.7); // warm white
+
+// ────────────────────────────────────────────────────────────
+//  Noise helpers (quintic 3D gradient, shared by density/drift)
+// ────────────────────────────────────────────────────────────
+
+const random3 = Fn(([i]: [ReturnType<typeof vec3>]) => {
+  const seed1 = vec3(31.06, 19.86, 30.19);
+  const seed2 = vec3(6640.0, 5790.4, 10798.861);
+  return fract(sin(dot(i, seed1)).mul(seed2)).sub(0.5);
 });
 
-const noise3D = Fn(([p]: [ReturnType<typeof vec3>]) => {
+const gradientNoise3 = Fn(([p]: [ReturnType<typeof vec3>]) => {
   const i = floor(p);
   const f = fract(p);
-  const u = f.mul(f).mul(float(3.0).sub(f.mul(2.0)));
-
-  const c000 = hash31(i);
-  const c100 = hash31(i.add(vec3(1, 0, 0)));
-  const c010 = hash31(i.add(vec3(0, 1, 0)));
-  const c110 = hash31(i.add(vec3(1, 1, 0)));
-  const c001 = hash31(i.add(vec3(0, 0, 1)));
-  const c101 = hash31(i.add(vec3(1, 0, 1)));
-  const c011 = hash31(i.add(vec3(0, 1, 1)));
-  const c111 = hash31(i.add(vec3(1, 1, 1)));
-
-  const x0 = mix(mix(c000, c100, u.x), mix(c010, c110, u.x), u.y);
-  const x1 = mix(mix(c001, c101, u.x), mix(c011, c111, u.x), u.y);
-
-  return mix(x0, x1, u.z);
+  const c = f
+    .mul(f)
+    .mul(f)
+    .mul(f.mul(float(6.0).mul(f).sub(15.0)).add(10.0));
+  const n000 = dot(random3(i), f);
+  const n100 = dot(random3(i.add(vec3(1, 0, 0))), f.sub(vec3(1, 0, 0)));
+  const n010 = dot(random3(i.add(vec3(0, 1, 0))), f.sub(vec3(0, 1, 0)));
+  const n110 = dot(random3(i.add(vec3(1, 1, 0))), f.sub(vec3(1, 1, 0)));
+  const n001 = dot(random3(i.add(vec3(0, 0, 1))), f.sub(vec3(0, 0, 1)));
+  const n101 = dot(random3(i.add(vec3(1, 0, 1))), f.sub(vec3(1, 0, 1)));
+  const n011 = dot(random3(i.add(vec3(0, 1, 1))), f.sub(vec3(0, 1, 1)));
+  const n111 = dot(random3(i.add(vec3(1, 1, 1))), f.sub(vec3(1, 1, 1)));
+  const nX00 = mix(n000, n100, c.x);
+  const nX01 = mix(n001, n101, c.x);
+  const nX10 = mix(n010, n110, c.x);
+  const nX11 = mix(n011, n111, c.x);
+  const nXX0 = mix(nX00, nX10, c.y);
+  const nXX1 = mix(nX01, nX11, c.y);
+  return mix(nXX0, nXX1, c.z).mul(2.0);
 });
-
-const noiseVec3 = Fn(([p]: [ReturnType<typeof vec3>]) => {
-  return vec3(
-    noise3D(p),
-    noise3D(p.add(vec3(31.416, 47.853, 12.793))),
-    noise3D(p.add(vec3(64.127, 13.942, 85.316))),
-  );
-});
-
-const curlNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
-  const e = float(EPSILON);
-
-  const dx = noiseVec3(p.add(vec3(e, 0, 0))).sub(
-    noiseVec3(p.sub(vec3(e, 0, 0))),
-  );
-  const dy = noiseVec3(p.add(vec3(0, e, 0))).sub(
-    noiseVec3(p.sub(vec3(0, e, 0))),
-  );
-  const dz = noiseVec3(p.add(vec3(0, 0, e))).sub(
-    noiseVec3(p.sub(vec3(0, 0, e))),
-  );
-
-  return vec3(dy.z.sub(dz.y), dz.x.sub(dx.z), dx.y.sub(dy.x));
-});
-
-// --- Component ---
 
 export const Particles = ({
   grayscale = false,
@@ -106,136 +144,148 @@ export const Particles = ({
     const aspect = width / height;
     let disposed = false;
 
-    // --- Initialize particles ---
+    // ── Initialize particles in a tube ────────────────────────
     const posArray = new Float32Array(PARTICLE_COUNT * 3);
-    const colArray = new Float32Array(PARTICLE_COUNT * 3);
     const phaseArray = new Float32Array(PARTICLE_COUNT);
-    const color = new THREE.Color();
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Distribute in a sphere
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      const r = Math.cbrt(Math.random()) * 2.5;
-
-      const sinPhi = Math.sin(phi);
+      // Uniform point in a disc of radius FIELD_RADIUS
+      const theta = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random()) * FIELD_RADIUS;
       const idx = i * 3;
-      posArray[idx] = r * sinPhi * Math.cos(theta);
-      posArray[idx + 1] = r * sinPhi * Math.sin(theta);
-      posArray[idx + 2] = r * Math.cos(phi);
+      posArray[idx] = r * Math.cos(theta);
+      posArray[idx + 1] = r * Math.sin(theta);
+      // Uniform z in [-FIELD_LENGTH, 0]
+      posArray[idx + 2] = -Math.random() * FIELD_LENGTH;
 
-      // Nebula color palette: blues, purples, magentas, cyans, with occasional warm accents
-      const roll = Math.random();
-      let hue: number;
-      if (roll < 0.35) {
-        hue = 0.55 + Math.random() * 0.1; // blue
-      } else if (roll < 0.6) {
-        hue = 0.7 + Math.random() * 0.12; // purple / violet
-      } else if (roll < 0.8) {
-        hue = 0.85 + Math.random() * 0.1; // magenta / pink
-      } else if (roll < 0.92) {
-        hue = 0.45 + Math.random() * 0.1; // cyan / teal
-      } else {
-        hue = 0.05 + Math.random() * 0.08; // warm accent (orange / gold)
-      }
-      const sat = 0.6 + Math.random() * 0.4;
-      const lit = 0.4 + Math.random() * 0.4;
-      color.setHSL(hue % 1.0, sat, lit);
-      colArray[idx] = color.r;
-      colArray[idx + 1] = color.g;
-      colArray[idx + 2] = color.b;
-
-      // Random phase for twinkle / pulse
       phaseArray[i] = Math.random() * Math.PI * 2;
     }
 
-    // --- Storage buffers ---
+    // ── Storage buffer (compute writes, vertex reads) ─────────
     const positionAttribute = new StorageBufferAttribute(posArray, 3);
     const positionStorage = storage(positionAttribute, "vec3", PARTICLE_COUNT);
 
-    // --- Uniforms ---
+    // ── Uniforms ──────────────────────────────────────────────
     const timeU = uniform(float(0));
     const grayscaleU = uniform(float(0));
 
-    // --- Compute shader ---
+    // ── Compute shader: advect + wrap ─────────────────────────
     const computeUpdate = Fn(() => {
       const pos = positionStorage.element(instanceIndex);
-      const currentPos = vec3(pos.x, pos.y, pos.z);
+      const curPos = vec3(pos.x, pos.y, pos.z);
 
-      const t = timeU.mul(0.15).mul(SPEED);
-      const freq = float(CURL_FREQ);
-      const dt = float(DT);
+      // Small lateral drift — samples a slow 3D noise field in xy so nearby
+      // particles drift together (coherent swirl, not per-particle noise).
+      const driftSeed = vec3(
+        curPos.x.mul(LATERAL_SCALE),
+        curPos.y.mul(LATERAL_SCALE),
+        timeU.mul(LATERAL_TIME),
+      );
+      const dx = gradientNoise3(driftSeed);
+      const dy = gradientNoise3(driftSeed.add(vec3(19.3, 7.1, 11.5)));
 
-      // Three octaves of curl noise for rich, organic flow
-      const vel1 = curlNoise(currentPos.mul(freq).add(t));
-      const vel2 = curlNoise(currentPos.mul(freq).mul(2.0).add(t.mul(1.4)));
-      const vel3 = curlNoise(currentPos.mul(freq).mul(4.0).add(t.mul(0.7)));
-      const velocity = vel1.add(vel2.mul(0.5)).add(vel3.mul(0.25));
+      const newX = curPos.x.add(dx.mul(LATERAL_DRIFT).mul(DT));
+      const newY = curPos.y.add(dy.mul(LATERAL_DRIFT).mul(DT));
 
-      // Advect
-      const newPos = currentPos.add(velocity.mul(SPEED).mul(dt));
-
-      // Soft spherical boundary
-      const dist = newPos.length();
-      const overBoundary = dist.div(float(BOUNDARY_RADIUS)).clamp(0, 1);
-      const pullback = overBoundary.mul(overBoundary).mul(overBoundary);
-      const bounded = mix(
-        newPos,
-        newPos.mul(float(BOUNDARY_RADIUS).div(dist)),
-        pullback,
+      // Forward advection + wrap: keep z in [-FIELD_LENGTH, 0).
+      // mod(z + L, L) - L maps any z past 0 back to the far end smoothly.
+      const advanced = curPos.z.add(FLIGHT_SPEED * DT);
+      const wrappedZ = mod(advanced.add(FIELD_LENGTH), float(FIELD_LENGTH)).sub(
+        FIELD_LENGTH,
       );
 
-      pos.assign(bounded);
+      pos.assign(vec3(newX, newY, wrappedZ));
     })().compute(PARTICLE_COUNT);
 
-    // --- Scene ---
+    // ── Scene ────────────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(0x02030a); // near-black deep space
 
-    const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
-    camera.position.z = 4.5;
+    const camera = new THREE.PerspectiveCamera(CAMERA_FOV, aspect, 0.1, 200);
+    camera.position.set(0, 0, 0);
+    camera.lookAt(0, 0, CAMERA_LOOKAT_Z);
 
     const clock = new THREE.Clock();
 
-    // --- Geometry ---
+    // ── Geometry ─────────────────────────────────────────────
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", positionAttribute);
-    geometry.setAttribute("color", new THREE.BufferAttribute(colArray, 3));
     geometry.setAttribute("aPhase", new THREE.BufferAttribute(phaseArray, 1));
 
-    // --- Material ---
-    const vertexColor = attribute("color", "vec3");
+    // ── Material: density-field color + depth fog + twinkle ──
     const aPhase = attribute("aPhase", "float");
 
+    // Sample the density field at this particle's current world position.
+    const densityRaw = gradientNoise3(
+      vec3(
+        positionLocal.x.mul(DENSITY_SCALE),
+        positionLocal.y.mul(DENSITY_SCALE),
+        positionLocal.z.mul(DENSITY_SCALE).add(timeU.mul(DENSITY_TIME)),
+      ),
+    );
+    // Remap noise [-1,1] → [0,1] and power-curve for sharp filaments.
+    const density = pow(
+      densityRaw.mul(0.5).add(0.5).clamp(0, 1),
+      float(DENSITY_POWER),
+    );
+
+    // Color ramp: void → mid → warm → hot
+    const cVoidMid = mix(COLOR_VOID, COLOR_MID, smoothstep(0.0, 0.35, density));
+    const cWithWarm = mix(
+      cVoidMid,
+      COLOR_WARM,
+      smoothstep(0.35, 0.65, density),
+    );
+    const particleColor = mix(
+      cWithWarm,
+      COLOR_HOT,
+      smoothstep(0.7, 0.95, density),
+    );
+
+    // Depth fog — both near (so camera-passing particles fade) and far (atmospheric).
+    const zDist = positionLocal.z.negate(); // camera at 0, particles at negative z
+    const nearFade = smoothstep(
+      float(FOG_NEAR_END),
+      float(FOG_NEAR_START),
+      zDist,
+    );
+    const farFade = float(1.0).sub(
+      smoothstep(float(FOG_FAR_START), float(FOG_FAR_END), zDist),
+    );
+
+    // Twinkle: each particle oscillates with its own phase.
+    const twinkle = sin(timeU.mul(TWINKLE_RATE).add(aPhase))
+      .mul(TWINKLE_AMP)
+      .add(float(1.0).sub(float(TWINKLE_AMP)));
+
+    // Intensity gates brightness by density × fog × twinkle
+    const intensity = density
+      .mul(nearFade)
+      .mul(farFade)
+      .mul(twinkle)
+      .mul(BASE_INTENSITY);
+
+    const litColor = particleColor.mul(intensity);
+
     // Grayscale
-    const lum = dot(vertexColor, vec3(0.299, 0.587, 0.114));
-    const baseColor = mix(vertexColor, vec3(lum, lum, lum), grayscaleU);
-
-    // Twinkle: each particle oscillates brightness at its own phase
-    const twinkle = sin(timeU.mul(2.5).add(aPhase)).mul(0.3).add(0.7);
-
-    // Boost color brightness (additive blending means brighter = more glow)
-    const boostedColor = baseColor.mul(2.5).mul(twinkle);
-
-    const finalAlpha = float(0.75).mul(twinkle);
+    const lum = dot(litColor, vec3(0.299, 0.587, 0.114));
+    const outColor = mix(litColor, vec3(lum, lum, lum), grayscaleU);
 
     const material = new PointsNodeMaterial({
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
-    material.colorNode = vec4(boostedColor, finalAlpha);
+    // Alpha channel mirrors intensity so overlapping particles additively
+    // reinforce filament brightness.
+    material.colorNode = vec4(outColor, intensity.clamp(0, 1));
 
-    // --- Points ---
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    // --- Renderer ---
+    // ── Renderer ─────────────────────────────────────────────
     const renderer = makeWebGPURenderer(context, { antialias: false });
 
-    // --- Animation loop ---
     function animate() {
       if (disposed) return;
       const elapsed = clock.getElapsedTime();
@@ -247,12 +297,12 @@ export const Particles = ({
 
       renderer.compute(computeUpdate);
 
-      // Gentle lissajous camera orbit
-      const cx = Math.sin(elapsed * 0.12) * 2.0;
-      const cy = Math.sin(elapsed * 0.08) * Math.cos(elapsed * 0.05) * 1.0;
-      const cz = 4.0 + Math.cos(elapsed * 0.1) * 0.5;
-      camera.position.set(cx, cy, cz);
-      camera.lookAt(0, 0, 0);
+      // Gentle ship-in-currents sway; look direction stays fixed down the tunnel.
+      camera.position.x =
+        Math.sin(elapsed * CAMERA_SWAY_FREQ_X) * CAMERA_SWAY_AMP_X;
+      camera.position.y =
+        Math.sin(elapsed * CAMERA_SWAY_FREQ_Y) * CAMERA_SWAY_AMP_Y;
+      camera.lookAt(0, 0, CAMERA_LOOKAT_Z);
 
       renderer.render(scene, camera);
       context!.present();
