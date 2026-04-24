@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import {
   musicFilesSelector,
   activeFileIdSelector,
+  sortedMusicFilesSelector,
 } from "../../state/musicLibrary.selectors";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
@@ -23,7 +24,7 @@ export const MusicControls = () => {
   const { isPlaying, volume, setVolume, playFile, deleteFile } =
     useAudioPlayer();
 
-  const files = useSelector(musicFilesSelector);
+  const files = useSelector(sortedMusicFilesSelector);
   const activeFileId = useSelector(activeFileIdSelector);
 
   const onVolumeChange = useCallback(
@@ -85,7 +86,7 @@ export const MusicControls = () => {
               { letterSpacing: 3 },
             ]}
           >
-            sound
+            Music
           </Text>
           <Pressable
             onPress={() => navigation.navigate("MusicHelp" as never)}

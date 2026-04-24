@@ -13,15 +13,20 @@ import {
   type BackgroundSourceId,
 } from "./sources";
 
-const BackgroundSurface = ({
+export const BackgroundSurface = ({
   isGrayscale,
   sourceId,
+  onReady,
 }: {
   isGrayscale: boolean;
   sourceId: BackgroundSourceId;
+  onReady?: () => void;
 }) => {
   const [isReady, setIsReady] = useState(false);
-  const handleReady = useCallback(() => setIsReady(true), []);
+  const handleReady = useCallback(() => {
+    setIsReady(true);
+    onReady?.();
+  }, [onReady]);
   const ActiveBackground =
     backgroundSourceById[sourceId]?.Component ??
     backgroundSourceById[DEFAULT_BACKGROUND_SOURCE_ID].Component;
