@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
@@ -15,8 +16,8 @@ import {
   mix,
   smoothstep,
   abs,
-  max,
   dot,
+  length,
   uv,
   uniform,
 } from "three/tsl";
@@ -26,14 +27,35 @@ import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Parameters ---
 const SEED = 42.17;
-const SCALE = 3.0;
-const SHARPNESS = 0.03; // near-binary ink edges
-const THRESHOLD = 0.48; // ~50% ink coverage, balanced with gentle edge mask
-const SYMMETRY = 0.95; // 1.0 = perfect symmetry, 0.0 = full asymmetry
+const SCALE = 1.82;
+const DRIFT_SPEED = 0.42;
+const WARP_STRENGTH = 0.34;
+const BREATH_ZOOM_AMOUNT = 0.14;
+const BREATH_WARP_AMOUNT = 0.2;
+const BREATH_THRESHOLD_AMOUNT = 0.12;
+const BREATH_GLOW_AMOUNT = 0.22;
+const BREATH_RESPONSE_RATE = 4.8;
+const EDGE_FADE_INNER = 0.66;
+const EDGE_FADE_OUTER = 1.58;
+const CENTER_DIM = 0.72;
+
+const COLOR_BG_DEEP = vec3(0.01, 0.015, 0.026);
+const COLOR_BG_HALO = vec3(0.035, 0.075, 0.09);
+const COLOR_INK_LOW = vec3(0.055, 0.16, 0.18);
+const COLOR_INK_MID = vec3(0.22, 0.58, 0.56);
+const COLOR_INK_HIGH = vec3(0.88, 0.88, 0.76);
+const COLOR_WARM_TRACE = vec3(0.74, 0.42, 0.31);
 
 // FBM: 5 octaves, base scale 2.5, lacunarity 2.3, gain 0.5
 const FBM_SCALE = [2.5, 5.75, 13.225, 30.4175, 69.96025];
 const FBM_AMP = [0.5, 0.25, 0.125, 0.0625, 0.03125];
+
+const damp = (
+  current: number,
+  target: number,
+  rate: number,
+  deltaSeconds: number,
+) => current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
 
 // --- TSL shader functions ---
 
@@ -89,14 +111,18 @@ const layeredNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 export const Rorschach = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -117,63 +143,123 @@ export const Rorschach = ({
     // Uniforms
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
+    const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
+
+    const breathEase = breathU
+      .mul(breathU)
+      .mul(float(3.0).sub(breathU.mul(2.0)));
+    const driftTime = timeU.mul(DRIFT_SPEED);
+    const breathZoom = float(1.0).sub(breathEase.mul(BREATH_ZOOM_AMOUNT));
+    const breathWarp = float(WARP_STRENGTH).mul(
+      float(0.88).add(breathEase.mul(BREATH_WARP_AMOUNT)),
+    );
 
     // UV: center to (-1,1)
     const uvRaw = uv();
     const uvCentered = uvRaw.mul(2.0).sub(1.0);
-    // Aspect-corrected UV for ink computation
-    const uvInk = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
-    // Non-corrected UV for edge mask
-    const uvCanvas = uvCentered;
+    const stRaw = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
+    const radial = length(stRaw);
+    const st = stRaw.mul(SCALE).mul(breathZoom);
+    const mirrored = vec2(abs(st.x), st.y);
 
-    // --- Noise mask: gently fade ink near canvas borders ---
-    // Gentle mask (from reference) — only ~0.2 subtraction at screen edges
-    const noiseMask = smoothstep(
-      float(0.6),
-      float(2.0),
-      max(abs(uvCanvas.x), abs(uvCanvas.y)),
+    const ambientPulse = sin(
+      driftTime
+        .mul(0.37)
+        .add(sin(driftTime.mul(0.13)).mul(0.7))
+        .add(1.9),
+    )
+      .mul(0.5)
+      .add(0.5);
+    const driftX = sin(driftTime.mul(0.31))
+      .mul(0.26)
+      .add(sin(driftTime.mul(0.17).add(2.4)).mul(0.18));
+    const driftY = sin(driftTime.mul(0.27).add(1.1))
+      .mul(0.24)
+      .add(sin(driftTime.mul(0.11).add(3.6)).mul(0.16));
+
+    const flowX = layeredNoise(
+      vec3(
+        mirrored.x.mul(0.66).add(driftX),
+        mirrored.y.mul(0.66).add(SEED * 0.03),
+        driftTime.mul(0.18),
+      ),
+    );
+    const flowY = layeredNoise(
+      vec3(
+        mirrored.x.mul(0.62).add(SEED * 0.05),
+        mirrored.y.mul(0.62).add(driftY),
+        driftTime.mul(0.15).add(7.3),
+      ),
+    );
+    const warped = vec2(
+      mirrored.x.add(flowX.mul(breathWarp)),
+      mirrored.y.add(flowY.mul(breathWarp)),
     );
 
-    // --- Scale UV for ink ---
-    const scaledUV = uvInk.mul(SCALE);
+    const body = layeredNoise(
+      vec3(
+        warped.x.mul(0.82).add(driftX.mul(0.4)),
+        warped.y.mul(0.82).add(SEED),
+        driftTime.mul(0.13).add(breathEase.mul(0.18)),
+      ),
+    ).add(0.5);
+    const undertow = layeredNoise(
+      vec3(
+        warped.x.mul(0.38).sub(driftY.mul(0.35)).add(8.2),
+        warped.y.mul(0.5).add(driftX.mul(0.25)).sub(4.1),
+        driftTime.mul(0.08).sub(breathEase.mul(0.09)),
+      ),
+    ).add(0.5);
+    const lace = gradientNoise(
+      vec3(
+        warped.x.mul(3.2).add(12.7),
+        warped.y.mul(2.8).sub(6.4),
+        driftTime.mul(0.22),
+      ),
+    ).add(0.5);
 
-    // --- Primary Rorschach noise (symmetric) ---
-    const coordsRorschach = vec3(
-      abs(scaledUV.x),
-      scaledUV.y.add(SEED),
-      timeU.mul(0.02),
+    const edgeFade = float(1.0).sub(
+      smoothstep(float(EDGE_FADE_INNER), float(EDGE_FADE_OUTER), radial),
     );
-    const noiseRorschach = layeredNoise(coordsRorschach).add(0.5);
+    const axisGlow = float(1.0)
+      .sub(smoothstep(float(0.0), float(0.16), abs(stRaw.x)))
+      .mul(0.12);
+    const density = body
+      .mul(0.74)
+      .add(undertow.mul(0.34))
+      .add(lace.mul(0.12))
+      .add(axisGlow)
+      .mul(edgeFade);
 
-    // --- Symmetry-breaking support noise ---
-    const coordsSupport = vec3(scaledUV.x, scaledUV.y, timeU.mul(0.001));
-    const noiseSupport = gradientNoise(coordsSupport.mul(25.0));
-    // Stronger near center axis, weaker at edges
-    const supportFactor = float(0.03)
-      .add(
-        float(0.08).mul(
-          float(1.0).sub(smoothstep(float(0.0), float(0.08), abs(scaledUV.x))),
-        ),
-      )
-      .mul(1.0 - SYMMETRY);
+    const threshold = float(0.52)
+      .sub(breathEase.mul(BREATH_THRESHOLD_AMOUNT))
+      .add(ambientPulse.sub(0.5).mul(0.08));
+    const veil = smoothstep(threshold.sub(0.32), threshold.add(0.22), density);
+    const core = smoothstep(threshold.add(0.02), threshold.add(0.36), density);
+    const highlight = smoothstep(
+      threshold.add(0.2),
+      threshold.add(0.52),
+      density.add(lace.mul(0.12)),
+    ).mul(float(0.68).add(breathEase.mul(BREATH_GLOW_AMOUNT)));
 
-    // --- Combine into ink intensity ---
-    const inkNoise = noiseRorschach
-      .add(supportFactor.mul(noiseSupport))
-      .sub(noiseMask);
-    const inkIntensity = smoothstep(
-      float(-SHARPNESS),
-      float(0.0),
-      inkNoise.sub(THRESHOLD),
+    const centerDim = float(CENTER_DIM).add(
+      smoothstep(float(0.15), float(0.56), radial).mul(1.0 - CENTER_DIM),
     );
-
-    // Inverted Rorschach: dark bg + light ink
-    const bgColor = vec3(0.02, 0.02, 0.03);
-    const inkColor = vec3(0.97, 0.97, 0.96);
-    const finalColor = mix(bgColor, inkColor, inkIntensity);
+    const bgColor = mix(
+      COLOR_BG_DEEP,
+      COLOR_BG_HALO,
+      smoothstep(float(0.08), float(1.08), radial).mul(0.58),
+    );
+    const inkBase = mix(COLOR_INK_LOW, COLOR_INK_MID, veil);
+    const inkColor = mix(inkBase, COLOR_INK_HIGH, highlight);
+    const warmTrace = smoothstep(float(0.52), float(0.92), undertow).mul(
+      core.mul(0.2),
+    );
+    const livingInk = mix(inkColor, COLOR_WARM_TRACE, warmTrace);
+    const finalColor = mix(bgColor, livingInk, veil.mul(centerDim));
 
     // Grayscale desaturation
-    const grayscaleU = uniform(float(0));
     const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
     const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
 
@@ -189,21 +275,37 @@ export const Rorschach = ({
     const renderer = makeWebGPURenderer(context, { antialias: false });
 
     let disposed = false;
+    let previousElapsed = 0;
+    let smoothedBreath = breathRef.current?.value ?? 0;
 
     function animate() {
       if (disposed) {
         return;
       }
-      (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      const elapsed = clock.getElapsedTime();
+      const deltaSeconds =
+        previousElapsed > 0
+          ? Math.max(1 / 120, Math.min(elapsed - previousElapsed, 0.12))
+          : 1 / 60;
+      smoothedBreath = damp(
+        smoothedBreath,
+        breathRef.current?.value ?? 0.0,
+        BREATH_RESPONSE_RATE,
+        deltaSeconds,
+      );
+      previousElapsed = elapsed;
+
+      (timeU as unknown as { value: number }).value = elapsed;
       (grayscaleU as unknown as { value: number }).value =
         grayscaleRef.current ? 1.0 : 0.0;
+      (breathU as unknown as { value: number }).value = smoothedBreath;
       renderer.render(scene, camera);
       context!.present();
     }
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "Rorschach",
+      label: "MirrorBloom",
       onReady,
     });
 

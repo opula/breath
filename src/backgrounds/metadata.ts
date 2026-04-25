@@ -4,7 +4,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "aurora", name: "Northern Drift" },
   { id: "circular", name: "Circular" },
   { id: "echo", name: "Echo" },
-  { id: "rorschach", name: "Rorschach" },
+  { id: "rorschach", name: "Mirror Bloom" },
   { id: "starfield", name: "Starfield" },
   { id: "waves", name: "Waves" },
   { id: "wormhole", name: "Wormhole" },
