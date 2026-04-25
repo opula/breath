@@ -16,7 +16,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "sin-pulse", name: "SinPulse" },
   { id: "fluid", name: "Fluid" },
   { id: "ethereal", name: "Ethereal" },
-  { id: "dream-smoke", name: "DreamSmoke" },
+  { id: "dream-smoke", name: "Tidal Veil" },
   { id: "particle-wave", name: "ParticleWave" },
   { id: "particle-helix", name: "ParticleHelix" },
 ] as const;

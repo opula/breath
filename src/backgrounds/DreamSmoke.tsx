@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
@@ -19,6 +20,7 @@ import {
   max,
   abs,
   dot,
+  length,
   uv,
   uniform,
 } from "three/tsl";
@@ -26,25 +28,31 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-// --- Theme: blue (default from reference) ---
-const C_MAIN = vec3(0.7, 0.85, 1.0);
-const C_LOW = vec3(0.4, 0.6, 0.9);
-const C_MID = vec3(0.5, 0.7, 1.0);
-const C_HIGH = vec3(1.0, 1.0, 1.0); // bumped to pure white for brighter highlights
+// --- Theme: moonlit water and warm vapor ---
+const C_MAIN = vec3(0.48, 0.68, 0.78);
+const C_LOW = vec3(0.08, 0.14, 0.22);
+const C_MID = vec3(0.34, 0.7, 0.66);
+const C_HIGH = vec3(0.98, 0.9, 0.74);
 
 // Highlight coverage: lower = more white showing. 1.0 = original behavior.
-const WHITE_GATE = 0.75;
+const WHITE_GATE = 0.82;
 
-// --- Tunable params (reference defaults) ---
-// const WIND_SPEED = 0.144;
-const WIND_SPEED = 0.044;
-const WARP_POWER = 0.2355;
-const FBM_STRENGTH = 0.912;
-const BLUR_RADIUS = 1.2673;
-const ZOOM = 0.3971;
-const GRAIN_STRENGTH = 0.014;
+// --- Tunable params ---
+const WIND_SPEED = 0.026;
+const WARP_POWER = 0.21;
+const FBM_STRENGTH = 0.86;
+const BLUR_RADIUS = 1.45;
+const ZOOM = 0.45;
+const GRAIN_STRENGTH = 0.008;
 const NOISE_SCALE = 0.8673;
-const SPEED = 0.72 * 0.95; // reference applies 0.95 post-multiplier
+const SPEED = 0.42;
+
+// Breath response: low amplitude, layered in several places so it feels like
+// the whole veil is breathing instead of one obvious slider moving.
+const BREATH_ZOOM_AMOUNT = 0.1;
+const BREATH_WARP_AMOUNT = 0.2;
+const BREATH_LIFT_AMOUNT = 0.08;
+const BREATH_GLOW_AMOUNT = 0.2;
 
 // fbm rotation matrix baked (angle = 0.5 rad)
 const FBM_ROT_C = Math.cos(0.5);
@@ -135,14 +143,18 @@ const blendLinearBurn = Fn(
 
 export const DreamSmoke = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -163,16 +175,24 @@ export const DreamSmoke = ({
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
     const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
 
     const computeColor = Fn(() => {
       // --- Centered, aspect-corrected, horizontally-mirrored UV ---
       // Folds top & bottom halves into each other (line of symmetry = horizontal axis).
       const threeUV = uv();
-      const stX = threeUV.x.sub(0.5).mul(aspectU);
-      const stY = abs(threeUV.y.sub(0.5));
+      const centeredY = threeUV.y.sub(0.5);
+      const breathZoom = float(1.0).sub(breathU.mul(BREATH_ZOOM_AMOUNT));
+      const stX = threeUV.x.sub(0.5).mul(aspectU).mul(breathZoom);
+      const stY = abs(centeredY).mul(breathZoom);
       const st = vec2(stX, stY);
+      const radial = length(vec2(stX, centeredY));
 
       const time = timeU.mul(SPEED);
+      const breathGlow = float(0.86).add(breathU.mul(BREATH_GLOW_AMOUNT));
+      const breathWarp = float(WARP_POWER).mul(
+        float(0.9).add(breathU.mul(BREATH_WARP_AMOUNT)),
+      );
 
       // --- getFluidColor body (inlined; st is already centered) ---
       const scaleFactor = float(1.0 / (2.0 * ZOOM));
@@ -182,7 +202,7 @@ export const DreamSmoke = ({
         float(1.0).sub(st.y.mul(scaleFactor).add(0.5)),
       );
 
-      const verticalOffset = 0.09; // waveSpread = 1.0 → no additional offset
+      const verticalOffset = float(0.09).add(breathU.mul(BREATH_LIFT_AMOUNT));
       const t = time.mul(0.85);
 
       // --- Domain warp via 3D gradient noise ---
@@ -196,7 +216,7 @@ export const DreamSmoke = ({
           .mul(vec3(NOISE_SCALE, NOISE_SCALE, 1))
           .add(vec3(203.91282, 10.0, t.mul(0.3))),
       );
-      fuv = fuv.add(vec2(noiseX.mul(2.0), noiseY).mul(WARP_POWER));
+      fuv = fuv.add(vec2(noiseX.mul(2.0), noiseY).mul(breathWarp));
 
       // Water-color wobble (two octaves)
       const waterScale = 18.0;
@@ -263,7 +283,9 @@ export const DreamSmoke = ({
       const fCompound = f.mul(1.7).add(f.mul(f).mul(0.6)).add(0.5).mul(0.5);
       const fullFbm = pow(fCompound, float(0.55)).mul(FBM_STRENGTH);
 
-      const blur = float(BLUR_RADIUS * 1.5);
+      const blur = float(BLUR_RADIUS * 1.5).mul(
+        float(0.95).add(breathU.mul(0.18)),
+      );
 
       // --- Wave Layer 1 ---
       const snUv1 = fuv
@@ -316,12 +338,25 @@ export const DreamSmoke = ({
       const highBlend = mix(C_MAIN, C_HIGH, float(1.0).sub(sn2Third));
       // pow() with exponent < 1 pulls the (sn2P * sn2BisP) mask toward 1,
       // so the white highlight shows across a much larger area.
-      const highMask = pow(sn2P.mul(sn2BisP), float(WHITE_GATE));
+      const highMask = pow(
+        sn2P.mul(sn2BisP),
+        float(WHITE_GATE).sub(breathU.mul(0.18)),
+      );
       const sinColor = mix(step2, highBlend, highMask);
 
+      const centerDim = mix(
+        float(0.62),
+        float(1.0),
+        smoothstep(float(0.1), float(0.42), radial),
+      );
+      const edgeFade = float(1.0).sub(
+        smoothstep(float(0.82), float(1.22), radial),
+      );
+      const finalColor = sinColor.mul(centerDim).mul(edgeFade).mul(breathGlow);
+
       // Grayscale
-      const lum = dot(sinColor, vec3(0.299, 0.587, 0.114));
-      return mix(sinColor, vec3(lum, lum, lum), grayscaleU);
+      const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+      return mix(finalColor, vec3(lum, lum, lum), grayscaleU);
     });
 
     const material = new MeshBasicNodeMaterial();
@@ -341,13 +376,15 @@ export const DreamSmoke = ({
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+      (breathU as unknown as { value: number }).value =
+        breathRef.current?.value ?? 0.0;
       renderer.render(scene, camera);
       context!.present();
     }
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "DreamSmoke",
+      label: "TidalVeil",
       onReady,
     });
 
