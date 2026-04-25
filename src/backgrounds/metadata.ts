@@ -13,7 +13,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "terrain", name: "Terrain" },
   { id: "dot-grid", name: "DotGrid" },
   { id: "game-of-life", name: "GameOfLife" },
-  { id: "sin-pulse", name: "SinPulse" },
+  { id: "sin-pulse", name: "Harmonic Tide" },
   { id: "fluid", name: "Fluid" },
   { id: "ethereal", name: "Inner Current" },
   { id: "dream-smoke", name: "Tidal Veil" },
