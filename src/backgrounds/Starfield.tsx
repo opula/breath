@@ -33,7 +33,8 @@ const TAU = 6.28318;
 const STAR_GLOW = 0.025;
 const CANVAS_VIEW = 20.0;
 const BASE_VELOCITY = 0.025;
-const NUM_LAYERS = 4;
+const NUM_LAYERS = 2;
+const LAYER_BRIGHTNESS = 1.55;
 const MAX_DELTA_SECONDS = 0.1;
 const BREATH_RESPONSE_RATE = 4.4;
 const INHALE_RESPONSE_RATE = 5.2;
@@ -213,7 +214,8 @@ export const Starfield = ({
       );
       const fade = depth
         .mul(smoothstep(float(1.0), float(0.9), depth))
-        .mul(float(0.82).add(breathEase.mul(0.24)).add(inhaleEase.mul(0.46)));
+        .mul(float(0.82).add(breathEase.mul(0.24)).add(inhaleEase.mul(0.46)))
+        .mul(LAYER_BRIGHTNESS);
       const layerUV = uvFinal
         .mul(scale)
         .add(i * 453.2)
