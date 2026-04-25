@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { PointsNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
@@ -13,6 +14,7 @@ import {
   fract,
   floor,
   mix,
+  smoothstep,
   dot,
   uniform,
   positionLocal,
@@ -26,14 +28,14 @@ import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 // ────────────────────────────────────────────────────────────
 
 const CAMERA_FOV = 50;
-const CAMERA_POS: [number, number, number] = [0, 3.2, 6.5]; // eye position
+const CAMERA_POS: [number, number, number] = [0, 3.0, 6.8]; // eye position
 const LOOK_AT: [number, number, number] = [0, 0, 0];
 const PLANE_TILT_X = -Math.PI / 2; // -π/2 = flat (matches reference)
 const PLANE_TILT_Z = 0; // base yaw of the field in its own plane
 
 // Slow sway of the field's yaw. Set OSC_AMP to 0 to disable.
-const PLANE_TILT_Z_OSC_AMP = 0.3; // radians (~17°)
-const PLANE_TILT_Z_OSC_FREQ = 0.25; // radians/sec → period ≈ 25s
+const PLANE_TILT_Z_OSC_AMP = 0.12; // radians (~7°)
+const PLANE_TILT_Z_OSC_FREQ = 0.08; // radians/sec → period ≈ 78s
 
 // ────────────────────────────────────────────────────────────
 //  FIELD / DENSITY
@@ -51,17 +53,21 @@ const PLANE_SEGMENTS_Y = 320;
 //  WAVE MOTION
 // ────────────────────────────────────────────────────────────
 
-const WAVE_AMPLITUDE = 0.55;
-const WAVE_XY_SCALE = 0.5; // reference uses x/2, y/2 → 0.5 multiplier
-const WAVE_TIME_SCALE = 0.2; // reference uses t/2000; we scale seconds directly
+const WAVE_AMPLITUDE = 0.42;
+const WAVE_XY_SCALE = 0.36;
+const WAVE_TIME_SCALE = 0.11;
+const BREATH_AMPLITUDE = 0.56;
+const BREATH_FIELD_SCALE = 0.06;
+const BREATH_LIFT = 0.1;
 
 // ────────────────────────────────────────────────────────────
 //  LOOK
 // ────────────────────────────────────────────────────────────
 
-const BG_COLOR = 0x05080f; // deep navy (almost black)
-const PARTICLE_DIM = vec3(0.18, 0.28, 0.45); // valleys
-const PARTICLE_BRIGHT = vec3(0.92, 0.97, 1.0); // peaks
+const BG_COLOR = 0x02070a; // deep blue-green black
+const PARTICLE_DIM = vec3(0.08, 0.16, 0.2); // valleys
+const PARTICLE_MID = vec3(0.24, 0.5, 0.52); // body
+const PARTICLE_BRIGHT = vec3(0.78, 0.94, 0.88); // peaks
 
 // ────────────────────────────────────────────────────────────
 //  Noise helpers (quintic 3D gradient, ~[-1, 1] range)
@@ -99,14 +105,18 @@ const gradientNoise3 = Fn(([p]: [ReturnType<typeof vec3>]) => {
 
 export const ParticleWave = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -131,23 +141,42 @@ export const ParticleWave = ({
 
     const timeU = uniform(float(0));
     const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
+    const breathEase = breathU
+      .mul(breathU)
+      .mul(float(3.0).sub(breathU.mul(2.0)));
+    const fieldScale = float(1.0).sub(breathEase.mul(BREATH_FIELD_SCALE));
+    const waveAmp = float(WAVE_AMPLITUDE).mul(
+      float(0.72).add(breathEase.mul(BREATH_AMPLITUDE)),
+    );
 
     // Wave displacement computed per-vertex in the shader graph — no CPU loop,
     // no storage buffers. Displacement goes along local Z; after the mesh's
     // -π/2 X-rotation, local +Z becomes world +Y, so peaks bob upward.
     const waveZ = gradientNoise3(
       vec3(
-        positionLocal.x.mul(WAVE_XY_SCALE),
-        positionLocal.y.mul(WAVE_XY_SCALE),
-        timeU.mul(WAVE_TIME_SCALE),
+        positionLocal.x.mul(WAVE_XY_SCALE).mul(fieldScale),
+        positionLocal.y.mul(WAVE_XY_SCALE).mul(fieldScale),
+        timeU.mul(WAVE_TIME_SCALE).add(breathEase.mul(0.12)),
       ),
-    ).mul(WAVE_AMPLITUDE);
+    ).mul(waveAmp);
 
-    const displacedPos = positionLocal.add(vec3(float(0), float(0), waveZ));
+    const displacedPos = positionLocal.add(
+      vec3(float(0), float(0), waveZ.add(breathEase.mul(BREATH_LIFT))),
+    );
 
     // Color by height: valleys dim, peaks bright.
-    const heightT = waveZ.div(WAVE_AMPLITUDE).mul(0.5).add(0.5); // [0, 1]
-    const particleColor = mix(PARTICLE_DIM, PARTICLE_BRIGHT, heightT);
+    const heightT = waveZ.div(waveAmp).mul(0.5).add(0.5); // [0, 1]
+    const lowMid = mix(
+      PARTICLE_DIM,
+      PARTICLE_MID,
+      smoothstep(0.0, 0.62, heightT),
+    );
+    const particleColor = mix(
+      lowMid,
+      PARTICLE_BRIGHT,
+      smoothstep(0.52, 1.0, heightT).mul(float(0.82).add(breathEase.mul(0.18))),
+    );
 
     const lum = dot(particleColor, vec3(0.299, 0.587, 0.114));
     const finalColor = mix(particleColor, vec3(lum, lum, lum), grayscaleU);
@@ -182,16 +211,19 @@ export const ParticleWave = ({
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+      (breathU as unknown as { value: number }).value =
+        breathRef.current?.value ?? 0.0;
       points.rotation.z =
         PLANE_TILT_Z +
-        Math.sin(elapsed * PLANE_TILT_Z_OSC_FREQ) * PLANE_TILT_Z_OSC_AMP;
+        Math.sin(elapsed * PLANE_TILT_Z_OSC_FREQ) *
+          (PLANE_TILT_Z_OSC_AMP + (breathRef.current?.value ?? 0) * 0.025);
       renderer.render(scene, camera);
       context!.present();
     }
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "ParticleWave",
+      label: "Stillwater",
       onReady,
     });
 
