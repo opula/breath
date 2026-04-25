@@ -162,6 +162,11 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     showName(engine.getExerciseName());
   }, [engine, showName]);
 
+  const handleStop = useCallback(() => {
+    engine.stop();
+    setStarted(engine.isStarted());
+  }, [engine]);
+
   const handleNextExercise = useCallback(
     (delta: number) => {
       if (engine.isActive()) return;
@@ -187,6 +192,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     handleTap,
     handlePauseResume,
     handleLongPress,
+    handleStop,
     handleNextExercise,
   };
 }

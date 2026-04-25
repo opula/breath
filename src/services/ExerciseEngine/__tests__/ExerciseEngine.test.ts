@@ -373,18 +373,35 @@ describe('ExerciseEngine', () => {
       expect(callbacks.pauseChanges).toEqual([]);
     });
 
-    it('advances on count===0 step', () => {
+    it('advances on count===0 step when another step exists', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([textExercise], scheduler, callbacks);
+
+      engine.start();
+
+      engine.advance();
+
+      expect(callbacks.hapticCount).toBeGreaterThan(0);
+      expect(callbacks.states[callbacks.states.length - 1]?.isBreathing).toBe(true);
+    });
+
+    it('ignores count===0 step when it would only advance to itself', () => {
       const scheduler = createMockScheduler();
       const callbacks = createMockCallbacks();
       const engine = new ExerciseEngine([infiniteHoldExercise], scheduler, callbacks);
 
       engine.start();
+      const jobsBefore = scheduler.jobs.length;
       const statesBefore = callbacks.states.length;
+
+      expect(engine.canAdvance()).toBe(false);
 
       engine.advance();
 
-      // Should have triggered haptic and cleared jobs
-      expect(callbacks.hapticCount).toBeGreaterThan(0);
+      expect(scheduler.jobs.length).toBe(jobsBefore);
+      expect(callbacks.hapticCount).toBe(0);
+      expect(callbacks.states.length).toBe(statesBefore);
     });
 
     it('does nothing on count>0 step', () => {
@@ -493,6 +510,25 @@ describe('ExerciseEngine', () => {
       engine.reset(true);
 
       expect(callbacks.hapticCount).toBe(1);
+    });
+
+    it('stop clears active playback without restarting', () => {
+      const scheduler = createMockScheduler();
+      const callbacks = createMockCallbacks();
+      const engine = new ExerciseEngine([hieExercise], scheduler, callbacks);
+
+      engine.start();
+      callbacks.hapticCount = 0;
+      engine.stop();
+
+      expect(scheduler.isRunning).toBe(false);
+      expect(engine.isStarted()).toBe(false);
+      expect(callbacks.pauseChanges[callbacks.pauseChanges.length - 1]).toBe(true);
+      expect(callbacks.hapticCount).toBe(0);
+
+      const lastState = callbacks.states[callbacks.states.length - 1];
+      expect(lastState.label).toBe('');
+      expect(lastState.canAdvance).toBe(false);
     });
   });
 
@@ -609,6 +645,7 @@ describe('ExerciseEngine', () => {
       name: 'Infinite Ramp',
       seq: [
         { id: 's1', type: 'hold', count: 0, ramp: 2.0 },
+        { id: 's2', type: 'hold', count: 1 },
       ],
       loopable: true,
     };

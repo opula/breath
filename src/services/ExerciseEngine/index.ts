@@ -105,6 +105,27 @@ export class ExerciseEngine {
     }
   }
 
+  stop(): void {
+    if (this.destroyed) return;
+    this.scheduler.reset();
+
+    this.callbacks.onAnimateBreath(0, 0);
+    this.seqIndex = -1;
+    this.breathPattern = [0, 0, 0, 0];
+    this.repeatState = null;
+    this.sequenceLoop = 0;
+    this.callbacks.onRepeatChange(null);
+    this.callbacks.onStateChange({
+      label: '',
+      sublabel: '',
+      isBreathing: false,
+      isText: false,
+      isHIE: false,
+      canAdvance: false,
+    });
+    this.callbacks.onPauseChange(true);
+  }
+
   // --- Navigation ---
 
   advance(): void {
@@ -121,11 +142,7 @@ export class ExerciseEngine {
       return;
     }
 
-    const exercise = this.currentExercise();
-    const { count } = exercise.seq[this.seqIndex];
-
-    // Can only manually advance on count===0 steps
-    if (count !== 0) return;
+    if (!this.canAdvanceCurrentStep()) return;
 
     this.scheduler.clearJobs();
     if (this.isHapticsEnabled()) this.callbacks.onHaptic();
@@ -164,8 +181,7 @@ export class ExerciseEngine {
 
   canAdvance(): boolean {
     if (this.seqIndex === -1) return true;
-    const exercise = this.currentExercise();
-    return exercise.seq[this.seqIndex].count === 0;
+    return this.canAdvanceCurrentStep();
   }
 
   getExerciseName(): string {
@@ -201,6 +217,18 @@ export class ExerciseEngine {
     const { count, ramp } = step;
     if (!count || !ramp || ramp <= 1) return count;
     return Math.round(count * (1 + this.sequenceLoop * (ramp - 1)));
+  }
+
+  private canAdvanceCurrentStep(): boolean {
+    if (this.seqIndex === -1) return true;
+
+    const exercise = this.currentExercise();
+    const step = exercise.seq[this.seqIndex];
+
+    if (this.getEffectiveCount(step) !== 0) return false;
+
+    const nextIndex = (this.seqIndex + 1) % exercise.seq.length;
+    return nextIndex !== this.seqIndex;
   }
 
   getSequenceLoop(): number {
@@ -323,7 +351,7 @@ export class ExerciseEngine {
           isBreathing: true,
           isText: false,
           isHIE: false,
-          canAdvance: effectiveCount === 0,
+          canAdvance: this.canAdvanceCurrentStep(),
         });
         break;
       }
@@ -336,7 +364,7 @@ export class ExerciseEngine {
           isBreathing: false,
           isText: true,
           isHIE: false,
-          canAdvance: this.getEffectiveCount(step) === 0,
+          canAdvance: this.canAdvanceCurrentStep(),
         });
         break;
 
@@ -432,7 +460,7 @@ export class ExerciseEngine {
       isBreathing: true,
       isText: false,
       isHIE: false,
-      canAdvance: count === 0,
+      canAdvance: this.canAdvanceCurrentStep(),
     });
 
     // Schedule next step
@@ -477,7 +505,7 @@ export class ExerciseEngine {
       isBreathing: showRing,
       isText: false,
       isHIE: !showRing,
-      canAdvance: count === 0,
+      canAdvance: this.canAdvanceCurrentStep(),
     });
 
     this.timedStep.execute({
@@ -490,7 +518,7 @@ export class ExerciseEngine {
           isBreathing: showRing,
           isText: false,
           isHIE: !showRing,
-          canAdvance: count === 0,
+          canAdvance: this.canAdvanceCurrentStep(),
         });
       },
       onComplete: () => {
@@ -589,7 +617,7 @@ export class ExerciseEngine {
           isBreathing: false,
           isText: true,
           isHIE: false,
-          canAdvance: count === 0,
+          canAdvance: this.canAdvanceCurrentStep(),
         });
       },
       onComplete: () => {

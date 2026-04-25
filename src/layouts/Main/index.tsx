@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   NavigationProp,
   RouteProp,
+  useFocusEffect,
   useNavigation,
   useRoute,
 } from "@react-navigation/native";
@@ -66,6 +67,7 @@ export const Main = () => {
     handleTap,
     handlePauseResume,
     handleLongPress,
+    handleStop,
   } = useExerciseEngine({ exercises, onPause: setPause });
 
   // Keep the screen awake while the session is open (up to 2h).
@@ -102,6 +104,14 @@ export const Main = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [autoplay, handleStart]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        handleStop();
+      };
+    }, [handleStop]),
+  );
 
   // Auto-fading chrome: show on mount and any gesture; hide after timeout.
   // First session gets a longer window so the legend is readable; subsequent
@@ -255,6 +265,11 @@ export const Main = () => {
     </AnimatePresence>
   );
 
+  const handleExit = useCallback(() => {
+    handleStop();
+    navigation.navigate("Home");
+  }, [handleStop, navigation]);
+
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
       <AnimatePresence>
@@ -324,7 +339,7 @@ export const Main = () => {
             ]}
           >
             <Pressable
-              onPress={() => navigation.navigate("Home")}
+              onPress={handleExit}
               style={[tw`py-2 active:opacity-50`, { flex: 1, minWidth: 0 }]}
             >
               <Text
