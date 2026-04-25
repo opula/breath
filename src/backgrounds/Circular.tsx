@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   float,
   vec3,
@@ -47,6 +48,15 @@ const MESH_OFFSET_Y = 0;
 const SPEED = 0.03;
 const TRAIL_LENGTH = 0.1;
 const WAVE_AMPLITUDE = 0.005;
+const BREATH_RESPONSE_RATE = 5.2;
+const BREATH_MOTION_GAIN = 3.0;
+const BREATH_MOTION_ATTACK_RATE = 4.8;
+const BREATH_MOTION_RELEASE_RATE = 2.1;
+const BREATH_SPEED_AMOUNT = 0.18;
+const BREATH_TRAIL_AMOUNT = 0.055;
+const BREATH_WAVE_AMOUNT = 0.72;
+const BREATH_SCALE_AMOUNT = 0.04;
+const BREATH_GLOW_AMOUNT = 0.24;
 
 // Camera
 const CAMERA_FOV = 45;
@@ -57,6 +67,16 @@ const COLOR_1 = vec3(0.0, 1.0, 1.0);
 const COLOR_2 = vec3(1.0, 0.0, 1.0);
 const COLOR_3 = vec3(0.0, 0.333, 1.0);
 const COLOR_4 = vec3(1.0, 1.0, 1.0);
+
+const clampNumber = (value: number, minValue: number, maxValue: number) =>
+  Math.max(minValue, Math.min(maxValue, value));
+
+const damp = (
+  current: number,
+  target: number,
+  rate: number,
+  deltaSeconds: number,
+) => current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
 
 // Inward logarithmic-ish spiral with sinusoidal z-wobble (pre-bake)
 function buildSpiralCurve(randomOffset: number) {
@@ -156,14 +176,18 @@ function buildMergedSpiralGeometry() {
 
 export const Circular = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -191,6 +215,7 @@ export const Circular = ({
     const trailLenU = uniform(float(TRAIL_LENGTH));
     const waveAmpU = uniform(float(WAVE_AMPLITUDE));
     const grayscaleU = uniform(float(0));
+    const breathGlowU = uniform(float(0));
 
     // Per-vertex attributes
     const aOffset = attribute("aOffset", "float");
@@ -199,7 +224,16 @@ export const Circular = ({
 
     // --- Vertex: sine wave along local Z, phased by uv.x, time, and per-trail offset
     const uvCoord = uv();
-    const wave = sin(uvCoord.x.mul(10.0).add(timeU.mul(2.0)).add(aOffset));
+    const breathGlow = breathGlowU
+      .mul(breathGlowU)
+      .mul(float(3.0).sub(breathGlowU.mul(2.0)));
+    const wave = sin(
+      uvCoord.x
+        .mul(10.0)
+        .add(timeU.mul(2.0))
+        .add(aOffset)
+        .add(breathGlow.mul(0.45)),
+    );
     const displacedPos = positionLocal.add(vec3(0, 0, wave.mul(waveAmpU)));
 
     // --- Fragment: inward-traveling trail along uv.x
@@ -223,7 +257,9 @@ export const Circular = ({
     const baseColor = mix(pickC1to3, COLOR_4, aColorIdx.step(float(2.5)));
 
     // Brighten toward white at the trail head (pseudo-bloom without post fx)
-    const tinted = mix(baseColor, vec3(1.0, 1.0, 1.0), trail.mul(0.8));
+    const tinted = mix(baseColor, vec3(1.0, 1.0, 1.0), trail.mul(0.8)).mul(
+      float(0.92).add(breathGlow.mul(BREATH_GLOW_AMOUNT)),
+    );
 
     // Grayscale desaturation
     const lum = dot(tinted, vec3(0.299, 0.587, 0.114));
@@ -252,10 +288,63 @@ export const Circular = ({
     renderer.toneMapping = THREE.ReinhardToneMapping;
 
     let disposed = false;
+    let previousElapsed = 0;
+    let smoothedBreath = breathRef.current?.value ?? 0;
+    let breathMotion = 0;
 
     function animate() {
       if (disposed) return;
-      (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      const elapsed = clock.getElapsedTime();
+      const deltaSeconds =
+        previousElapsed > 0
+          ? Math.max(1 / 120, Math.min(elapsed - previousElapsed, 0.12))
+          : 1 / 60;
+      const targetBreath = breathRef.current?.value ?? 0.0;
+      const breathDelta = targetBreath - smoothedBreath;
+      smoothedBreath = damp(
+        smoothedBreath,
+        targetBreath,
+        BREATH_RESPONSE_RATE,
+        deltaSeconds,
+      );
+      const motionTarget = clampNumber(
+        Math.abs(breathDelta) * BREATH_MOTION_GAIN,
+        0.0,
+        1.0,
+      );
+      breathMotion = damp(
+        breathMotion,
+        motionTarget,
+        motionTarget > breathMotion
+          ? BREATH_MOTION_ATTACK_RATE
+          : BREATH_MOTION_RELEASE_RATE,
+        deltaSeconds,
+      );
+      previousElapsed = elapsed;
+
+      const breathEase =
+        smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      const scale =
+        1 + breathEase * BREATH_SCALE_AMOUNT + breathMotion * 0.018;
+      mesh.scale.setScalar(scale);
+      mesh.rotation.z =
+        Math.sin(elapsed * 0.032) * 0.055 +
+        Math.sin(elapsed * 0.019 + 2.4) * 0.035 +
+        breathEase * 0.035;
+
+      (timeU as unknown as { value: number }).value = elapsed;
+      (speedU as unknown as { value: number }).value =
+        SPEED * (1 + breathEase * BREATH_SPEED_AMOUNT + breathMotion * 0.12);
+      (trailLenU as unknown as { value: number }).value =
+        TRAIL_LENGTH + breathEase * BREATH_TRAIL_AMOUNT + breathMotion * 0.018;
+      (waveAmpU as unknown as { value: number }).value =
+        WAVE_AMPLITUDE *
+        (1 + breathEase * BREATH_WAVE_AMOUNT + breathMotion * 0.45);
+      (breathGlowU as unknown as { value: number }).value = clampNumber(
+        breathEase + breathMotion * 0.38,
+        0.0,
+        1.0,
+      );
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
