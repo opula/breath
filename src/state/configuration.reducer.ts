@@ -15,6 +15,7 @@ interface ConfigurationState {
   bgSourceId: SceneSourceId;
   soundsEnabled: boolean;
   hapticsEnabled: boolean;
+  hideCenterHints: boolean;
   bgSourceIndex?: number;
 }
 
@@ -24,6 +25,7 @@ const initialState: ConfigurationState = {
   bgSourceId: DEFAULT_BACKGROUND_SOURCE_ID,
   soundsEnabled: true,
   hapticsEnabled: true,
+  hideCenterHints: false,
 };
 
 export const configurationSlice = createSlice({
@@ -44,6 +46,9 @@ export const configurationSlice = createSlice({
     },
     toggleHaptics(state) {
       state.hapticsEnabled = !state.hapticsEnabled;
+    },
+    toggleHideCenterHints(state) {
+      state.hideCenterHints = !state.hideCenterHints;
     },
     updateSource(state, action: PayloadAction<SceneSourceId>) {
       state.bgSourceId = action.payload;
@@ -96,5 +101,6 @@ export const {
   toggleGrayscale,
   toggleSounds,
   toggleHaptics,
+  toggleHideCenterHints,
   updateSource,
 } = configurationSlice.actions;

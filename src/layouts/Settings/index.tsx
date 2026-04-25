@@ -8,11 +8,13 @@ import {
   isGrayscaleSelector,
   soundsEnabledSelector,
   hapticsEnabledSelector,
+  hideCenterHintsSelector,
 } from "../../state/configuration.selectors";
 import {
   toggleGrayscale,
   toggleSounds,
   toggleHaptics,
+  toggleHideCenterHints,
 } from "../../state/configuration.reducer";
 // Accent picker is parked — see note below the Display group.
 // import { accentColorSelector } from "../../state/accent.selectors";
@@ -111,6 +113,7 @@ export const Settings = () => {
   const isGrayscale = useAppSelector(isGrayscaleSelector);
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
+  const hideCenterHints = useAppSelector(hideCenterHintsSelector);
   // const accentColor = useAppSelector(accentColorSelector);
 
   return (
@@ -192,6 +195,12 @@ export const Settings = () => {
             hint="desaturate the ambient scene"
             enabled={isGrayscale}
             onPress={() => dispatch(toggleGrayscale())}
+          />
+          <ToggleRow
+            label="Hide hints"
+            hint="skip the center tap / hold prompts"
+            enabled={hideCenterHints}
+            onPress={() => dispatch(toggleHideCenterHints())}
           />
 
           {/* Accent picker — hidden until runtime palette swap is wired.

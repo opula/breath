@@ -26,7 +26,10 @@ import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
-import { isPausedSelector } from "../../state/configuration.selectors";
+import {
+  isPausedSelector,
+  hideCenterHintsSelector,
+} from "../../state/configuration.selectors";
 import { setPause as setPauseAction } from "../../state/configuration.reducer";
 import { MainStackParams } from "../../navigation";
 import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
@@ -45,6 +48,7 @@ export const Main = () => {
   const isAppActive = useAppIsActive();
   const insets = useSafeAreaInsets();
   const isPaused = useAppSelector(isPausedSelector);
+  const hideCenterHints = useAppSelector(hideCenterHintsSelector);
 
   const setPause = useCallback(
     (status: boolean) => {
@@ -216,7 +220,7 @@ export const Main = () => {
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
   const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
   const showIndefiniteHint = isStarted && canAdvance && !isPaused;
-  const showCenterHints = isStarted && showHints;
+  const showCenterHints = isStarted && showHints && !hideCenterHints;
   const primaryHint = showIndefiniteHint
     ? "tap when you're ready to continue"
     : "tap 2x to pause / resume";
