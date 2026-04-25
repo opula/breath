@@ -45,18 +45,18 @@ const SEED_INTERVAL = 44; // ticks between quiet background injections
 const SEED_RADIUS = 2; // half-size of seeded clump
 const SEED_DENSITY = 0.34; // fill ratio inside the clump
 const INHALE_SEED_RADIUS = 2;
-const INHALE_SEED_DENSITY = 0.62;
+const INHALE_SEED_DENSITY = 0.82;
 const INHALE_FLOW_GAIN = 3.2;
 const BREATH_RESPONSE_RATE = 5.0;
 const INHALE_RESPONSE_RATE = 4.2;
 
-const COLOR_DEEP = vec3(0.006, 0.012, 0.02);
-const COLOR_FIELD = vec3(0.026, 0.074, 0.086);
-const COLOR_CELL_LOW = vec3(0.07, 0.2, 0.19);
-const COLOR_CELL_MID = vec3(0.24, 0.62, 0.55);
-const COLOR_CELL_HIGH = vec3(0.82, 0.94, 0.76);
-const COLOR_INHALE = vec3(0.72, 0.96, 0.9);
-const COLOR_BIRTH = vec3(0.95, 0.55, 0.36);
+const COLOR_DEEP = vec3(0.0, 0.0, 0.0);
+const COLOR_FIELD = vec3(0.025, 0.025, 0.025);
+const COLOR_CELL_LOW = vec3(0.18, 0.18, 0.18);
+const COLOR_CELL_MID = vec3(0.62, 0.62, 0.62);
+const COLOR_CELL_HIGH = vec3(1.0, 1.0, 1.0);
+const COLOR_INHALE = vec3(0.92, 0.92, 0.92);
+const COLOR_BIRTH = vec3(0.72, 0.72, 0.72);
 
 const clampNumber = (value: number, minValue: number, maxValue: number) =>
   Math.max(minValue, Math.min(maxValue, value));
@@ -126,7 +126,6 @@ export const GameOfLife = ({
 
     // ── GoL simulation ─────────────────────────────────────────────
     let tickCounter = 0;
-    let inhaleSeedCounter = 0;
     let inhaleSeedPhase = Math.random() * TWO_PI;
 
     function seedCluster(
@@ -156,10 +155,10 @@ export const GameOfLife = ({
     }
 
     function seedInhale(inhalePower: number, breathLevel: number) {
-      const clusters = 2 + Math.floor(inhalePower * 3);
+      const clusters = 4 + Math.floor(inhalePower * 7);
       const minAxis = Math.min(GRID_COLS, rows);
-      const ringRadius = minAxis * (0.04 + breathLevel * 0.2);
-      const jitter = minAxis * 0.028;
+      const ringRadius = minAxis * (0.06 + breathLevel * 0.28);
+      const jitter = minAxis * 0.052;
       inhaleSeedPhase += 0.33 + inhalePower * 0.24;
 
       for (let i = 0; i < clusters; i++) {
@@ -172,8 +171,21 @@ export const GameOfLife = ({
           rows * 0.5 +
           Math.sin(angle) * ringRadius +
           (Math.random() - 0.5) * jitter;
-        const radius = INHALE_SEED_RADIUS + Math.floor(inhalePower * 2.5);
+        const radius = INHALE_SEED_RADIUS + Math.floor(inhalePower * 3.5);
         seedCluster(cx, cy, radius, INHALE_SEED_DENSITY, true);
+      }
+
+      const fieldDots = Math.floor(
+        totalCells * (0.0018 + inhalePower * 0.0058),
+      );
+      for (let i = 0; i < fieldDots; i++) {
+        const x = Math.floor(Math.random() * GRID_COLS);
+        const y = Math.floor(Math.random() * rows);
+        const idx = y * GRID_COLS + x;
+        alive[idx] = 1;
+        texData[idx * 4] = 255;
+        texData[idx * 4 + 1] = 255;
+        texData[idx * 4 + 2] = 255;
       }
     }
 
@@ -216,14 +228,8 @@ export const GameOfLife = ({
         texData[i * 4 + 2] = inhale;
       }
 
-      if (inhalePower > 0.06) {
-        inhaleSeedCounter++;
-        if (inhaleSeedCounter >= 2) {
-          seedInhale(inhalePower, breathLevel);
-          inhaleSeedCounter = 0;
-        }
-      } else {
-        inhaleSeedCounter = 0;
+      if (inhalePower > 0.04) {
+        seedInhale(inhalePower, breathLevel);
       }
 
       // Periodic random seeding
@@ -368,7 +374,7 @@ export const GameOfLife = ({
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "LivingBloom",
+      label: "GameOfLife",
       onReady,
     });
 
