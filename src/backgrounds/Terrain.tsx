@@ -39,7 +39,7 @@ const SCALE_X = 0.07;
 const SCALE_Y = 0.07;
 const DETAIL_HEIGHT = 3.34;
 const DETAIL_SCALE = 0.09163;
-const FOG_COLOR = 0x071014;
+const FOG_COLOR = 0x999999;
 const CAM_HEIGHT = 4.214;
 const CAM_DIST = 68.04;
 const FOV = 70;
@@ -470,9 +470,9 @@ export const Terrain = ({
       );
 
       waveTime +=
-        delta * WAVE_SPEED * (0.78 + smoothedBreath * 0.38 + inhalePower * 0.7);
+        delta * WAVE_SPEED * (1.0 + smoothedBreath * 0.24 + inhalePower * 0.5);
       flightOffset +=
-        delta * FLY_SPEED * (0.72 + smoothedBreath * 0.26 + inhalePower * 1.25);
+        delta * FLY_SPEED * (1.0 + smoothedBreath * 0.18 + inhalePower * 0.9);
 
       (waveTimeU as unknown as { value: number }).value = waveTime;
       (flightOffsetU as unknown as { value: number }).value = flightOffset;
@@ -487,10 +487,6 @@ export const Terrain = ({
       camera.lookAt(0, smoothedBreath * 0.2 + inhalePower * 0.35, -10);
       hemiLight.intensity = 0.32 + smoothedBreath * 0.08 + inhalePower * 0.16;
       dirLight.intensity = 0.86 + smoothedBreath * 0.24 + inhalePower * 0.42;
-      if (scene.fog instanceof THREE.FogExp2) {
-        scene.fog.density =
-          FOG_DENSITY * (1.08 - smoothedBreath * 0.16 + inhalePower * 0.08);
-      }
 
       // Compute positions + colors every frame.
       renderer.compute(computePositions);
