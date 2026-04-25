@@ -1,7 +1,7 @@
 export const NO_BACKGROUND_SOURCE_ID = "none" as const;
 
 export const BACKGROUND_SOURCE_DEFINITIONS = [
-  { id: "aurora", name: "Aurora" },
+  { id: "aurora", name: "Northern Drift" },
   { id: "circular", name: "Circular" },
   { id: "echo", name: "Echo" },
   { id: "rorschach", name: "Rorschach" },

@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
@@ -26,20 +27,20 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-// --- Shared physics params (Blue/Cyan preset from reference) ---
-const DEPTH = 0.04;
-const SPEED = 0.1148;
+// --- Shared physics params, tuned for slow breath work ---
+const DEPTH = 0.05;
+const SPEED = 0.078;
 const NOISE_SCALE = 0.714;
-const WARP_AMOUNT = 4.0;
-const FOLD_FREQUENCY = 1.865;
+const WARP_AMOUNT = 3.35;
+const FOLD_FREQUENCY = 1.55;
 const ANGLE = 1.08699;
-const CONNECTIONS = 0.8715;
-const SHADOW_WIDTH = 0.01;
+const CONNECTIONS = 0.76;
+const SHADOW_WIDTH = 0.035;
 const NORMAL_EPSILON = 0.09;
 
 // Uniform zoom — scales screen-space p. >1 = zoomed out (more pattern visible),
 // <1 = zoomed in. Keeps the look identical, just changes how much fits on screen.
-const ZOOM = 2;
+const ZOOM = 1.85;
 
 // Baked rotation (ANGLE is compile-time constant)
 const ANGLE_COS = Math.cos(ANGLE);
@@ -52,11 +53,11 @@ const _LZ = 1.0;
 const _LLEN = Math.hypot(_LX, _LY, _LZ);
 const LIGHT_DIR = vec3(_LX / _LLEN, _LY / _LLEN, _LZ / _LLEN);
 
-// Palette (Aurora Borealis)
-const C1 = vec3(0.0, 10 / 255, 20 / 255); // #000a14 night-sky navy
-const C2 = vec3(0.0, 89 / 255, 77 / 255); // #00594d deep teal
-const C3 = vec3(0.0, 1.0, 136 / 255); // #00ff88 neon aurora green
-const C4 = vec3(170 / 255, 1.0, 1.0); // #aaffff bright cyan glow
+// Palette: polar night, softened teal, and pale sky glow.
+const C1 = vec3(0.0, 0.035, 0.07);
+const C2 = vec3(0.0, 0.27, 0.26);
+const C3 = vec3(0.22, 0.76, 0.58);
+const C4 = vec3(0.72, 0.95, 0.92);
 
 // --- Noise helpers (Rorschach-style quintic 3D gradient noise) ---
 
@@ -94,15 +95,28 @@ const gradientNoise3 = Fn(([p]: [ReturnType<typeof vec3>]) => {
 // --- Surface field (ported from reference's getSurface) ---
 
 const getSurface = Fn(
-  ([p, time]: [ReturnType<typeof vec2>, ReturnType<typeof float>]) => {
+  ([p, time, breath]: [
+    ReturnType<typeof vec2>,
+    ReturnType<typeof float>,
+    ReturnType<typeof float>,
+  ]) => {
     // Rotate p by ANGLE (rot = [[c, s], [-s, c]])
     const rp = vec2(
       p.x.mul(ANGLE_COS).add(p.y.mul(ANGLE_SIN)),
       p.x.mul(-ANGLE_SIN).add(p.y.mul(ANGLE_COS)),
     );
 
-    const tScaled = time.mul(SPEED);
+    const tScaled = time.mul(SPEED).add(breath.mul(0.08));
     const nScale = NOISE_SCALE * 0.25; // reference's buttery-smooth multiplier
+    const breathWarp = float(WARP_AMOUNT * 0.12).mul(
+      float(0.86).add(breath.mul(0.32)),
+    );
+    const breathFold = float(FOLD_FREQUENCY * 0.5).mul(
+      float(0.96).sub(breath.mul(0.1)),
+    );
+    const breathConnections = float(CONNECTIONS).mul(
+      float(0.86).add(breath.mul(0.24)),
+    );
 
     // Two macro noises, offset in xy
     const n1 = gradientNoise3(
@@ -123,12 +137,15 @@ const getSurface = Fn(
     const flow = vec2(n1.add(trig1), n2.add(trig2));
 
     // Smooth domain warping
-    const wp = rp.add(flow.mul(WARP_AMOUNT * 0.12));
+    const wp = rp.add(flow.mul(breathWarp));
 
     // Harmonious waves: phase modulation (bends waves instead of crossing them)
-    const freq = float(FOLD_FREQUENCY * 0.5);
-    const phase = sin(wp.y.mul(freq).add(flow.y.mul(2.0))).mul(CONNECTIONS);
-    const mainWave = sin(wp.x.mul(freq).add(phase.mul(WARP_AMOUNT * 0.3)));
+    const phase = sin(wp.y.mul(breathFold).add(flow.y.mul(2.0))).mul(
+      breathConnections,
+    );
+    const mainWave = sin(
+      wp.x.mul(breathFold).add(phase.mul(float(WARP_AMOUNT * 0.3))),
+    );
 
     // Subtle depth variation so it doesn't look flat
     const n3 = gradientNoise3(
@@ -141,14 +158,18 @@ const getSurface = Fn(
 
 export const Aurora = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -169,34 +190,60 @@ export const Aurora = ({
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
     const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
 
     const computeColor = Fn(() => {
       const uvRaw = uv();
+      const breathEase = breathU
+        .mul(breathU)
+        .mul(float(3.0).sub(breathU.mul(2.0)));
+      const zoomScale = float(ZOOM).mul(float(1.02).sub(breathEase.mul(0.1)));
       // Centered, aspect-corrected screen coords in [-aspect, aspect] x [-1, 1]
       const p = vec2(
-        uvRaw.x.mul(2.0).sub(1.0).mul(aspectU).mul(ZOOM),
-        uvRaw.y.mul(2.0).sub(1.0).mul(ZOOM),
+        uvRaw.x.mul(2.0).sub(1.0).mul(aspectU).mul(zoomScale),
+        uvRaw.y.mul(2.0).sub(1.0).mul(zoomScale),
       );
 
       // Central differences for normals (4 extra surface evaluations).
-      const sCenter = getSurface(p, timeU);
-      const sPx = getSurface(vec2(p.x.add(NORMAL_EPSILON), p.y), timeU);
-      const sNx = getSurface(vec2(p.x.sub(NORMAL_EPSILON), p.y), timeU);
-      const sPy = getSurface(vec2(p.x, p.y.add(NORMAL_EPSILON)), timeU);
-      const sNy = getSurface(vec2(p.x, p.y.sub(NORMAL_EPSILON)), timeU);
+      const sCenter = getSurface(p, timeU, breathEase);
+      const sPx = getSurface(
+        vec2(p.x.add(NORMAL_EPSILON), p.y),
+        timeU,
+        breathEase,
+      );
+      const sNx = getSurface(
+        vec2(p.x.sub(NORMAL_EPSILON), p.y),
+        timeU,
+        breathEase,
+      );
+      const sPy = getSurface(
+        vec2(p.x, p.y.add(NORMAL_EPSILON)),
+        timeU,
+        breathEase,
+      );
+      const sNy = getSurface(
+        vec2(p.x, p.y.sub(NORMAL_EPSILON)),
+        timeU,
+        breathEase,
+      );
 
       const dx = sPx.sub(sNx).div(NORMAL_EPSILON * 2);
       const dy = sPy.sub(sNy).div(NORMAL_EPSILON * 2);
 
       // Never collapse to a zero normal (prevents sharp-dot singularities)
-      const safeDepth = max(float(DEPTH), float(0.02));
+      const safeDepth = max(
+        float(DEPTH).mul(float(1.1).sub(breathEase.mul(0.28))),
+        float(0.02),
+      );
       const normal = normalize(vec3(dx.negate(), dy.negate(), safeDepth));
 
       // Soft diffuse (bias so t ∈ [0, 1])
       const diffuse = dot(normal, LIGHT_DIR).mul(0.5).add(0.5);
 
       // Blend a tiny bit of raw surface to de-flatten, clamp, extra Hermite smoothing
-      let t: ReturnType<typeof float> = diffuse.add(sCenter.mul(0.04));
+      let t: ReturnType<typeof float> = diffuse.add(
+        sCenter.mul(float(0.035).add(breathEase.mul(0.045))),
+      );
       t = clamp(t, float(0.0), float(1.0));
       t = t.mul(t).mul(float(3.0).sub(t.mul(2.0)));
 
@@ -219,6 +266,8 @@ export const Aurora = ({
       );
       const dither = grain.sub(0.5).mul(0.03);
       color = color.add(vec3(dither, dither, dither));
+      const breathGlow = float(0.9).add(breathEase.mul(0.2));
+      color = color.mul(breathGlow);
 
       // Grayscale desaturation
       const lum = dot(color, vec3(0.299, 0.587, 0.114));
@@ -242,13 +291,15 @@ export const Aurora = ({
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+      (breathU as unknown as { value: number }).value =
+        breathRef.current?.value ?? 0.0;
       renderer.render(scene, camera);
       context!.present();
     }
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "Aurora",
+      label: "NorthernDrift",
       onReady,
     });
 
