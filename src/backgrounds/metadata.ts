@@ -12,7 +12,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "particles", name: "Particles" },
   { id: "terrain", name: "Terrain" },
   { id: "dot-grid", name: "DotGrid" },
-  { id: "game-of-life", name: "GameOfLife" },
+  { id: "game-of-life", name: "Living Bloom" },
   { id: "sin-pulse", name: "Harmonic Tide" },
   { id: "fluid", name: "Fluid" },
   { id: "ethereal", name: "Inner Current" },
