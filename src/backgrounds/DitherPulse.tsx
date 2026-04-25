@@ -4,24 +4,21 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
   vec2,
   vec3,
   sin,
-  cos,
   fract,
   floor,
   min,
   mix,
   smoothstep,
   length,
-  pow,
   clamp,
   dot,
-  max,
-  abs,
   exp,
   uv,
   uniform,
@@ -30,7 +27,33 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-// --- TSL shader functions ---
+const COLOR_DEEP = vec3(0.006, 0.01, 0.018);
+const COLOR_FIELD = vec3(0.028, 0.08, 0.105);
+const COLOR_SIGNAL_LOW = vec3(0.05, 0.22, 0.25);
+const COLOR_SIGNAL_MID = vec3(0.28, 0.72, 0.67);
+const COLOR_SIGNAL_HIGH = vec3(0.9, 0.96, 0.82);
+const COLOR_WARM_TRACE = vec3(0.82, 0.42, 0.34);
+
+const DRIFT_SPEED = 0.34;
+const WARP_STRENGTH = 0.26;
+const DITHER_SCALE = 0.64;
+const BREATH_ZOOM_AMOUNT = 0.12;
+const BREATH_RING_OPEN = 0.68;
+const BREATH_GLOW_AMOUNT = 0.24;
+const BREATH_RESPONSE_RATE = 5.0;
+const BREATH_MOTION_GAIN = 3.0;
+const BREATH_MOTION_ATTACK_RATE = 4.6;
+const BREATH_MOTION_RELEASE_RATE = 2.0;
+
+const clampNumber = (value: number, minValue: number, maxValue: number) =>
+  Math.max(minValue, Math.min(maxValue, value));
+
+const damp = (
+  current: number,
+  target: number,
+  rate: number,
+  deltaSeconds: number,
+) => current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
 
 const hash = Fn(([n]: [ReturnType<typeof float>]) => {
   return fract(sin(n).mul(43758.5453));
@@ -52,132 +75,199 @@ const noise2D = Fn(([p]: [ReturnType<typeof vec2>]) => {
   );
 });
 
-const expandingRing = Fn(
-  ([uvCoord, center, aspectVal, time, resolutionY]: [
+const fbm = Fn(([pIn]: [ReturnType<typeof vec2>]) => {
+  let p: ReturnType<typeof vec2> = pIn;
+  let total: ReturnType<typeof float> = float(0);
+  let amp = 0.52;
+
+  total = total.add(noise2D(p).mul(amp));
+  p = vec2(
+    p.x.mul(1.62).add(p.y.mul(0.58)),
+    p.x.mul(-0.58).add(p.y.mul(1.62)),
+  ).add(vec2(17.4, 9.1));
+  amp *= 0.5;
+
+  total = total.add(noise2D(p).mul(amp));
+  p = vec2(
+    p.x.mul(1.48).add(p.y.mul(0.42)),
+    p.x.mul(-0.42).add(p.y.mul(1.48)),
+  ).add(vec2(3.8, 28.6));
+  amp *= 0.5;
+
+  total = total.add(noise2D(p).mul(amp));
+  p = vec2(
+    p.x.mul(1.36).add(p.y.mul(0.36)),
+    p.x.mul(-0.36).add(p.y.mul(1.36)),
+  ).add(vec2(31.2, 14.7));
+  amp *= 0.5;
+
+  return total.add(noise2D(p).mul(amp));
+});
+
+const signalColor = Fn(
+  ([uvCoord, timeU, aspectU, heightU, breathU, breathMotionU]: [
     ReturnType<typeof vec2>,
-    ReturnType<typeof vec2>,
+    ReturnType<typeof float>,
+    ReturnType<typeof float>,
     ReturnType<typeof float>,
     ReturnType<typeof float>,
     ReturnType<typeof float>,
   ]) => {
-    const ringSpeed = float(0.2);
-    const warpStrength = float(0.22);
+    const centered = uvCoord.sub(0.5);
+    const corrected = vec2(centered.x.mul(aspectU), centered.y).mul(2.0);
+    const screenD = length(corrected);
 
-    // Aspect-correct UV and center
-    const uvA = vec2(uvCoord.x.mul(aspectVal), uvCoord.y);
-    const cA = vec2(center.x.mul(aspectVal), center.y);
+    const breathEase = breathU
+      .mul(breathU)
+      .mul(float(3.0).sub(breathU.mul(2.0)));
+    const time = timeU.mul(DRIFT_SPEED);
+    const zoom = float(1.0)
+      .sub(breathEase.mul(BREATH_ZOOM_AMOUNT))
+      .sub(breathMotionU.mul(0.035));
+    const p = corrected.mul(zoom);
 
-    // Max radius to 4 corners (unrolled)
-    const d0 = length(vec2(cA.x.negate(), cA.y.negate()));
-    const d1 = length(vec2(float(1.0).mul(aspectVal).sub(cA.x), cA.y.negate()));
-    const d2 = length(vec2(cA.x.negate(), float(1.0).sub(cA.y)));
-    const d3 = length(
-      vec2(float(1.0).mul(aspectVal).sub(cA.x), float(1.0).sub(cA.y)),
+    const drift = vec2(
+      sin(time.mul(0.33)).mul(0.26).add(sin(time.mul(0.13).add(1.8)).mul(0.16)),
+      sin(time.mul(0.27).add(1.2))
+        .mul(0.22)
+        .add(sin(time.mul(0.1).add(4.3)).mul(0.14)),
     );
-    const maxRadius = max(max(d0, d1), max(d2, d3));
-
-    // Noise warp — low-frequency, high-amplitude for blobby organic shape
-    const noiseScale = float(1.8);
-    const n1 = noise2D(
-      vec2(
-        uvA.x.mul(noiseScale).add(time.mul(0.3)),
-        uvA.y.mul(noiseScale).add(time.mul(0.2)),
-      ),
+    const sourceA = vec2(
+      sin(time.mul(0.16).add(0.4)).mul(0.2),
+      sin(time.mul(0.12).add(2.1)).mul(0.13),
     );
-    const n2 = noise2D(
-      vec2(
-        uvA.x.mul(noiseScale).add(time.mul(0.25)).add(50.0),
-        uvA.y.mul(noiseScale).add(time.mul(0.15)).add(50.0),
-      ),
-    );
-    // Layer a second octave for richer distortion
-    const n3 = noise2D(
-      vec2(
-        uvA.x.mul(3.5).add(time.mul(0.4)),
-        uvA.y.mul(3.5).sub(time.mul(0.35)),
-      ),
-    );
-    const warpOffset = vec2(
-      n1.sub(0.5).add(n3.sub(0.5).mul(0.3)),
-      n2.sub(0.5).add(n3.sub(0.5).mul(0.3)),
-    ).mul(warpStrength);
-    const warpedUV = uvA.add(warpOffset);
-
-    // Distance from warped position to center
-    const dist = length(warpedUV.sub(cA));
-
-    // Expanding ring — faithful port of original GLSL
-    const progress = fract(time.mul(ringSpeed));
-    const currentRadius = maxRadius.mul(progress);
-    const ringDist = abs(dist.sub(currentRadius));
-
-    // Original glow formula: lineRadius / smoothstep denominator
-    // lineRadius GROWS with progress — this creates the "liquid bleeding"
-    const lineRad = float(0.5).mul(progress).add(0.1);
-    // Reversed smoothstep(0.2, 0.002, x) = 1 - smoothstep(0.002, 0.2, x)
-    // So denominator = 1 - (1 - smoothstep(0.002,0.2,x)) = smoothstep(0.002,0.2,x)
-    const denom = smoothstep(float(0.002), float(0.2), ringDist.add(0.02));
-    const brightness = lineRad.div(denom.add(0.001)).mul(0.5);
-
-    // Fade as cycle completes
-    const fade = max(float(0.0), float(1.0).sub(progress));
-
-    // Cubic falloff (clamp base to prevent pow of negative)
-    const falloff = pow(
-      clamp(float(1.0).sub(ringDist), float(0.0), float(1.0)),
-      float(3.0),
+    const sourceB = vec2(
+      sin(time.mul(0.11).add(3.4)).mul(0.18),
+      sin(time.mul(0.18).add(0.9)).mul(0.15),
     );
 
-    const glow = brightness.mul(fade).mul(falloff);
+    const flowA = fbm(p.mul(1.08).add(drift).add(vec2(2.4, 7.1)));
+    const flowB = fbm(
+      p
+        .mul(1.42)
+        .add(vec2(drift.y.negate(), drift.x))
+        .add(vec2(9.2, 3.6)),
+    );
+    const warpStrength = float(WARP_STRENGTH).mul(
+      float(0.82).add(breathEase.mul(0.28)).add(breathMotionU.mul(0.18)),
+    );
+    const warped = vec2(
+      p.x.add(flowA.sub(0.5).mul(warpStrength)),
+      p.y.add(flowB.sub(0.5).mul(warpStrength.mul(0.82))),
+    );
 
-    // Dither — only visible where the ring is bright
-    const pixelY = uvCoord.y.mul(resolutionY);
-    const scanline = sin(pixelY.mul(float(Math.PI / 3.0)))
-      .mul(0.4)
+    const dA = length(warped.sub(sourceA));
+    const dB = length(warped.add(sourceB.mul(0.86)));
+    const phase = time
+      .mul(1.42)
+      .add(breathEase.mul(0.72))
+      .add(breathMotionU.mul(0.24));
+    const ringOpen = breathEase
+      .mul(BREATH_RING_OPEN)
+      .add(breathMotionU.mul(0.2));
+    const waveA = sin(
+      dA.mul(float(8.4).sub(ringOpen))
+        .sub(phase)
+        .add(flowA.mul(2.1)),
+    );
+    const waveB = sin(
+      dB.mul(float(5.8).sub(ringOpen.mul(0.56)))
+        .add(phase.mul(0.72))
+        .sub(flowB.mul(1.7)),
+    );
+    const lattice = sin(
+      warped.x.mul(8.2).add(warped.y.mul(5.4)).add(time.mul(0.62)),
+    )
+      .mul(0.5)
       .add(0.5);
-    const ditherMask = smoothstep(float(0.1), float(0.5), glow);
-    const dithered = glow.mul(mix(float(1.0), scanline, ditherMask.mul(0.4)));
 
-    return dithered;
-  },
-);
+    const softRing = smoothstep(float(0.08), float(0.96), waveA).mul(0.46);
+    const broadRing = smoothstep(float(-0.28), float(0.82), waveB).mul(0.3);
+    const field = fbm(
+      warped.mul(0.86).add(vec2(14.2, 5.8)).add(drift.mul(0.55)),
+    ).mul(0.26);
 
-const borderBeam = Fn(
-  ([uvCoord, time]: [ReturnType<typeof vec2>, ReturnType<typeof float>]) => {
-    const thickness = float(0.05);
+    const pixel = vec2(
+      floor(uvCoord.x.mul(heightU).mul(aspectU).mul(DITHER_SCALE)),
+      floor(uvCoord.y.mul(heightU).mul(DITHER_SCALE)),
+    );
+    const ditherSeed = pixel.x
+      .mul(17.0)
+      .add(pixel.y.mul(131.0))
+      .add(floor(timeU.mul(3.0)).mul(0.013));
+    const dither = hash(ditherSeed).sub(0.5);
+    const scanline = sin(uvCoord.y.mul(heightU).mul(1.32))
+      .mul(0.5)
+      .add(0.5);
 
-    // Edge SDF: distance to nearest viewport edge
+    const edgeFade = float(1.0).sub(
+      smoothstep(float(0.78), float(1.48), screenD),
+    );
+    const centerCalm = float(0.58).add(
+      smoothstep(float(0.08), float(0.56), screenD).mul(0.42),
+    );
+    const glow = float(0.78)
+      .add(breathEase.mul(BREATH_GLOW_AMOUNT))
+      .add(breathMotionU.mul(0.18));
+    const ditherGate = smoothstep(float(0.08), float(0.72), softRing.add(field));
+    const signal = softRing
+      .add(broadRing)
+      .add(field)
+      .add(lattice.mul(0.06))
+      .add(dither.mul(ditherGate).mul(0.12))
+      .mul(float(0.92).add(scanline.mul(0.12)))
+      .mul(edgeFade)
+      .mul(centerCalm)
+      .mul(glow);
+
+    const veil = smoothstep(float(0.05), float(0.78), signal);
+    const crest = smoothstep(float(0.32), float(0.98), signal);
+    const warmTrace = smoothstep(float(0.62), float(1.0), waveB).mul(
+      smoothstep(float(0.26), float(0.88), flowA).mul(0.2),
+    );
+
     const edgeDist = min(
       min(uvCoord.x, uvCoord.y),
       min(float(1.0).sub(uvCoord.x), float(1.0).sub(uvCoord.y)),
     );
+    const edgeGlow = exp(edgeDist.negate().div(0.09))
+      .mul(0.045)
+      .mul(float(0.84).add(breathEase.mul(0.28)));
 
-    // Soft exponential glow from edges inward
-    const glow = exp(edgeDist.negate().div(thickness)).mul(0.25);
+    const bgColor = mix(
+      COLOR_DEEP,
+      COLOR_FIELD,
+      edgeFade.mul(float(0.18).add(field.mul(0.28))),
+    );
+    const lowSignal = mix(COLOR_SIGNAL_LOW, COLOR_SIGNAL_MID, veil);
+    const highSignal = mix(
+      lowSignal,
+      COLOR_SIGNAL_HIGH,
+      crest.mul(float(0.62).add(breathMotionU.mul(0.16))),
+    );
+    const traced = mix(highSignal, COLOR_WARM_TRACE, warmTrace);
+    const color = mix(bgColor, traced, veil)
+      .add(COLOR_SIGNAL_MID.mul(edgeGlow))
+      .add(COLOR_SIGNAL_HIGH.mul(ditherGate).mul(dither.add(0.5)).mul(0.018));
 
-    // Subtle dither noise
-    const seed = uvCoord.x
-      .mul(1234.5)
-      .add(uvCoord.y.mul(6789.1))
-      .add(time.mul(17.3));
-    const dither = hash(seed).sub(0.5).mul(0.015);
-
-    return clamp(glow.add(dither), float(0.0), float(1.0));
+    return clamp(color, vec3(0, 0, 0), vec3(1, 1, 1));
   },
 );
 
-// --- Component ---
-
 export const DitherPulse = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -195,42 +285,24 @@ export const DitherPulse = ({
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const clock = new THREE.Clock();
 
-    // Uniforms
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
     const heightU = uniform(float(height));
-
-    // Build shader graph
-    const uvRaw = uv();
-    const center = vec2(0.5, 0.5);
-
-    // Effects
-    const ring = expandingRing(uvRaw, center, aspectU, timeU, heightU);
-    const border = borderBeam(uvRaw, timeU);
-
-    // Colors — time-varying cosine palette (blues → teals → purples)
-    const ringT = timeU.mul(0.08);
-    const ringColor = vec3(0.5, 0.5, 0.7).add(
-      vec3(0.3, 0.4, 0.3).mul(
-        cos(float(6.2831853).mul(vec3(1.0, 1.0, 1.0).mul(ringT).add(vec3(0.0, 0.1, 0.2)))),
-      ),
-    );
-    const borderColor = ringColor.mul(0.3);
-    const bgColor = vec3(0.005, 0.005, 0.01);
-
-    // Compose — original formula naturally saturates to white at core
-    const color = bgColor
-      .add(ringColor.mul(ring))
-      .add(borderColor.mul(border).mul(0.15));
-
-    const clamped = clamp(color, vec3(0, 0, 0), vec3(1, 1, 1));
-
-    // Grayscale desaturation
     const grayscaleU = uniform(float(0));
-    const lum = dot(clamped, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(clamped, vec3(lum, lum, lum), grayscaleU);
+    const breathU = uniform(float(0));
+    const breathMotionU = uniform(float(0));
 
-    // Material + mesh
+    const color = signalColor(
+      uv(),
+      timeU,
+      aspectU,
+      heightU,
+      breathU,
+      breathMotionU,
+    );
+    const lum = dot(color, vec3(0.299, 0.587, 0.114));
+    const outputColor = mix(color, vec3(lum, lum, lum), grayscaleU);
+
     const material = new MeshBasicNodeMaterial();
     material.colorNode = outputColor;
 
@@ -238,26 +310,58 @@ export const DitherPulse = ({
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    // Renderer
     const renderer = makeWebGPURenderer(context, { antialias: false });
 
     let disposed = false;
+    let previousElapsed = 0;
+    let smoothedBreath = breathRef.current?.value ?? 0;
+    let breathMotion = 0;
 
     function animate() {
       if (disposed) {
         return;
       }
-      (timeU as unknown as { value: number }).value = clock.getElapsedTime();
+      const elapsed = clock.getElapsedTime();
+      const deltaSeconds =
+        previousElapsed > 0
+          ? Math.max(1 / 120, Math.min(elapsed - previousElapsed, 0.12))
+          : 1 / 60;
+      const targetBreath = breathRef.current?.value ?? 0.0;
+      const breathDelta = targetBreath - smoothedBreath;
+      smoothedBreath = damp(
+        smoothedBreath,
+        targetBreath,
+        BREATH_RESPONSE_RATE,
+        deltaSeconds,
+      );
+      const motionTarget = clampNumber(
+        Math.abs(breathDelta) * BREATH_MOTION_GAIN,
+        0.0,
+        1.0,
+      );
+      breathMotion = damp(
+        breathMotion,
+        motionTarget,
+        motionTarget > breathMotion
+          ? BREATH_MOTION_ATTACK_RATE
+          : BREATH_MOTION_RELEASE_RATE,
+        deltaSeconds,
+      );
+      previousElapsed = elapsed;
+
+      (timeU as unknown as { value: number }).value = elapsed;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+      (breathU as unknown as { value: number }).value = smoothedBreath;
+      (breathMotionU as unknown as { value: number }).value = breathMotion;
       renderer.render(scene, camera);
       context!.present();
     }
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "DitherPulse",
+      label: "SignalBloom",
       onReady,
     });
 

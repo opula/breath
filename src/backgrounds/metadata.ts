@@ -8,7 +8,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "starfield", name: "Starfield" },
   { id: "waves", name: "Waves" },
   { id: "wormhole", name: "Wormhole" },
-  { id: "dither-pulse", name: "DitherPulse" },
+  { id: "dither-pulse", name: "Signal Bloom" },
   { id: "particles", name: "Particles" },
   { id: "terrain", name: "Terrain" },
   { id: "dot-grid", name: "DotGrid" },
