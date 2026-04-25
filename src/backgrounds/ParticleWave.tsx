@@ -59,6 +59,13 @@ const WAVE_TIME_SCALE = 0.11;
 const BREATH_AMPLITUDE = 0.56;
 const BREATH_FIELD_SCALE = 0.06;
 const BREATH_LIFT = 0.1;
+const BREATH_SURGE_AMPLITUDE = 1.05;
+const BREATH_SURGE_FIELD_SCALE = 0.14;
+const BREATH_SURGE_LIFT = 0.08;
+const BREATH_SURGE_PHASE = 0.34;
+const BREATH_SURGE_GAIN = 0.34;
+const BREATH_FLOW_GAIN = 0.55;
+const BREATH_RESPONSE_DECAY = 0.86;
 
 // ────────────────────────────────────────────────────────────
 //  LOOK
@@ -142,12 +149,18 @@ export const ParticleWave = ({
     const timeU = uniform(float(0));
     const grayscaleU = uniform(float(0));
     const breathU = uniform(float(0));
+    const breathSurgeU = uniform(float(0));
+    const breathFlowU = uniform(float(0));
     const breathEase = breathU
       .mul(breathU)
       .mul(float(3.0).sub(breathU.mul(2.0)));
-    const fieldScale = float(1.0).sub(breathEase.mul(BREATH_FIELD_SCALE));
+    const fieldScale = float(1.0)
+      .sub(breathEase.mul(BREATH_FIELD_SCALE))
+      .sub(breathSurgeU.mul(BREATH_SURGE_FIELD_SCALE));
     const waveAmp = float(WAVE_AMPLITUDE).mul(
-      float(0.72).add(breathEase.mul(BREATH_AMPLITUDE)),
+      float(0.66)
+        .add(breathEase.mul(BREATH_AMPLITUDE))
+        .add(breathSurgeU.mul(BREATH_SURGE_AMPLITUDE)),
     );
 
     // Wave displacement computed per-vertex in the shader graph — no CPU loop,
@@ -157,12 +170,23 @@ export const ParticleWave = ({
       vec3(
         positionLocal.x.mul(WAVE_XY_SCALE).mul(fieldScale),
         positionLocal.y.mul(WAVE_XY_SCALE).mul(fieldScale),
-        timeU.mul(WAVE_TIME_SCALE).add(breathEase.mul(0.12)),
+        timeU
+          .mul(WAVE_TIME_SCALE)
+          .add(breathEase.mul(0.12))
+          .add(breathSurgeU.mul(BREATH_SURGE_PHASE))
+          .add(breathFlowU.mul(0.12)),
       ),
     ).mul(waveAmp);
 
     const displacedPos = positionLocal.add(
-      vec3(float(0), float(0), waveZ.add(breathEase.mul(BREATH_LIFT))),
+      vec3(
+        float(0),
+        float(0),
+        waveZ
+          .add(breathEase.mul(BREATH_LIFT))
+          .add(breathSurgeU.mul(BREATH_SURGE_LIFT))
+          .add(breathFlowU.mul(0.05)),
+      ),
     );
 
     // Color by height: valleys dim, peaks bright.
@@ -175,11 +199,18 @@ export const ParticleWave = ({
     const particleColor = mix(
       lowMid,
       PARTICLE_BRIGHT,
-      smoothstep(0.52, 1.0, heightT).mul(float(0.82).add(breathEase.mul(0.18))),
+      smoothstep(0.52, 1.0, heightT).mul(
+        float(0.82)
+          .add(breathEase.mul(0.18))
+          .add(breathSurgeU.mul(0.34)),
+      ),
     );
 
-    const lum = dot(particleColor, vec3(0.299, 0.587, 0.114));
-    const finalColor = mix(particleColor, vec3(lum, lum, lum), grayscaleU);
+    const energizedColor = particleColor.mul(
+      float(1.0).add(breathSurgeU.mul(0.28)),
+    );
+    const lum = dot(energizedColor, vec3(0.299, 0.587, 0.114));
+    const finalColor = mix(energizedColor, vec3(lum, lum, lum), grayscaleU);
 
     const material = new PointsNodeMaterial({
       transparent: false,
@@ -203,20 +234,48 @@ export const ParticleWave = ({
     const renderer = makeWebGPURenderer(context, { antialias: false });
 
     let disposed = false;
+    let previousElapsed = 0;
+    let previousBreath = breathRef.current?.value ?? 0;
+    let breathSurge = 0;
+    let breathFlow = 0;
 
     function animate() {
       if (disposed) return;
       const elapsed = clock.getElapsedTime();
+      const deltaSeconds =
+        previousElapsed > 0
+          ? Math.max(1 / 120, Math.min(elapsed - previousElapsed, 0.12))
+          : 1 / 60;
+      const currentBreath = breathRef.current?.value ?? 0.0;
+      const breathVelocity = (currentBreath - previousBreath) / deltaSeconds;
+      const surgeTarget = Math.min(
+        1.0,
+        Math.abs(breathVelocity) * BREATH_SURGE_GAIN,
+      );
+      const flowTarget = Math.max(
+        -1.0,
+        Math.min(1.0, breathVelocity * BREATH_FLOW_GAIN),
+      );
+      breathSurge = Math.max(surgeTarget, breathSurge * BREATH_RESPONSE_DECAY);
+      breathFlow =
+        breathFlow * BREATH_RESPONSE_DECAY +
+        flowTarget * (1.0 - BREATH_RESPONSE_DECAY);
+      previousElapsed = elapsed;
+      previousBreath = currentBreath;
+
       (timeU as unknown as { value: number }).value = elapsed;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
-      (breathU as unknown as { value: number }).value =
-        breathRef.current?.value ?? 0.0;
+      (breathU as unknown as { value: number }).value = currentBreath;
+      (breathSurgeU as unknown as { value: number }).value = breathSurge;
+      (breathFlowU as unknown as { value: number }).value = breathFlow;
       points.rotation.z =
         PLANE_TILT_Z +
         Math.sin(elapsed * PLANE_TILT_Z_OSC_FREQ) *
-          (PLANE_TILT_Z_OSC_AMP + (breathRef.current?.value ?? 0) * 0.025);
+          (PLANE_TILT_Z_OSC_AMP +
+            currentBreath * 0.025 +
+            breathSurge * 0.08);
       renderer.render(scene, camera);
       context!.present();
     }
