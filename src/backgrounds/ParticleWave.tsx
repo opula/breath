@@ -56,6 +56,7 @@ const PLANE_SEGMENTS_Y = 320;
 const WAVE_AMPLITUDE = 0.42;
 const WAVE_XY_SCALE = 0.36;
 const WAVE_TIME_SCALE = 0.11;
+const AMBIENT_DRIFT_SPEED = 1.55;
 const AMBIENT_DRIFT_SCALE = 0.18;
 const AMBIENT_UNDERTOW_SCALE = 0.58;
 const AMBIENT_UNDERTOW_AMPLITUDE = 0.3;
@@ -172,20 +173,21 @@ export const ParticleWave = ({
     const breathEase = breathU
       .mul(breathU)
       .mul(float(3.0).sub(breathU.mul(2.0)));
+    const ambientTime = timeU.mul(AMBIENT_DRIFT_SPEED);
     const ambientPulse = sin(
-      timeU
+      ambientTime
         .mul(0.067)
-        .add(sin(timeU.mul(0.023)).mul(0.8))
+        .add(sin(ambientTime.mul(0.023)).mul(0.8))
         .add(1.2),
     )
       .mul(0.5)
       .add(0.5);
-    const ambientDriftX = sin(timeU.mul(0.043))
+    const ambientDriftX = sin(ambientTime.mul(0.043))
       .mul(0.58)
-      .add(sin(timeU.mul(0.017).add(2.1)).mul(0.44));
-    const ambientDriftY = sin(timeU.mul(0.037).add(1.4))
+      .add(sin(ambientTime.mul(0.017).add(2.1)).mul(0.44));
+    const ambientDriftY = sin(ambientTime.mul(0.037).add(1.4))
       .mul(0.52)
-      .add(sin(timeU.mul(0.021).add(4.0)).mul(0.38));
+      .add(sin(ambientTime.mul(0.021).add(4.0)).mul(0.38));
     const fieldScale = float(1.0)
       .sub(breathEase.mul(BREATH_FIELD_SCALE))
       .sub(breathMotionU.mul(BREATH_MOTION_FIELD_SCALE));
@@ -229,7 +231,7 @@ export const ParticleWave = ({
         positionLocal.y
           .mul(WAVE_XY_SCALE * AMBIENT_UNDERTOW_SCALE)
           .add(ambientDriftX.mul(AMBIENT_DRIFT_SCALE * 0.7)),
-        timeU
+        ambientTime
           .mul(WAVE_TIME_SCALE * 0.54)
           .add(3.7)
           .sub(ambientPulse.mul(AMBIENT_PHASE_SWAY * 0.7))
@@ -353,8 +355,8 @@ export const ParticleWave = ({
           (PLANE_TILT_Z_OSC_AMP +
             smoothedBreath * 0.025 +
             breathMotion * 0.035) +
-        Math.sin(elapsed * 0.031 + 1.8) * 0.024 +
-        Math.sin(elapsed * 0.019 + 4.1) * 0.018;
+        Math.sin(elapsed * 0.031 * AMBIENT_DRIFT_SPEED + 1.8) * 0.024 +
+        Math.sin(elapsed * 0.019 * AMBIENT_DRIFT_SPEED + 4.1) * 0.018;
       renderer.render(scene, camera);
       context!.present();
     }
