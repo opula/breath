@@ -15,7 +15,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "game-of-life", name: "GameOfLife" },
   { id: "sin-pulse", name: "SinPulse" },
   { id: "fluid", name: "Fluid" },
-  { id: "ethereal", name: "Ethereal" },
+  { id: "ethereal", name: "Inner Current" },
   { id: "dream-smoke", name: "Tidal Veil" },
   { id: "particle-wave", name: "ParticleWave" },
   { id: "particle-helix", name: "ParticleHelix" },
