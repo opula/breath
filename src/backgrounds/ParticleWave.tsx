@@ -56,6 +56,11 @@ const PLANE_SEGMENTS_Y = 320;
 const WAVE_AMPLITUDE = 0.42;
 const WAVE_XY_SCALE = 0.36;
 const WAVE_TIME_SCALE = 0.11;
+const AMBIENT_DRIFT_SCALE = 0.18;
+const AMBIENT_UNDERTOW_SCALE = 0.58;
+const AMBIENT_UNDERTOW_AMPLITUDE = 0.3;
+const AMBIENT_AMPLITUDE_SWAY = 0.14;
+const AMBIENT_PHASE_SWAY = 0.28;
 const BREATH_AMPLITUDE = 0.56;
 const BREATH_FIELD_SCALE = 0.06;
 const BREATH_LIFT = 0.1;
@@ -167,29 +172,73 @@ export const ParticleWave = ({
     const breathEase = breathU
       .mul(breathU)
       .mul(float(3.0).sub(breathU.mul(2.0)));
+    const ambientPulse = sin(
+      timeU
+        .mul(0.067)
+        .add(sin(timeU.mul(0.023)).mul(0.8))
+        .add(1.2),
+    )
+      .mul(0.5)
+      .add(0.5);
+    const ambientDriftX = sin(timeU.mul(0.043))
+      .mul(0.58)
+      .add(sin(timeU.mul(0.017).add(2.1)).mul(0.44));
+    const ambientDriftY = sin(timeU.mul(0.037).add(1.4))
+      .mul(0.52)
+      .add(sin(timeU.mul(0.021).add(4.0)).mul(0.38));
     const fieldScale = float(1.0)
       .sub(breathEase.mul(BREATH_FIELD_SCALE))
       .sub(breathMotionU.mul(BREATH_MOTION_FIELD_SCALE));
     const waveAmp = float(WAVE_AMPLITUDE).mul(
       float(0.72)
         .add(breathEase.mul(BREATH_AMPLITUDE))
-        .add(breathMotionU.mul(BREATH_MOTION_AMPLITUDE)),
+        .add(breathMotionU.mul(BREATH_MOTION_AMPLITUDE))
+        .mul(
+          float(1.0).add(
+            ambientPulse.sub(0.5).mul(AMBIENT_AMPLITUDE_SWAY),
+          ),
+        ),
     );
 
     // Wave displacement computed per-vertex in the shader graph — no CPU loop,
     // no storage buffers. Displacement goes along local Z; after the mesh's
     // -π/2 X-rotation, local +Z becomes world +Y, so peaks bob upward.
-    const waveZ = gradientNoise3(
+    const primaryWave = gradientNoise3(
       vec3(
-        positionLocal.x.mul(WAVE_XY_SCALE).mul(fieldScale),
-        positionLocal.y.mul(WAVE_XY_SCALE).mul(fieldScale),
+        positionLocal.x
+          .mul(WAVE_XY_SCALE)
+          .mul(fieldScale)
+          .add(ambientDriftX.mul(AMBIENT_DRIFT_SCALE)),
+        positionLocal.y
+          .mul(WAVE_XY_SCALE)
+          .mul(fieldScale)
+          .add(ambientDriftY.mul(AMBIENT_DRIFT_SCALE)),
         timeU
           .mul(WAVE_TIME_SCALE)
+          .add(ambientPulse.mul(AMBIENT_PHASE_SWAY))
           .add(breathEase.mul(0.12))
           .add(breathMotionU.mul(BREATH_MOTION_PHASE))
           .add(breathFlowU.mul(0.08)),
       ),
-    ).mul(waveAmp);
+    );
+    const undertowWave = gradientNoise3(
+      vec3(
+        positionLocal.x
+          .mul(WAVE_XY_SCALE * AMBIENT_UNDERTOW_SCALE)
+          .sub(ambientDriftY.mul(AMBIENT_DRIFT_SCALE * 0.7)),
+        positionLocal.y
+          .mul(WAVE_XY_SCALE * AMBIENT_UNDERTOW_SCALE)
+          .add(ambientDriftX.mul(AMBIENT_DRIFT_SCALE * 0.7)),
+        timeU
+          .mul(WAVE_TIME_SCALE * 0.54)
+          .add(3.7)
+          .sub(ambientPulse.mul(AMBIENT_PHASE_SWAY * 0.7))
+          .sub(breathFlowU.mul(0.04)),
+      ),
+    );
+    const waveZ = primaryWave
+      .add(undertowWave.mul(AMBIENT_UNDERTOW_AMPLITUDE))
+      .mul(waveAmp);
 
     const displacedPos = positionLocal.add(
       vec3(
@@ -303,7 +352,9 @@ export const ParticleWave = ({
         Math.sin(elapsed * PLANE_TILT_Z_OSC_FREQ) *
           (PLANE_TILT_Z_OSC_AMP +
             smoothedBreath * 0.025 +
-            breathMotion * 0.035);
+            breathMotion * 0.035) +
+        Math.sin(elapsed * 0.031 + 1.8) * 0.024 +
+        Math.sin(elapsed * 0.019 + 4.1) * 0.018;
       renderer.render(scene, camera);
       context!.present();
     }
