@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { StorageBufferAttribute } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
   float,
@@ -18,6 +19,7 @@ import {
   dot,
   mod,
   min,
+  smoothstep,
   normalize,
   uniform,
   storage,
@@ -37,7 +39,7 @@ const SCALE_X = 0.07;
 const SCALE_Y = 0.07;
 const DETAIL_HEIGHT = 3.34;
 const DETAIL_SCALE = 0.09163;
-const FOG_COLOR = 0x999999;
+const FOG_COLOR = 0x071014;
 const CAM_HEIGHT = 4.214;
 const CAM_DIST = 68.04;
 const FOV = 70;
@@ -46,6 +48,9 @@ const SEGMENTS = 160;
 const EDGE_RADIUS = 90;
 const FOG_DENSITY = 0.015;
 const MAX_DELTA_SECONDS = 0.1; // clamp large frame gaps on app resume
+const BREATH_RESPONSE_RATE = 4.0;
+const INHALE_RESPONSE_RATE = 4.8;
+const INHALE_FLOW_GAIN = 3.1;
 
 const STRIDE = SEGMENTS + 1;
 const VERT_COUNT = STRIDE * STRIDE;
@@ -54,16 +59,30 @@ const CELL_SIZE = PLANE_SIZE / SEGMENTS;
 // Echo-inspired cosine palette
 const TWO_PI = 6.2831853;
 
+const clampNumber = (value: number, minValue: number, maxValue: number) =>
+  Math.max(minValue, Math.min(maxValue, value));
+
+const damp = (
+  current: number,
+  target: number,
+  rate: number,
+  deltaSeconds: number,
+) => current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
+
 export const Terrain = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -245,6 +264,12 @@ export const Terrain = ({
     const waveTimeU = uniform(float(0));
     const flightOffsetU = uniform(float(0));
     const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
+    const inhaleU = uniform(float(0));
+    const breathEase = breathU
+      .mul(breathU)
+      .mul(float(3.0).sub(breathU.mul(2.0)));
+    const inhaleEase = smoothstep(float(0.02), float(1.0), inhaleU);
 
     // ================================================================
     // Helper: sample terrain height at a grid position
@@ -258,20 +283,31 @@ export const Terrain = ({
         ReturnType<typeof float>,
       ]) => {
         const noiseY = y.add(flightOffsetU);
+        const heightScale = float(0.82)
+          .add(breathEase.mul(0.32))
+          .add(inhaleEase.mul(0.24));
+        const detailScale = float(0.76).add(inhaleEase.mul(0.52));
+        const inhaleRidge = sin(noiseY.mul(0.075).add(waveTimeU.mul(7.5)))
+          .mul(inhaleEase)
+          .mul(1.35);
 
         const mainNoise = noise3D(
           x.mul(SCALE_X),
           noiseY.mul(SCALE_Y),
-          waveTimeU,
-        ).mul(MAIN_HEIGHT);
+          waveTimeU.add(breathEase.mul(0.16)),
+        )
+          .mul(MAIN_HEIGHT)
+          .mul(heightScale);
 
         const detailNoise = noise3D(
           x.mul(DETAIL_SCALE),
           noiseY.mul(DETAIL_SCALE),
           waveTimeU.mul(0.5).add(10.0),
-        ).mul(DETAIL_HEIGHT);
+        )
+          .mul(DETAIL_HEIGHT)
+          .mul(detailScale);
 
-        return mainNoise.add(detailNoise).mul(smoothEdge);
+        return mainNoise.add(detailNoise).add(inhaleRidge).mul(smoothEdge);
       },
     );
 
@@ -300,12 +336,22 @@ export const Terrain = ({
 
       // Color: map normalized height to Echo palette
       const normalizedZ = z.div(float(MAIN_HEIGHT)).mul(0.5).add(0.5);
-      const palInput = normalizedZ.add(waveTimeU.mul(0.3));
-      const palCol = palette(palInput).mul(0.7);
+      const palInput = normalizedZ.add(waveTimeU.mul(0.3)).add(
+        breathEase.mul(0.08),
+      );
+      const ridgeGlow = smoothstep(float(0.36), float(1.0), normalizedZ);
+      const palCol = palette(palInput).mul(
+        float(0.58).add(breathEase.mul(0.2)).add(inhaleEase.mul(0.28)),
+      );
+      const inhaleCol = vec3(0.18, 0.72, 0.84).mul(
+        ridgeGlow.mul(inhaleEase).mul(0.26),
+      );
+      const restedCol = vec3(0.012, 0.028, 0.04);
+      const terrainCol = mix(restedCol, palCol.add(inhaleCol), smoothEdge);
 
       // Grayscale desaturation
-      const lum = dot(palCol, vec3(0.299, 0.587, 0.114));
-      const finalCol = mix(palCol, vec3(lum, lum, lum), grayscaleU);
+      const lum = dot(terrainCol, vec3(0.299, 0.587, 0.114));
+      const finalCol = mix(terrainCol, vec3(lum, lum, lum), grayscaleU);
 
       col.assign(finalCol);
     })().compute(VERT_COUNT);
@@ -401,19 +447,50 @@ export const Terrain = ({
 
     let waveTime = 0;
     let flightOffset = 0;
+    let smoothedBreath = breathRef.current?.value ?? 0;
+    let inhalePower = 0;
 
     function animate() {
       if (disposed) return;
 
       const delta = Math.min(clock.getDelta(), MAX_DELTA_SECONDS);
-      waveTime += delta * WAVE_SPEED;
-      flightOffset += delta * FLY_SPEED;
+      const targetBreath = breathRef.current?.value ?? 0.0;
+      const breathDelta = targetBreath - smoothedBreath;
+      smoothedBreath = damp(
+        smoothedBreath,
+        targetBreath,
+        BREATH_RESPONSE_RATE,
+        delta,
+      );
+      inhalePower = damp(
+        inhalePower,
+        clampNumber(breathDelta * INHALE_FLOW_GAIN, 0.0, 1.0),
+        INHALE_RESPONSE_RATE,
+        delta,
+      );
+
+      waveTime +=
+        delta * WAVE_SPEED * (0.78 + smoothedBreath * 0.38 + inhalePower * 0.7);
+      flightOffset +=
+        delta * FLY_SPEED * (0.72 + smoothedBreath * 0.26 + inhalePower * 1.25);
 
       (waveTimeU as unknown as { value: number }).value = waveTime;
       (flightOffsetU as unknown as { value: number }).value = flightOffset;
+      (breathU as unknown as { value: number }).value = smoothedBreath;
+      (inhaleU as unknown as { value: number }).value = inhalePower;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+
+      camera.position.y = CAM_HEIGHT + smoothedBreath * 1.2 + inhalePower * 1.1;
+      camera.position.z = CAM_DIST - smoothedBreath * 4.5 - inhalePower * 6.0;
+      camera.lookAt(0, smoothedBreath * 0.2 + inhalePower * 0.35, -10);
+      hemiLight.intensity = 0.32 + smoothedBreath * 0.08 + inhalePower * 0.16;
+      dirLight.intensity = 0.86 + smoothedBreath * 0.24 + inhalePower * 0.42;
+      if (scene.fog instanceof THREE.FogExp2) {
+        scene.fog.density =
+          FOG_DENSITY * (1.08 - smoothedBreath * 0.16 + inhalePower * 0.08);
+      }
 
       // Compute positions + colors every frame.
       renderer.compute(computePositions);
