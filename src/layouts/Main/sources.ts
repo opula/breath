@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { Aurora } from "../../backgrounds/Aurora";
 import { Wormhole } from "../../backgrounds/Wormhole";
 import { Starfield } from "../../backgrounds/Starfield";
@@ -29,7 +30,11 @@ export {
   type SceneSourceId,
 } from "../../backgrounds/metadata";
 
-type BackgroundProps = { grayscale?: boolean; onReady?: () => void };
+type BackgroundProps = {
+  grayscale?: boolean;
+  breath?: SharedValue<number>;
+  onReady?: () => void;
+};
 
 const BackgroundComponentById = {
   aurora: Aurora,

@@ -4,6 +4,7 @@ import { Canvas } from "react-native-wgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { PointsNodeMaterial } from "three/webgpu";
+import type { SharedValue } from "react-native-reanimated";
 import {
   float,
   vec3,
@@ -22,7 +23,7 @@ import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // ────────────────────────────────────────────────────────────
-//  PARTICLE HELIX — fly through a multi-strand spiral tunnel
+//  PARTICLE HELIX — slow spiral current for breath work
 // ────────────────────────────────────────────────────────────
 // Each particle stores a fixed (s, strand, jitter…) tuple and the vertex
 // shader reconstructs its world position every frame as a function of
@@ -32,92 +33,96 @@ import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 // ────────────────────────────────────────────────────────────
 
 const HELIX_PARTICLE_COUNT = 48_000;
-const STRAND_COUNT = 8; // DNA-style: two strands
+const STRAND_COUNT = 5;
+const STRAND_PHASE_STEP = (Math.PI * 2) / STRAND_COUNT;
+const STRAND_COLOR_DENOM = Math.max(1, STRAND_COUNT - 1);
 
 // Helix shape
-const HELIX_RADIUS = 0.5; // distance from center axis
-const HELIX_LENGTH = 26.0; // total z-length of the tunnel
-const TWIST_TURNS = 22; // how many full revolutions over the length
+const HELIX_RADIUS = 2.15; // distance from center axis
+const HELIX_LENGTH = 32.0; // total z-length of the field
+const TWIST_TURNS = 5.5; // broad spirals, not a tight DNA corkscrew
 const TWIST_RATE = (TWIST_TURNS * Math.PI * 2) / HELIX_LENGTH;
+const RADIUS_FLOW_AMP = 0.42;
+const BREATH_RADIUS_AMP = 0.18;
+const BREATH_FLOW_OFFSET = 0.014;
 
-// Ambient star cloud — distributed radially with outward density bias so the
-// tunnel walls feel denser further from the camera axis.
-const AMBIENT_PARTICLE_COUNT = 12_000;
-const AMBIENT_R_MIN = 0.4;
-const AMBIENT_R_MAX = 7.0;
+// Ambient particles make the spiral feel suspended in atmosphere instead of
+// sitting on a flat black backdrop.
+const AMBIENT_PARTICLE_COUNT = 18_000;
+const AMBIENT_R_MIN = 0.15;
+const AMBIENT_R_MAX = 7.8;
 // Power exponent for `r = R_MAX * pow(rand, EXP)`. EXP < 1 biases toward the
-// outer edge (more particles near R_MAX). 0.4 is a strong outward bias.
-const AMBIENT_R_EXP = 0.4;
+// outer edge. Keep this moderate so the center is quiet, not empty.
+const AMBIENT_R_EXP = 0.62;
+const AMBIENT_INTENSITY_MULT = 0.38;
 
 // Motion
-const FLIGHT_SPEED = 0.01; // world units per second toward camera
+const FLIGHT_SPEED = 0.2; // world units per second toward camera
 const FLIGHT_S_PER_SEC = FLIGHT_SPEED / HELIX_LENGTH; // s ∈ [0,1] flow rate
-const GLOBAL_ROT_HZ = 1 / 60; // global slow rotation: 1 rev per 60s
+const GLOBAL_ROT_HZ = 1 / 150; // global slow rotation: 1 rev per 150s
 const GLOBAL_ROT_RATE = GLOBAL_ROT_HZ * Math.PI * 2;
 
-// Per-particle jitter (so the helix has thickness instead of a thin line)
-const RADIUS_JITTER_MAX = 0.35;
-const ANGLE_JITTER_MAX = 0.08; // radians
-const Z_JITTER_MAX = 0.05;
+// Per-particle jitter gives each arm thickness and a soft-edged current.
+const RADIUS_JITTER_MAX = 0.82;
+const ANGLE_JITTER_MAX = 0.26; // radians
+const Z_JITTER_MAX = 0.38;
 
-// Twinkle
-const TWINKLE_AMP = 1.25;
-const TWINKLE_RATE = 5.5;
+// Shimmer, intentionally slow and shallow so it reads as glow instead of stars.
+const TWINKLE_AMP = 0.12;
+const TWINKLE_RATE = 0.55;
 
 // Brightness / fog
-const BASE_INTENSITY = 2.4;
+const BASE_INTENSITY = 0.92;
 
-// Per-particle shine spread — distribution skewed low with a long bright tail,
-// so most particles are subtle and a handful really pop like stars.
-// Wide range + heavy bias = scattered bright "hero" particles among dim mass.
-const SHINE_MIN = 0.25;
-const SHINE_MAX = 8.0;
-const SHINE_BIAS = 5.0; // higher = more particles dim, fewer bright
-const FOG_NEAR_END = 0.4; // particles closer than this are fully invisible
-const FOG_NEAR_START = 1.5; // fully visible past this (from camera)
-const FOG_FAR_START = 18;
+// Per-particle shine spread. Keep the range restrained; no hard star pops.
+const SHINE_MIN = 0.42;
+const SHINE_MAX = 2.25;
+const SHINE_BIAS = 2.8; // higher = more particles dim, fewer bright
+const FOG_NEAR_END = 0.25; // particles closer than this are fully invisible
+const FOG_NEAR_START = 3.0; // fully visible past this (from camera)
+const FOG_FAR_START = 22;
 const FOG_FAR_END = HELIX_LENGTH;
 
 // Camera
-const CAMERA_FOV = 6;
+const CAMERA_FOV = 46;
 
-// Keep-out cone — fraction of screen radius from center to leave empty.
+// Center calm cone — fraction of screen radius from center to keep subdued.
 // Mask is applied per-particle as smoothstep on `world_r / |z|`, which is the
-// particle's normalized screen position regardless of its z depth. So a
-// distant particle at world radius 2 (which would otherwise project to
-// screen-center) gets faded out, while a near particle at the same world
-// radius (now at the screen periphery) renders normally.
-const KEEP_OUT_FRACTION = 0.3;
-const KEEP_OUT_RATIO =
-  KEEP_OUT_FRACTION * Math.tan(((CAMERA_FOV / 2) * Math.PI) / 180);
-// Soft fade band to avoid a hard ring edge.
-const KEEP_OUT_FADE_INNER = KEEP_OUT_RATIO * 0.85;
-const KEEP_OUT_FADE_OUTER = KEEP_OUT_RATIO;
-const CAMERA_LOOKAT_Z = -10;
-const CAMERA_SWAY_AMP_X = 0.12;
-const CAMERA_SWAY_AMP_Y = 0.08;
-const CAMERA_SWAY_FREQ_X = 0.07;
-const CAMERA_SWAY_FREQ_Y = 0.05;
+// particle's normalized screen position regardless of its z depth. Unlike a
+// hard keep-out, this leaves quiet texture behind the breath ring.
+const CENTER_CALM_FRACTION = 0.42;
+const CENTER_CALM_RATIO =
+  CENTER_CALM_FRACTION * Math.tan(((CAMERA_FOV / 2) * Math.PI) / 180);
+const CENTER_CALM_FADE_INNER = CENTER_CALM_RATIO * 0.72;
+const CENTER_CALM_FADE_OUTER = CENTER_CALM_RATIO;
+const CENTER_DIM = 0.34;
+const CAMERA_LOOKAT_Z = -14;
+const CAMERA_SWAY_AMP_X = 0.08;
+const CAMERA_SWAY_AMP_Y = 0.06;
+const CAMERA_SWAY_FREQ_X = 0.045;
+const CAMERA_SWAY_FREQ_Y = 0.035;
 
-// Two-strand palette — one cool, one warm, so the strands stay distinguishable
-// when they cross each other in the foreground.
-const COLOR_0 = vec3(0.4, 0.85, 1.0); // cyan-blue
-const COLOR_1 = vec3(1.0, 0.55, 0.85); // pink-magenta
-// Ambient star cloud — neutral pale blue, lets the helix colors stay primary.
-const COLOR_AMBIENT = vec3(0.85, 0.9, 1.0);
+const COLOR_DEEP = vec3(0.07, 0.14, 0.18);
+const COLOR_TIDE = vec3(0.42, 0.78, 0.76);
+const COLOR_WARM = vec3(0.95, 0.72, 0.48);
+const COLOR_AMBIENT = vec3(0.58, 0.72, 0.82);
 
-const BG_COLOR = 0x02030a;
+const BG_COLOR = 0x020506;
 
 export const ParticleHelix = ({
   grayscale = false,
+  breath,
   onReady,
 }: {
   grayscale?: boolean;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const ref = useRef<CanvasRef>(null);
   const grayscaleRef = useRef(grayscale);
+  const breathRef = useRef(breath);
   grayscaleRef.current = grayscale;
+  breathRef.current = breath;
 
   useEffect(() => {
     const context = ref.current?.getContext("webgpu");
@@ -131,7 +136,7 @@ export const ParticleHelix = ({
     const aspect = width / height;
     let disposed = false;
 
-    // Power-curve shine: most particles dim, a few much brighter "stars".
+    // Power-curve shine: most particles dim, a few softly brighter.
     const sampleShine = () =>
       SHINE_MIN + Math.pow(Math.random(), SHINE_BIAS) * (SHINE_MAX - SHINE_MIN);
 
@@ -226,6 +231,7 @@ export const ParticleHelix = ({
     // ── Uniforms ──────────────────────────────────────────────
     const timeU = uniform(float(0));
     const grayscaleU = uniform(float(0));
+    const breathU = uniform(float(0));
 
     // ── TSL nodes for per-particle attrs ──────────────────────
     const aS = attribute("aS", "float");
@@ -237,35 +243,43 @@ export const ParticleHelix = ({
     const aShine = attribute("aShine", "float");
 
     // ── Position from closed-form helix ────────────────────────
-    // effS ∈ [0, 1) — particle's current position along the helix arc.
-    // Advancing s wraps automatically via fract().
-    const effS = fract(aS.add(timeU.mul(FLIGHT_S_PER_SEC)));
+    // effS ∈ [0, 1) — particle's current position along the spiral arc.
+    // Breath subtly shifts the current so inhale/exhale is felt in the field.
+    const effS = fract(
+      aS.add(timeU.mul(FLIGHT_S_PER_SEC)).add(
+        breathU.mul(BREATH_FLOW_OFFSET),
+      ),
+    );
 
     // z mapped to [-LENGTH, 0]; near-camera end is at z=0.
     const z = effS.sub(1.0).mul(HELIX_LENGTH).add(aZJ);
 
-    // Strand 0 twists CCW, strand 1 twists CW — opposite directions create
-    // the X-shaped crossings of a classic double helix.
-    // strandDir = 1 for strand 0, -1 for strand 1
-    // strandStart = 0 for strand 0, π for strand 1 (180° apart at z=0)
+    // Multiple strands share a direction and phase apart into a slow spiral
+    // current. This avoids the busy X-crossings of a literal DNA helix.
     const pathLen = effS.mul(HELIX_LENGTH);
-    const strandDir = float(1.0).sub(aStrand.mul(2.0));
-    const strandStart = aStrand.mul(Math.PI);
+    const strandPhase = aStrand.mul(STRAND_PHASE_STEP);
+    const radiusWave = sin(
+      pathLen.mul(0.72).add(strandPhase).add(timeU.mul(0.16)),
+    ).mul(RADIUS_FLOW_AMP);
     const angle = pathLen
       .mul(TWIST_RATE)
-      .mul(strandDir)
-      .add(strandStart)
+      .add(strandPhase)
+      .add(sin(pathLen.mul(0.34).add(timeU.mul(0.08))).mul(0.16))
       .add(aAJ)
       .add(timeU.mul(GLOBAL_ROT_RATE));
 
-    const radius = float(HELIX_RADIUS).add(aRJ);
+    const breathScale = float(1.0).add(breathU.mul(BREATH_RADIUS_AMP));
+    const radius = float(HELIX_RADIUS).add(aRJ).add(radiusWave).mul(breathScale);
     const x = cos(angle).mul(radius);
     const y = sin(angle).mul(radius);
 
     const helixPos = vec3(x, y, z);
 
-    // Per-strand color (aStrand is 0 or 1 → straight mix).
-    const strandColor = mix(COLOR_0, COLOR_1, aStrand);
+    // Calm color ramp: deep teal shadows, pale tide highlights, warm accents.
+    const strandT = aStrand.div(STRAND_COLOR_DENOM);
+    const coolColor = mix(COLOR_DEEP, COLOR_TIDE, strandT);
+    const warmBlend = smoothstep(0.58, 1.0, strandT);
+    const strandColor = mix(coolColor, COLOR_WARM, warmBlend.mul(0.55));
 
     // ── Depth fog (kills the wrap pop on both ends) ────────────
     const zDist = z.negate(); // distance from camera (camera at z=0)
@@ -278,26 +292,28 @@ export const ParticleHelix = ({
       smoothstep(float(FOG_FAR_START), float(FOG_FAR_END), zDist),
     );
 
-    // ── Twinkle (per-particle phase keeps it from feeling synced) ──
+    // ── Shimmer (per-particle phase keeps it from feeling synced) ──
     const twinkle = sin(timeU.mul(TWINKLE_RATE).add(aPhase))
       .mul(TWINKLE_AMP)
       .add(float(1.0).sub(float(TWINKLE_AMP)));
 
-    // Center keep-out: particle screen-radius = world_radius / |z|. Anything
-    // inside KEEP_OUT_RATIO is faded out, regardless of its 3D position.
+    // Center calm: dim behind the breath UI without cutting a visible hole.
     const helixScreenR = radius.div(zDist);
-    const helixKeepOut = smoothstep(
-      float(KEEP_OUT_FADE_INNER),
-      float(KEEP_OUT_FADE_OUTER),
+    const helixCenterFade = smoothstep(
+      float(CENTER_CALM_FADE_INNER),
+      float(CENTER_CALM_FADE_OUTER),
       helixScreenR,
     );
+    const helixCenterDim = mix(float(CENTER_DIM), float(1.0), helixCenterFade);
+    const breathGlow = float(0.84).add(breathU.mul(0.28));
 
     const intensity = nearFade
       .mul(farFade)
-      .mul(helixKeepOut)
+      .mul(helixCenterDim)
       .mul(twinkle)
       .mul(aShine)
-      .mul(BASE_INTENSITY);
+      .mul(BASE_INTENSITY)
+      .mul(breathGlow);
 
     const litColor = strandColor.mul(intensity);
 
@@ -321,10 +337,21 @@ export const ParticleHelix = ({
     const ambPhase = attribute("aPhase", "float");
     const ambShine = attribute("aShine", "float");
 
-    const ambEffS = fract(ambS.add(timeU.mul(FLIGHT_S_PER_SEC)));
+    const ambEffS = fract(
+      ambS.add(timeU.mul(FLIGHT_S_PER_SEC)).add(
+        breathU.mul(BREATH_FLOW_OFFSET),
+      ),
+    );
     const ambZ = ambEffS.sub(1.0).mul(HELIX_LENGTH);
-    const ambAngle = ambTheta.add(timeU.mul(GLOBAL_ROT_RATE));
-    const ambPos = vec3(cos(ambAngle).mul(ambR), sin(ambAngle).mul(ambR), ambZ);
+    const ambAngle = ambTheta
+      .add(timeU.mul(GLOBAL_ROT_RATE))
+      .add(sin(ambEffS.mul(Math.PI * 2).add(timeU.mul(0.06))).mul(0.22));
+    const ambRadius = ambR.mul(float(0.96).add(breathU.mul(0.08)));
+    const ambPos = vec3(
+      cos(ambAngle).mul(ambRadius),
+      sin(ambAngle).mul(ambRadius),
+      ambZ,
+    );
 
     const ambZDist = ambZ.negate();
     const ambNearFade = smoothstep(
@@ -338,20 +365,23 @@ export const ParticleHelix = ({
     const ambTwinkle = sin(timeU.mul(TWINKLE_RATE).add(ambPhase))
       .mul(TWINKLE_AMP)
       .add(float(1.0).sub(float(TWINKLE_AMP)));
-    // Same center keep-out applied to the ambient cloud.
-    const ambScreenR = ambR.div(ambZDist);
-    const ambKeepOut = smoothstep(
-      float(KEEP_OUT_FADE_INNER),
-      float(KEEP_OUT_FADE_OUTER),
+    // Same calm center applied to the ambient cloud.
+    const ambScreenR = ambRadius.div(ambZDist);
+    const ambCenterFade = smoothstep(
+      float(CENTER_CALM_FADE_INNER),
+      float(CENTER_CALM_FADE_OUTER),
       ambScreenR,
     );
+    const ambCenterDim = mix(float(CENTER_DIM), float(1.0), ambCenterFade);
 
     const ambIntensity = ambNearFade
       .mul(ambFarFade)
-      .mul(ambKeepOut)
+      .mul(ambCenterDim)
       .mul(ambTwinkle)
       .mul(ambShine)
-      .mul(BASE_INTENSITY);
+      .mul(BASE_INTENSITY)
+      .mul(AMBIENT_INTENSITY_MULT)
+      .mul(breathGlow);
 
     const ambLit = COLOR_AMBIENT.mul(ambIntensity);
     const ambLum = dot(ambLit, vec3(0.299, 0.587, 0.114));
@@ -403,6 +433,8 @@ export const ParticleHelix = ({
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
         ? 1.0
         : 0.0;
+      (breathU as unknown as { value: number }).value =
+        breathRef.current?.value ?? 0.0;
 
       // Gentle ship-in-currents sway (camera stays inside the tunnel).
       camera.position.x =

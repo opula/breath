@@ -273,7 +273,9 @@ export const Main = () => {
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
       <AnimatePresence>
-        {isAppActive && mountBackground ? <Background /> : null}
+        {isAppActive && mountBackground ? (
+          <Background breath={iBreath} />
+        ) : null}
       </AnimatePresence>
 
       <GestureDetector gesture={gesture}>

@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState } from "react";
 import { MotiView } from "moti";
+import type { SharedValue } from "react-native-reanimated";
 import tw from "../../utils/tw";
 import { useAppSelector } from "../../hooks/store";
 import {
@@ -16,10 +17,12 @@ import {
 export const BackgroundSurface = ({
   isGrayscale,
   sourceId,
+  breath,
   onReady,
 }: {
   isGrayscale: boolean;
   sourceId: BackgroundSourceId;
+  breath?: SharedValue<number>;
   onReady?: () => void;
 }) => {
   const [isReady, setIsReady] = useState(false);
@@ -39,24 +42,31 @@ export const BackgroundSurface = ({
       transition={{ opacity: { type: "timing", duration: 300 } }}
       style={tw`flex-1`}
     >
-      <ActiveBackground grayscale={isGrayscale} onReady={handleReady} />
+      <ActiveBackground
+        grayscale={isGrayscale}
+        breath={breath}
+        onReady={handleReady}
+      />
     </MotiView>
   );
 };
 
-export const Background = memo(() => {
-  const isGrayscale = useAppSelector(isGrayscaleSelector);
-  const sourceId = useAppSelector(sourceIdSelector);
+export const Background = memo(
+  ({ breath }: { breath?: SharedValue<number> }) => {
+    const isGrayscale = useAppSelector(isGrayscaleSelector);
+    const sourceId = useAppSelector(sourceIdSelector);
 
-  if (sourceId === NO_BACKGROUND_SOURCE_ID) {
-    return null;
-  }
+    if (sourceId === NO_BACKGROUND_SOURCE_ID) {
+      return null;
+    }
 
-  return (
-    <BackgroundSurface
-      key={sourceId}
-      isGrayscale={isGrayscale}
-      sourceId={sourceId}
-    />
-  );
-});
+    return (
+      <BackgroundSurface
+        key={sourceId}
+        isGrayscale={isGrayscale}
+        sourceId={sourceId}
+        breath={breath}
+      />
+    );
+  },
+);
