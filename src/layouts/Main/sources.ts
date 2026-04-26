@@ -14,6 +14,7 @@ import { DotGrid } from "../../backgrounds/DotGrid";
 import { GameOfLife } from "../../backgrounds/GameOfLife";
 import { SinPulse } from "../../backgrounds/SinPulse";
 import { Fluid } from "../../backgrounds/Fluid";
+import { InkBloom } from "../../backgrounds/InkBloom";
 import { Ethereal } from "../../backgrounds/Ethereal";
 import { DreamSmoke } from "../../backgrounds/DreamSmoke";
 import { ParticleWave } from "../../backgrounds/ParticleWave";
@@ -51,6 +52,7 @@ const BackgroundComponentById = {
   "game-of-life": GameOfLife,
   "sin-pulse": SinPulse,
   fluid: Fluid,
+  "ink-bloom": InkBloom,
   ethereal: Ethereal,
   "dream-smoke": DreamSmoke,
   "particle-wave": ParticleWave,
