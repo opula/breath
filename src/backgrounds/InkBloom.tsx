@@ -39,6 +39,7 @@ const WATER_DEPTH = vec3(0.12, 0.18, 0.2);
 const INK_DENSE = vec3(0.006, 0.008, 0.014);
 const INK_EDGE = vec3(0.045, 0.075, 0.1);
 const INK_MILK = vec3(0.84, 0.9, 0.88);
+const CYAN_ACCENT = vec3(0.12, 0.76, 0.96);
 
 const FBM_ROT_C = Math.cos(0.62);
 const FBM_ROT_S = Math.sin(0.62);
@@ -142,10 +143,10 @@ export const InkBloom = ({
       const waterMix = vignette.add(waterNoise.mul(0.18)).clamp(0.0, 1.0);
       const water = mix(WATER_CLEAR, WATER_DEPTH, waterMix);
 
-      const lift = time.mul(float(0.17).add(breathEase.mul(0.08)));
+      const anchorDrift = sin(time.mul(0.72)).mul(0.035);
       let p = vec2(
-        st.x.mul(float(1.0).sub(breathEase.mul(0.08))),
-        st.y.sub(lift).add(breathEase.mul(0.12)),
+        st.x.mul(float(1.0).sub(breathEase.mul(0.06))),
+        st.y.mul(1.08).add(anchorDrift).sub(breathEase.mul(0.04)),
       );
 
       const slowCurl = vec2(
@@ -163,18 +164,53 @@ export const InkBloom = ({
       ).sub(0.5);
       p = p.add(fineCurl.mul(float(0.16).add(inhaleEase.mul(0.16))));
 
-      const sway = sin(p.y.mul(2.2).add(time.mul(0.9))).mul(
-        float(0.09).add(breathEase.mul(0.08)),
+      const plumeRadial = length(p);
+      const branchWindow = smoothstep(float(0.05), float(0.28), plumeRadial).mul(
+        float(1.0).sub(smoothstep(float(0.98), float(1.38), plumeRadial)),
       );
-      const columnWidth = float(0.2)
-        .add(breathEase.mul(0.14))
-        .add(inhaleEase.mul(0.13))
-        .add(p.y.add(1.0).mul(0.055));
-      const column = float(1.0).sub(
-        smoothstep(columnWidth, columnWidth.add(0.5), abs(p.x.add(sway))),
+      const branchWidth = float(0.105)
+        .add(breathEase.mul(0.05))
+        .add(inhaleEase.mul(0.085));
+      const stemSway = sin(p.y.mul(3.2).add(time.mul(0.85))).mul(
+        float(0.05).add(breathEase.mul(0.035)),
       );
-      const vertical = smoothstep(float(-1.05), float(-0.38), p.y).mul(
-        float(1.0).sub(smoothstep(float(1.04), float(1.48), p.y)),
+      const stem = float(1.0)
+        .sub(
+          smoothstep(
+            branchWidth,
+            branchWidth.add(0.28),
+            abs(p.x.add(stemSway)),
+          ),
+        )
+        .mul(float(1.0).sub(smoothstep(float(0.96), float(1.34), plumeRadial)));
+      const leftLine = p.x.add(p.y.mul(0.44)).add(
+        sin(p.y.mul(5.2).add(time.mul(0.78))).mul(0.07),
+      );
+      const rightLine = p.x.sub(p.y.mul(0.42)).add(
+        cos(p.y.mul(4.8).sub(time.mul(0.72))).mul(0.07),
+      );
+      const crossLine = p.y.add(
+        sin(p.x.mul(5.4).sub(time.mul(0.58))).mul(0.055),
+      );
+      const leftBranch = float(1.0).sub(
+        smoothstep(branchWidth, branchWidth.add(0.24), abs(leftLine)),
+      );
+      const rightBranch = float(1.0).sub(
+        smoothstep(branchWidth, branchWidth.add(0.24), abs(rightLine)),
+      );
+      const crossBranch = float(1.0).sub(
+        smoothstep(branchWidth.mul(0.84), branchWidth.add(0.2), abs(crossLine)),
+      );
+      const branchShape = max(
+        stem,
+        max(leftBranch, max(rightBranch, crossBranch)).mul(branchWindow),
+      );
+      const bodyEnvelope = float(1.0).sub(
+        smoothstep(
+          float(0.34).add(breathEase.mul(0.04)),
+          float(1.18).add(inhaleEase.mul(0.16)),
+          plumeRadial,
+        ),
       );
 
       const bodyNoise = fbm2(
@@ -195,19 +231,19 @@ export const InkBloom = ({
         float(0.35).add(inhaleEase.mul(0.35)),
       );
 
-      const sourcePoint = vec2(st.x.mul(0.8), st.y.add(0.72));
+      const sourcePoint = vec2(st.x.mul(0.92), st.y.mul(1.08));
       const source = float(1.0)
         .sub(
           smoothstep(
-            float(0.06),
-            float(0.36).add(inhaleEase.mul(0.18)),
+            float(0.04),
+            float(0.32).add(inhaleEase.mul(0.18)),
             length(sourcePoint),
           ),
         )
-        .mul(float(0.42).add(inhaleEase.mul(0.6)));
+        .mul(float(0.5).add(inhaleEase.mul(0.58)));
 
-      const plume = column
-        .mul(vertical)
+      const plume = branchShape
+        .mul(bodyEnvelope)
         .mul(softBody.add(tendrils))
         .mul(float(0.78).add(breathEase.mul(0.22)).add(inhaleEase.mul(0.32)));
       const density = max(source, plume).clamp(0.0, 1.0);
@@ -236,8 +272,13 @@ export const InkBloom = ({
         INK_MILK,
         bloomEdge.mul(float(0.09).add(inhaleEase.mul(0.08))),
       );
+      const cyanThread = tendrils
+        .mul(branchWindow)
+        .mul(smoothstep(float(0.16), float(0.78), density))
+        .mul(float(0.12).add(inhaleEase.mul(0.22)));
+      const accentedInkColor = mix(milkyInkColor, CYAN_ACCENT, cyanThread);
       const pigmentColor = mix(
-        milkyInkColor,
+        accentedInkColor,
         INK_DENSE,
         suspendedPigment.mul(0.55),
       );
