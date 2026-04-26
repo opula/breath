@@ -17,6 +17,7 @@ import { MusicTrackItem } from "./MusicTrackItem";
 import { MusicFile } from "../../types/music";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
+import { Icon } from "../../components/Icon";
 
 export const MusicControls = () => {
   const navigation = useNavigation();
@@ -66,41 +67,37 @@ export const MusicControls = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
+        <View style={tw`flex-row items-center px-6 py-3`}>
+          <View style={tw`flex-1`}></View>
+          <View style={tw`flex-1 items-center`}>
             <Text
               style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
                 { letterSpacing: 3 },
               ]}
             >
-              ← back
+              Music
             </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            Music
-          </Text>
-          <Pressable
-            onPress={() => navigation.navigate("MusicHelp" as never)}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
+          </View>
+          <View style={tw`flex-1 items-end`}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              hitSlop={12}
+              style={tw`flex-row items-center py-2 active:opacity-60`}
             >
-              help
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute uppercase text-[10px]`,
+                  { letterSpacing: 3 },
+                ]}
+              >
+                close
+              </Text>
+              <View style={tw`ml-1.5`}>
+                <Icon name="close" size={12} color="#6E6E74" />
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         {/* Hero + volume */}
@@ -167,38 +164,72 @@ export const MusicControls = () => {
               </View>
             }
             ListFooterComponent={
-              <Pressable
-                onPress={() => navigation.navigate("AddMusic" as never)}
-                style={({ pressed }) => [
-                  tw`flex-row items-center py-4 border-b border-mb-line`,
-                  pressed && tw`opacity-70`,
-                ]}
-              >
-                <Text
-                  style={[
-                    tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
-                    { letterSpacing: 1.5 },
+              <>
+                <Pressable
+                  onPress={() => navigation.navigate("AddMusic" as never)}
+                  style={({ pressed }) => [
+                    tw`flex-row items-center py-4 border-b border-mb-line`,
+                    pressed && tw`opacity-70`,
                   ]}
                 >
-                  +
-                </Text>
-                <Text
-                  style={[
-                    tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
-                    { letterSpacing: -0.4 },
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-accent uppercase text-[10px] w-8`,
+                      { letterSpacing: 1.5 },
+                    ]}
+                  >
+                    +
+                  </Text>
+                  <Text
+                    style={[
+                      tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
+                      { letterSpacing: -0.4 },
+                    ]}
+                  >
+                    Add music
+                  </Text>
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-mute uppercase text-[10px]`,
+                      { letterSpacing: 2 },
+                    ]}
+                  >
+                    wifi · url · file
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => navigation.navigate("MusicHelp" as never)}
+                  style={({ pressed }) => [
+                    tw`flex-row items-center py-4 border-b border-mb-line`,
+                    pressed && tw`opacity-70`,
                   ]}
                 >
-                  Add music
-                </Text>
-                <Text
-                  style={[
-                    tw`font-mono text-mb-mute uppercase text-[10px]`,
-                    { letterSpacing: 2 },
-                  ]}
-                >
-                  wifi · url · file
-                </Text>
-              </Pressable>
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-mute uppercase text-[10px] w-8`,
+                      { letterSpacing: 1.5 },
+                    ]}
+                  >
+                    ?
+                  </Text>
+                  <Text
+                    style={[
+                      tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
+                      { letterSpacing: -0.4 },
+                    ]}
+                  >
+                    Help
+                  </Text>
+                  <Text
+                    style={[
+                      tw`font-mono text-mb-mute uppercase text-[10px]`,
+                      { letterSpacing: 2 },
+                    ]}
+                  >
+                    guide · tips
+                  </Text>
+                </Pressable>
+              </>
             }
           />
         </View>

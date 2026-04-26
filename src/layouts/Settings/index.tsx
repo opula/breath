@@ -22,6 +22,7 @@ import {
 import { MainStackParams } from "../../navigation";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
+import { Icon } from "../../components/Icon";
 
 // const ACCENTS = [
 //   { id: "mint", hex: "#6FE7FF" },
@@ -120,41 +121,37 @@ export const Settings = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
+        <View style={tw`flex-row items-center px-6 py-3`}>
+          <View style={tw`flex-1`} />
+          <View style={tw`flex-1 items-center`}>
             <Text
               style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
+                tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
                 { letterSpacing: 3 },
               ]}
             >
-              ← back
+              settings
             </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            settings
-          </Text>
-          <Pressable
-            onPress={() => navigation.navigate("Help")}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
+          </View>
+          <View style={tw`flex-1 items-end`}>
+            <Pressable
+              onPress={() => navigation.goBack()}
+              hitSlop={12}
+              style={tw`flex-row items-center py-2 active:opacity-60`}
             >
-              help
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  tw`font-mono text-mb-mute uppercase text-[10px]`,
+                  { letterSpacing: 3 },
+                ]}
+              >
+                close
+              </Text>
+              <View style={tw`ml-1.5`}>
+                <Icon name="close" size={12} color="#6E6E74" />
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         <ScrollView
@@ -163,9 +160,7 @@ export const Settings = () => {
         >
           {/* Hero */}
           <View style={tw`mt-2 mb-6`}>
-            <Overline accent right="v1.0">
-              Preferences
-            </Overline>
+            <Overline accent>Preferences</Overline>
             <View style={tw`mt-5`}>
               <BigTitle size={44} accent>{`Adjust\nyour flow`}</BigTitle>
             </View>
@@ -261,9 +256,33 @@ export const Settings = () => {
           <View style={tw`mt-8`}>
             <Overline>About</Overline>
           </View>
-          <AboutRow label="Mid breath" value="v1.0" />
-          <AboutRow label="No accounts" value="nothing is collected" />
-          <AboutRow label="No streaks" value="nothing is counted at you" />
+          <AboutRow label="Version" value="v1.0" />
+          {/* <AboutRow label="No accounts" value="nothing is collected" />
+          <AboutRow label="No streaks" value="nothing is counted at you" /> */}
+          <Pressable
+            onPress={() => navigation.navigate("Help")}
+            style={({ pressed }) => [
+              tw`flex-row items-center py-3 border-b border-mb-line`,
+              pressed && tw`opacity-70`,
+            ]}
+          >
+            <Text
+              style={[
+                tw`font-display text-[15px] text-mb-fg uppercase flex-1`,
+                { letterSpacing: -0.3 },
+              ]}
+            >
+              Help
+            </Text>
+            <Text
+              style={[
+                tw`font-mono text-[10px] text-mb-mute uppercase`,
+                { letterSpacing: 2 },
+              ]}
+            >
+              guide · tips
+            </Text>
+          </Pressable>
         </ScrollView>
       </View>
     </View>

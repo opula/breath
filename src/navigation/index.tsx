@@ -128,12 +128,7 @@ export const MainStack = () => {
         }}
       />
 
-      <Stack.Group
-        screenOptions={{
-          ...modalScreenOptions,
-          gestureEnabled: false,
-        }}
-      >
+      <Stack.Group screenOptions={modalScreenOptions}>
         <Stack.Screen name="MusicControls" component={MusicControls} />
         <Stack.Screen name="MusicHelp" component={MusicHelp} />
         <Stack.Screen name="FileTransfer" component={FileTransfer} />
