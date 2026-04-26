@@ -39,7 +39,7 @@ const WATER_DEPTH = vec3(0.12, 0.18, 0.2);
 const INK_DENSE = vec3(0.006, 0.008, 0.014);
 const INK_EDGE = vec3(0.045, 0.075, 0.1);
 const INK_MILK = vec3(0.84, 0.9, 0.88);
-const CYAN_ACCENT = vec3(0.12, 0.76, 0.96);
+const CYAN_ACCENT = vec3(0.08, 0.82, 1.0);
 
 const FBM_ROT_C = Math.cos(0.62);
 const FBM_ROT_S = Math.sin(0.62);
@@ -165,12 +165,12 @@ export const InkBloom = ({
       p = p.add(fineCurl.mul(float(0.16).add(inhaleEase.mul(0.16))));
 
       const plumeRadial = length(p);
-      const branchWindow = smoothstep(float(0.05), float(0.28), plumeRadial).mul(
-        float(1.0).sub(smoothstep(float(0.98), float(1.38), plumeRadial)),
+      const branchWindow = smoothstep(float(0.04), float(0.2), plumeRadial).mul(
+        float(1.0).sub(smoothstep(float(1.08), float(1.52), plumeRadial)),
       );
-      const branchWidth = float(0.105)
-        .add(breathEase.mul(0.05))
-        .add(inhaleEase.mul(0.085));
+      const branchWidth = float(0.145)
+        .add(breathEase.mul(0.07))
+        .add(inhaleEase.mul(0.105));
       const stemSway = sin(p.y.mul(3.2).add(time.mul(0.85))).mul(
         float(0.05).add(breathEase.mul(0.035)),
       );
@@ -178,11 +178,11 @@ export const InkBloom = ({
         .sub(
           smoothstep(
             branchWidth,
-            branchWidth.add(0.28),
+            branchWidth.add(0.34),
             abs(p.x.add(stemSway)),
           ),
         )
-        .mul(float(1.0).sub(smoothstep(float(0.96), float(1.34), plumeRadial)));
+        .mul(float(1.0).sub(smoothstep(float(1.05), float(1.48), plumeRadial)));
       const leftLine = p.x.add(p.y.mul(0.44)).add(
         sin(p.y.mul(5.2).add(time.mul(0.78))).mul(0.07),
       );
@@ -193,13 +193,13 @@ export const InkBloom = ({
         sin(p.x.mul(5.4).sub(time.mul(0.58))).mul(0.055),
       );
       const leftBranch = float(1.0).sub(
-        smoothstep(branchWidth, branchWidth.add(0.24), abs(leftLine)),
+        smoothstep(branchWidth, branchWidth.add(0.32), abs(leftLine)),
       );
       const rightBranch = float(1.0).sub(
-        smoothstep(branchWidth, branchWidth.add(0.24), abs(rightLine)),
+        smoothstep(branchWidth, branchWidth.add(0.32), abs(rightLine)),
       );
       const crossBranch = float(1.0).sub(
-        smoothstep(branchWidth.mul(0.84), branchWidth.add(0.2), abs(crossLine)),
+        smoothstep(branchWidth.mul(0.8), branchWidth.add(0.28), abs(crossLine)),
       );
       const branchShape = max(
         stem,
@@ -207,8 +207,8 @@ export const InkBloom = ({
       );
       const bodyEnvelope = float(1.0).sub(
         smoothstep(
-          float(0.34).add(breathEase.mul(0.04)),
-          float(1.18).add(inhaleEase.mul(0.16)),
+          float(0.28).add(breathEase.mul(0.04)),
+          float(1.28).add(inhaleEase.mul(0.2)),
           plumeRadial,
         ),
       );
@@ -224,11 +224,11 @@ export const InkBloom = ({
         ),
       );
       const softBody = pow(
-        smoothstep(float(0.24), float(0.92), bodyNoise),
-        float(0.7),
+        smoothstep(float(0.16), float(0.84), bodyNoise),
+        float(0.58),
       );
-      const tendrils = smoothstep(float(0.52), float(0.93), threadNoise).mul(
-        float(0.35).add(inhaleEase.mul(0.35)),
+      const tendrils = smoothstep(float(0.42), float(0.88), threadNoise).mul(
+        float(0.46).add(inhaleEase.mul(0.46)),
       );
 
       const sourcePoint = vec2(st.x.mul(0.92), st.y.mul(1.08));
@@ -236,17 +236,17 @@ export const InkBloom = ({
         .sub(
           smoothstep(
             float(0.04),
-            float(0.32).add(inhaleEase.mul(0.18)),
+            float(0.42).add(inhaleEase.mul(0.22)),
             length(sourcePoint),
           ),
         )
-        .mul(float(0.5).add(inhaleEase.mul(0.58)));
+        .mul(float(0.62).add(inhaleEase.mul(0.68)));
 
       const plume = branchShape
         .mul(bodyEnvelope)
         .mul(softBody.add(tendrils))
-        .mul(float(0.78).add(breathEase.mul(0.22)).add(inhaleEase.mul(0.32)));
-      const density = max(source, plume).clamp(0.0, 1.0);
+        .mul(float(1.05).add(breathEase.mul(0.24)).add(inhaleEase.mul(0.44)));
+      const density = max(source, plume).mul(1.16).clamp(0.0, 1.0);
 
       const speckSpace = p.mul(42.0).add(vec2(time.mul(2.0), time.mul(-1.3)));
       const speckCell = floor(speckSpace);
@@ -258,14 +258,14 @@ export const InkBloom = ({
       const suspendedPigment = suspendedDot
         .mul(smoothstep(float(0.78), float(0.995), speckSeed))
         .mul(density)
-        .mul(float(0.18).add(inhaleEase.mul(0.28)));
+        .mul(float(0.24).add(inhaleEase.mul(0.36)));
 
-      const inkCore = pow(density, float(1.18));
+      const inkCore = pow(density, float(0.98));
       const inkColor = mix(INK_EDGE, INK_DENSE, inkCore);
-      const baseInkColor = mix(water, inkColor, density.mul(0.92));
+      const baseInkColor = mix(water, inkColor, density);
 
       const bloomEdge = smoothstep(float(0.16), float(0.56), density).mul(
-        float(1.0).sub(smoothstep(float(0.58), float(0.98), density)),
+        float(1.0).sub(smoothstep(float(0.64), float(1.0), density)),
       );
       const milkyInkColor = mix(
         baseInkColor,
@@ -274,13 +274,20 @@ export const InkBloom = ({
       );
       const cyanThread = tendrils
         .mul(branchWindow)
-        .mul(smoothstep(float(0.16), float(0.78), density))
-        .mul(float(0.12).add(inhaleEase.mul(0.22)));
-      const accentedInkColor = mix(milkyInkColor, CYAN_ACCENT, cyanThread);
+        .mul(smoothstep(float(0.1), float(0.68), density))
+        .mul(float(0.24).add(inhaleEase.mul(0.32)));
+      const cyanBloom = bloomEdge
+        .mul(smoothstep(float(0.18), float(0.72), density))
+        .mul(float(0.12).add(inhaleEase.mul(0.18)));
+      const accentedInkColor = mix(
+        milkyInkColor,
+        CYAN_ACCENT,
+        max(cyanThread, cyanBloom),
+      );
       const pigmentColor = mix(
         accentedInkColor,
         INK_DENSE,
-        suspendedPigment.mul(0.55),
+        suspendedPigment.mul(0.48),
       );
 
       const breathGlow = float(0.96).add(breathEase.mul(0.08)).add(
