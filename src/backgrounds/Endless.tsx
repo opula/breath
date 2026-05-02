@@ -40,6 +40,10 @@ const SURFACE_EPSILON = 0.001;
 
 const SPEED = 0.6;
 const FLY_SPEED = 3.0;
+// Primary tuning knobs: speed controls all motion, zoom back widens the view
+// and pulls the ray origin away from the water surface.
+const SPEED_KNOB = 1.0;
+const ZOOM_BACK_KNOB = 1.0;
 const NOISE_SCALE = 2.3;
 const WARP_INTENSITY = 1.2;
 const SPARKLE_INTENSITY = 0.34;
@@ -219,6 +223,8 @@ export const Endless = ({
         uvRaw.y.mul(2.0).sub(1.0),
       );
       const radial = length(viewUV);
+      const zoomBack = float(ZOOM_BACK_KNOB);
+      const zoomScale = float(1.0).add(zoomBack.mul(0.14));
 
       const breathEase = breathU
         .mul(breathU)
@@ -240,11 +246,16 @@ export const Endless = ({
       );
       const ro = vec3(
         float(-0.3).add(cameraSway.x),
-        float(4.0).sub(breathEase.mul(0.34)).add(breathMotionU.mul(0.1)),
-        float(-8.5).add(flyOffsetU),
+        float(4.0)
+          .add(zoomBack.mul(0.24))
+          .sub(breathEase.mul(0.34))
+          .add(breathMotionU.mul(0.1)),
+        float(-8.5).sub(zoomBack.mul(1.6)).add(flyOffsetU),
       );
 
-      const baseRd = normalize(vec3(viewUV.x, viewUV.y, float(1.0)));
+      const baseRd = normalize(
+        vec3(viewUV.x.mul(zoomScale), viewUV.y.mul(zoomScale), float(1.0)),
+      );
       const tilt = float(-0.35)
         .sub(breathEase.mul(0.035))
         .sub(breathMotionU.mul(0.025));
@@ -272,9 +283,12 @@ export const Endless = ({
           Break();
         });
 
-        If(t.greaterThan(float(MAX_TRACE_DIST)), () => {
-          Break();
-        });
+        If(
+          t.greaterThan(float(MAX_TRACE_DIST + ZOOM_BACK_KNOB * 6.0)),
+          () => {
+            Break();
+          },
+        );
 
         t.assign(t.add(max(d, float(0.012))));
       });
@@ -431,13 +445,19 @@ export const Endless = ({
       );
       previousElapsed = elapsed;
 
-      const breathEase = smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      const breathEase =
+        smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
       const motionPulse = breathMotion;
-      sceneTime += deltaSeconds * SPEED * (1 + breathEase * 0.3 + motionPulse * 0.32);
+      const speed = SPEED * SPEED_KNOB;
+      const flySpeed = FLY_SPEED * SPEED_KNOB;
+      sceneTime +=
+        deltaSeconds * speed * (1 + breathEase * 0.3 + motionPulse * 0.32);
       fractalTime +=
-        deltaSeconds * SPEED * (1 + breathEase * 0.46 + motionPulse * 0.68);
+        deltaSeconds * speed * (1 + breathEase * 0.46 + motionPulse * 0.68);
       flyOffset +=
-        deltaSeconds * FLY_SPEED * (1 + breathEase * 0.22 + motionPulse * 0.78);
+        deltaSeconds *
+        flySpeed *
+        (1 + breathEase * 0.22 + motionPulse * 0.78);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (fractalTimeU as unknown as { value: number }).value = fractalTime;
