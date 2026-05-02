@@ -19,6 +19,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "dream-smoke", name: "Tidal Veil" },
   { id: "particle-wave", name: "Stillwater" },
   { id: "particle-helix", name: "ParticleHelix" },
+  { id: "endless", name: "Endless" },
 ] as const;
 
 export type BackgroundSourceDefinition =

@@ -18,6 +18,7 @@ import { Ethereal } from "../../backgrounds/Ethereal";
 import { DreamSmoke } from "../../backgrounds/DreamSmoke";
 import { ParticleWave } from "../../backgrounds/ParticleWave";
 import { ParticleHelix } from "../../backgrounds/ParticleHelix";
+import { Endless } from "../../backgrounds/Endless";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
   type BackgroundSourceId,
@@ -55,6 +56,7 @@ const BackgroundComponentById = {
   "dream-smoke": DreamSmoke,
   "particle-wave": ParticleWave,
   "particle-helix": ParticleHelix,
+  endless: Endless,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
 export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({
