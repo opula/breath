@@ -39,11 +39,11 @@ const MAX_TRACE_DIST = 30.0;
 const SURFACE_EPSILON = 0.001;
 
 const SPEED = 0.6;
-const FLY_SPEED = 3.0;
+const FLY_SPEED = 2.0;
 // Primary tuning knobs: speed controls all motion, zoom back widens the view
 // and pulls the ray origin away from the water surface.
 const SPEED_KNOB = 1.0;
-const ZOOM_BACK_KNOB = 1.0;
+const ZOOM_BACK_KNOB = 10.0;
 const NOISE_SCALE = 2.3;
 const WARP_INTENSITY = 1.2;
 const SPARKLE_INTENSITY = 0.34;
@@ -136,11 +136,7 @@ const applyHue = Fn(
 const palette = Fn(([t]: [ReturnType<typeof float>]) => {
   const v = fract(t);
   const lowMid = mix(WAVE_COLOR_1, WAVE_COLOR_2, smoothstep(0.0, 0.62, v));
-  const highlighted = mix(
-    lowMid,
-    WAVE_COLOR_3,
-    smoothstep(0.48, 0.95, v),
-  );
+  const highlighted = mix(lowMid, WAVE_COLOR_3, smoothstep(0.48, 0.95, v));
   return mix(highlighted, WAVE_COLOR_1, smoothstep(0.82, 1.0, v).mul(0.58));
 });
 
@@ -283,12 +279,9 @@ export const Endless = ({
           Break();
         });
 
-        If(
-          t.greaterThan(float(MAX_TRACE_DIST + ZOOM_BACK_KNOB * 6.0)),
-          () => {
-            Break();
-          },
-        );
+        If(t.greaterThan(float(MAX_TRACE_DIST + ZOOM_BACK_KNOB * 6.0)), () => {
+          Break();
+        });
 
         t.assign(t.add(max(d, float(0.012))));
       });
@@ -365,9 +358,7 @@ export const Endless = ({
           .add(texColor.mul(fresnel).mul(1.1));
         water = water.div(max(float(1.0).sub(microLines), float(0.001)));
         water = applyHue(water, float(HUE));
-        water = water.add(
-          float(WAVE_BRIGHTNESS).add(breathMotionU.mul(0.045)),
-        );
+        water = water.add(float(WAVE_BRIGHTNESS).add(breathMotionU.mul(0.045)));
         water = mix(vec3(0.5, 0.5, 0.5), water, float(CONTRAST));
 
         const lumaA = dot(water, vec3(0.299, 0.587, 0.114));
@@ -455,9 +446,7 @@ export const Endless = ({
       fractalTime +=
         deltaSeconds * speed * (1 + breathEase * 0.46 + motionPulse * 0.68);
       flyOffset +=
-        deltaSeconds *
-        flySpeed *
-        (1 + breathEase * 0.22 + motionPulse * 0.78);
+        deltaSeconds * flySpeed * (1 + breathEase * 0.22 + motionPulse * 0.78);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (fractalTimeU as unknown as { value: number }).value = fractalTime;
