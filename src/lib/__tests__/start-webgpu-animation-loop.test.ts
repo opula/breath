@@ -2,13 +2,10 @@ import { startWebGPUAnimationLoop } from "../start-webgpu-animation-loop";
 
 describe("startWebGPUAnimationLoop", () => {
   it("renders the first frame and throttles subsequent frames to the target FPS", async () => {
-    let loop: ((time?: number) => void) | null = null;
     const renderer = {
       init: jest.fn().mockResolvedValue(undefined),
       setAnimationLoop: jest.fn(
-        (callback: ((time?: number) => void) | null) => {
-          loop = callback;
-        },
+        (_callback: ((time?: number) => void) | null) => {},
       ),
     };
     const animate = jest.fn();
@@ -23,9 +20,12 @@ describe("startWebGPUAnimationLoop", () => {
 
     await Promise.resolve();
 
-    loop?.(0);
-    loop?.(10);
-    loop?.(34);
+    const loop = renderer.setAnimationLoop.mock.calls[0][0] as (
+      time?: number,
+    ) => void;
+    loop(0);
+    loop(10);
+    loop(34);
 
     expect(animate).toHaveBeenCalledTimes(2);
     expect(onReady).toHaveBeenCalledTimes(1);

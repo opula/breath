@@ -9,9 +9,9 @@ import React, {
 } from 'react';
 import {
   useAudioPlayer as useExpoAudioPlayer,
-  useAudioPlayerStatus,
   setAudioModeAsync,
 } from 'expo-audio';
+import {AppState} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Clipboard from 'expo-clipboard';
 import uuid from 'react-native-uuid';
@@ -78,7 +78,9 @@ const AudioPlayerContext = createContext<
   (AudioPlayerState & AudioPlayerActions) | undefined
 >(undefined);
 
-const MUSIC_STATUS_UPDATE_INTERVAL_MS = 2000;
+// MusicControls does not show track progress, so keep the native status timer
+// effectively idle during long background playback.
+const MUSIC_STATUS_UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
 export const AudioPlayerProvider = ({
   children,
@@ -88,14 +90,18 @@ export const AudioPlayerProvider = ({
   const dispatch = useDispatch();
   const activeFile = useSelector(activeFileSelector);
   const activeFileId = useSelector(activeFileIdSelector);
-  const savedVolume = storage.getNumber(MUSIC_BG_VOLUME) ?? 1;
+  const initialSourceRef = useRef(getInitialSource());
+  const savedVolumeRef = useRef(storage.getNumber(MUSIC_BG_VOLUME) ?? 1);
   const migrated = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(Boolean(initialSourceRef.current));
+  const [volume, setVolumeState] = useState(savedVolumeRef.current);
+  const isPlayingRef = useRef(false);
 
-  const player = useExpoAudioPlayer(getInitialSource(), {
+  const player = useExpoAudioPlayer(initialSourceRef.current, {
     updateInterval: MUSIC_STATUS_UPDATE_INTERVAL_MS,
   });
-  const status = useAudioPlayerStatus(player);
 
   // Configure audio mode on mount
   useEffect(() => {
@@ -109,8 +115,24 @@ export const AudioPlayerProvider = ({
   // Set loop and initial volume
   useEffect(() => {
     player.loop = true;
-    player.volume = savedVolume;
+    player.volume = savedVolumeRef.current;
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player]);
+
+  useEffect(() => {
+    const syncPlaybackState = () => {
+      setIsPlaying(player.playing);
+      isPlayingRef.current = player.playing;
+      setIsLoaded(player.isLoaded);
+    };
+
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        syncPlaybackState();
+      }
+    });
+
+    return () => sub.remove();
   }, [player]);
 
   // One-time migration from legacy MMKV keys
@@ -131,6 +153,7 @@ export const AudioPlayerProvider = ({
       dispatch(addFile(file));
       dispatch(setActiveFile(id));
       player.replace({uri: getMusicFileUri(fileName)});
+      setIsLoaded(true);
     } catch {
       // Migration failed — legacy file may have been deleted
     } finally {
@@ -149,20 +172,33 @@ export const AudioPlayerProvider = ({
     if (activeFile) {
       player.replace({uri: getMusicFileUri(activeFile.fileName)});
       player.play();
+      setIsLoaded(true);
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+    } else {
+      setIsLoaded(false);
+      isPlayingRef.current = false;
+      setIsPlaying(false);
     }
   }, [activeFile, activeFileId, player]);
 
   const play = useCallback(() => {
     player.play();
+    isPlayingRef.current = true;
+    setIsPlaying(true);
   }, [player]);
 
   const pause = useCallback(() => {
     player.pause();
+    isPlayingRef.current = false;
+    setIsPlaying(false);
   }, [player]);
 
   const setLiveVolume = useCallback(
     (v: number) => {
-      player.volume = Math.max(0, Math.min(1, v));
+      const clamped = Math.max(0, Math.min(1, v));
+      player.volume = clamped;
+      setVolumeState(clamped);
     },
     [player],
   );
@@ -171,6 +207,7 @@ export const AudioPlayerProvider = ({
     (v: number) => {
       const clamped = Math.max(0, Math.min(1, v));
       player.volume = clamped;
+      setVolumeState(clamped);
       storage.set(MUSIC_BG_VOLUME, clamped);
     },
     [player],
@@ -193,6 +230,7 @@ export const AudioPlayerProvider = ({
     dispatch(addFile(file));
     dispatch(setActiveFile(id));
     player.replace({uri: getMusicFileUri(fileName)});
+    setIsLoaded(true);
   }, [dispatch, player]);
 
   const pasteUrl = useCallback(async () => {
@@ -233,6 +271,7 @@ export const AudioPlayerProvider = ({
       dispatch(addFile(file));
       dispatch(setActiveFile(id));
       player.replace({uri: getMusicFileUri(fileName)});
+      setIsLoaded(true);
     } catch {
       deleteFromMusicDir(fileName);
     } finally {
@@ -269,6 +308,7 @@ export const AudioPlayerProvider = ({
         dispatch(addFile(file));
         dispatch(setActiveFile(id));
         player.replace({uri: getMusicFileUri(fileName)});
+        setIsLoaded(true);
       } catch {
         deleteFromMusicDir(fileName);
       } finally {
@@ -282,16 +322,20 @@ export const AudioPlayerProvider = ({
     (id: string) => {
       if (id === activeFileId) {
         // Toggle play/pause for the already-active file
-        if (status.playing) {
+        if (isPlayingRef.current) {
           player.pause();
+          isPlayingRef.current = false;
+          setIsPlaying(false);
         } else {
           player.play();
+          isPlayingRef.current = true;
+          setIsPlaying(true);
         }
         return;
       }
       dispatch(setActiveFile(id));
     },
-    [activeFileId, dispatch, player, status.playing],
+    [activeFileId, dispatch, player],
   );
 
   const deleteFile = useCallback(
@@ -304,6 +348,8 @@ export const AudioPlayerProvider = ({
 
       if (id === activeFileId) {
         player.pause();
+        isPlayingRef.current = false;
+        setIsPlaying(false);
       }
 
       deleteFromMusicDir(file.fileName);
@@ -314,9 +360,9 @@ export const AudioPlayerProvider = ({
 
   const value = useMemo(
     () => ({
-      isPlaying: status.playing,
-      isLoaded: status.isLoaded,
-      volume: player.volume,
+      isPlaying,
+      isLoaded,
+      volume,
       activeFileName: activeFile?.name ?? null,
       isDownloading,
       play,
@@ -333,17 +379,17 @@ export const AudioPlayerProvider = ({
       activeFile?.name,
       deleteFile,
       downloadUrl,
+      isLoaded,
       isDownloading,
+      isPlaying,
       pause,
       pickLocalFile,
       pasteUrl,
       play,
       playFile,
-      player.volume,
       setLiveVolume,
       setVolume,
-      status.isLoaded,
-      status.playing,
+      volume,
     ],
   );
 
