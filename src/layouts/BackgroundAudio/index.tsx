@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
@@ -6,7 +6,10 @@ import { MainStackParams } from "../../navigation";
 import { exerciseByIdSelector } from "../../state/exercises.selectors";
 import { useParametrizedAppSelector } from "../../utils/selectors";
 import { useBackgroundAudio } from "../../hooks/useBackgroundAudio";
-import { calculateExerciseDuration } from "../../services/BackgroundAudio/exerciseEligibility";
+import {
+  calculateExerciseDuration,
+  calculateMaxLoopsForDuration,
+} from "../../services/BackgroundAudio/exerciseEligibility";
 import { convertSecondsToHHMM } from "../../utils/pretty";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
@@ -17,6 +20,8 @@ const formatTime = (secs: number) => {
   const { minutes, seconds } = convertSecondsToHHMM(Math.floor(secs));
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
+
+const MAX_BACKGROUND_AUDIO_SECONDS = 60 * 60;
 
 const DialGroup = ({
   label,
@@ -67,19 +72,26 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
     restart,
   } = useBackgroundAudio(exercise);
 
-  const singleLoopSeconds = useMemo(
-    () => (exercise ? calculateExerciseDuration(exercise, 1) : 1),
+  const maxLoops = useMemo(
+    () =>
+      exercise
+        ? calculateMaxLoopsForDuration(exercise, MAX_BACKGROUND_AUDIO_SECONDS)
+        : 1,
     [exercise],
   );
 
-  const maxLoops = useMemo(
-    () => Math.max(1, Math.ceil(3600 / singleLoopSeconds)),
-    [singleLoopSeconds],
-  );
+  const effectiveLoops = Math.min(loops, maxLoops);
+
+  useEffect(() => {
+    setLoops((current) => Math.min(current, maxLoops));
+  }, [maxLoops]);
 
   const durationSeconds = useMemo(
-    () => (exercise ? calculateExerciseDuration(exercise, loops) + delay : 0),
-    [exercise, loops, delay],
+    () =>
+      exercise
+        ? calculateExerciseDuration(exercise, effectiveLoops) + delay
+        : 0,
+    [exercise, effectiveLoops, delay],
   );
 
   const durationDisplay = useMemo(
@@ -88,8 +100,8 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
   );
 
   const handleGenerate = useCallback(() => {
-    generate(loops, volume, delay);
-  }, [generate, loops, volume, delay]);
+    generate(effectiveLoops, volume, delay);
+  }, [generate, effectiveLoops, volume, delay]);
 
   const handlePlayPause = useCallback(() => {
     if (isPlaying) pause();
@@ -147,7 +159,7 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                   max={maxLoops}
                   step={1}
                   suffix="×"
-                  defaultValue={loops}
+                  defaultValue={effectiveLoops}
                   onChange={setLoops}
                 />
               </DialGroup>

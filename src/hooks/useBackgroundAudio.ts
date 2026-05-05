@@ -106,55 +106,12 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
     [],
   );
 
-  // Progress tracking
-  const startProgressTimer = useCallback(() => {
-    if (progressIntervalRef.current)
+  const clearProgressTimer = useCallback(() => {
+    if (progressIntervalRef.current) {
       clearInterval(progressIntervalRef.current);
-
-    progressIntervalRef.current = setInterval(() => {
-      const ctx = audioContextRef.current;
-      if (!ctx || !isPlayingRef.current) return;
-
-      const elapsed =
-        ctx.currentTime - playStartTimeRef.current + pausedOffsetRef.current;
-      const total = totalSeconds;
-      const clampedElapsed = Math.min(elapsed, total);
-
-      setElapsedSeconds(clampedElapsed);
-      setProgress(total > 0 ? clampedElapsed / total : 0);
-
-      if (elapsed >= total) {
-        // Playback complete
-        isPlayingRef.current = false;
-        setIsPlaying(false);
-        setProgress(1);
-        setElapsedSeconds(total);
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-          progressIntervalRef.current = null;
-        }
-      }
-    }, 250);
-  }, [totalSeconds]);
-
-  // Handle app state changes to resume progress timer correctly
-  useEffect(() => {
-    const handleAppState = (nextState: AppStateStatus) => {
-      if (nextState === "active" && isPlayingRef.current) {
-        startProgressTimer();
-      }
-    };
-    const sub = AppState.addEventListener("change", handleAppState);
-    return () => sub.remove();
-  }, [startProgressTimer]);
-
-  const getOrCreateContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      ensureAudioSession();
-      audioContextRef.current = new AudioContext();
+      progressIntervalRef.current = null;
     }
-    return audioContextRef.current;
-  }, [ensureAudioSession]);
+  }, []);
 
   // Stop all active source nodes
   const stopAllSources = useCallback(() => {
@@ -166,6 +123,66 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
     }
     activeSourcesRef.current = [];
   }, []);
+
+  const updateProgressFromClock = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx || !isPlayingRef.current) return;
+
+    const elapsed =
+      ctx.currentTime - playStartTimeRef.current + pausedOffsetRef.current;
+    const total = totalSeconds;
+    const clampedElapsed = Math.min(elapsed, total);
+
+    setElapsedSeconds(clampedElapsed);
+    setProgress(total > 0 ? clampedElapsed / total : 0);
+
+    if (elapsed >= total) {
+      stopAllSources();
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+      setProgress(1);
+      setElapsedSeconds(total);
+      clearProgressTimer();
+    }
+  }, [clearProgressTimer, stopAllSources, totalSeconds]);
+
+  // Progress tracking. This is UI-only, so it only runs while the app is active.
+  const startProgressTimer = useCallback(() => {
+    clearProgressTimer();
+
+    if (AppState.currentState !== "active") {
+      return;
+    }
+
+    progressIntervalRef.current = setInterval(() => {
+      updateProgressFromClock();
+    }, 250);
+  }, [clearProgressTimer, updateProgressFromClock]);
+
+  // Handle app state changes without keeping JS timers alive in the background.
+  useEffect(() => {
+    const handleAppState = (nextState: AppStateStatus) => {
+      if (!isPlayingRef.current) return;
+
+      if (nextState === "active") {
+        updateProgressFromClock();
+        startProgressTimer();
+      } else {
+        updateProgressFromClock();
+        clearProgressTimer();
+      }
+    };
+    const sub = AppState.addEventListener("change", handleAppState);
+    return () => sub.remove();
+  }, [clearProgressTimer, startProgressTimer, updateProgressFromClock]);
+
+  const getOrCreateContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      ensureAudioSession();
+      audioContextRef.current = new AudioContext();
+    }
+    return audioContextRef.current;
+  }, [ensureAudioSession]);
 
   // Schedule source nodes for all events from the given offset.
   // `now` is the shared ctx.currentTime snapshot used by the caller for
@@ -277,11 +294,8 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
     isPlayingRef.current = false;
     setIsPlaying(false);
 
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-  }, [stopAllSources]);
+    clearProgressTimer();
+  }, [clearProgressTimer, stopAllSources]);
 
   // Restart from beginning
   const restart = useCallback(() => {
@@ -314,10 +328,7 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
       gainNodeRef.current = null;
     }
 
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
+    clearProgressTimer();
     if (audioContextRef.current) {
       try {
         audioContextRef.current.close();
@@ -330,7 +341,7 @@ export const useBackgroundAudio = (exercise: Exercise | undefined) => {
     setProgress(0);
     setElapsedSeconds(0);
     scheduleRef.current = null;
-  }, [stopAllSources]);
+  }, [clearProgressTimer, stopAllSources]);
 
   // Cleanup on unmount + beforeRemove nav event
   useEffect(() => {

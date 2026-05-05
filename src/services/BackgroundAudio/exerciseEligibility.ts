@@ -102,3 +102,32 @@ export const calculateExerciseDuration = (
 
   return total;
 };
+
+export const calculateMaxLoopsForDuration = (
+  exercise: Exercise,
+  maxSeconds: number,
+): number => {
+  const firstLoopSeconds = calculateExerciseDuration(exercise, 1);
+  if (!Number.isFinite(firstLoopSeconds) || firstLoopSeconds <= 0) {
+    return 1;
+  }
+
+  const upperBound = Math.max(1, Math.ceil(maxSeconds / firstLoopSeconds));
+  let low = 1;
+  let high = upperBound;
+  let best = 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const duration = calculateExerciseDuration(exercise, mid);
+
+    if (duration <= maxSeconds) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best;
+};

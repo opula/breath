@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -77,6 +78,8 @@ const AudioPlayerContext = createContext<
   (AudioPlayerState & AudioPlayerActions) | undefined
 >(undefined);
 
+const MUSIC_STATUS_UPDATE_INTERVAL_MS = 2000;
+
 export const AudioPlayerProvider = ({
   children,
 }: {
@@ -89,7 +92,9 @@ export const AudioPlayerProvider = ({
   const migrated = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const player = useExpoAudioPlayer(getInitialSource());
+  const player = useExpoAudioPlayer(getInitialSource(), {
+    updateInterval: MUSIC_STATUS_UPDATE_INTERVAL_MS,
+  });
   const status = useAudioPlayerStatus(player);
 
   // Configure audio mode on mount
@@ -307,22 +312,40 @@ export const AudioPlayerProvider = ({
     [activeFileId, dispatch, player],
   );
 
-  const value = {
-    isPlaying: status.playing,
-    isLoaded: status.isLoaded,
-    volume: player.volume,
-    activeFileName: activeFile?.name ?? null,
-    isDownloading,
-    play,
-    pause,
-    setVolume,
-    setLiveVolume,
-    pickLocalFile,
-    pasteUrl,
-    downloadUrl,
-    playFile,
-    deleteFile,
-  };
+  const value = useMemo(
+    () => ({
+      isPlaying: status.playing,
+      isLoaded: status.isLoaded,
+      volume: player.volume,
+      activeFileName: activeFile?.name ?? null,
+      isDownloading,
+      play,
+      pause,
+      setVolume,
+      setLiveVolume,
+      pickLocalFile,
+      pasteUrl,
+      downloadUrl,
+      playFile,
+      deleteFile,
+    }),
+    [
+      activeFile?.name,
+      deleteFile,
+      downloadUrl,
+      isDownloading,
+      pause,
+      pickLocalFile,
+      pasteUrl,
+      play,
+      playFile,
+      player.volume,
+      setLiveVolume,
+      setVolume,
+      status.isLoaded,
+      status.playing,
+    ],
+  );
 
   return (
     <AudioPlayerContext.Provider value={value}>
