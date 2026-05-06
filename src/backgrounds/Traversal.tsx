@@ -67,7 +67,7 @@ type TrailBuild = {
   bendUv: number;
 };
 
-class ProgressionCurve extends THREE.Curve<THREE.Vector3> {
+class TraversalCurve extends THREE.Curve<THREE.Vector3> {
   private readonly flatLength: number;
   private readonly arcLength: number;
   private readonly upLength: number;
@@ -188,7 +188,7 @@ const buildTrailGeometry = (): TrailBuild => {
     const speed = random() * 0.5 + 0.2;
     const offset = random();
     const tailLength = random() * 0.4 + 0.3;
-    const path = new ProgressionCurve(
+    const path = new TraversalCurve(
       startX,
       FLOOR_LENGTH,
       BEND_START_Z - ARC_RADIUS,
@@ -265,7 +265,7 @@ const selectTrailColor = Fn(([colorIndex]: [ReturnType<typeof float>]) => {
   return mix(color0123, COLOR_4, colorIndex.step(float(3.5)));
 });
 
-export const Progression = ({
+export const Traversal = ({
   grayscale = false,
   breath,
   onReady,
@@ -519,7 +519,7 @@ export const Progression = ({
 
     startWebGPUAnimationLoop(renderer, animate, {
       isDisposed: () => disposed,
-      label: "Progression",
+      label: "Traversal",
       onReady,
     });
 

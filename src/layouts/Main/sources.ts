@@ -19,7 +19,7 @@ import { DreamSmoke } from "../../backgrounds/DreamSmoke";
 import { ParticleWave } from "../../backgrounds/ParticleWave";
 import { ParticleHelix } from "../../backgrounds/ParticleHelix";
 import { Endless } from "../../backgrounds/Endless";
-import { Progression } from "../../backgrounds/Progression";
+import { Traversal } from "../../backgrounds/Traversal";
 import { LightWaves } from "../../backgrounds/LightWaves";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
@@ -59,7 +59,7 @@ const BackgroundComponentById = {
   "particle-wave": ParticleWave,
   "particle-helix": ParticleHelix,
   endless: Endless,
-  progression: Progression,
+  progression: Traversal,
   "light-waves": LightWaves,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
