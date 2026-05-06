@@ -20,6 +20,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "particle-wave", name: "Stillwater" },
   { id: "particle-helix", name: "ParticleHelix" },
   { id: "endless", name: "Endless" },
+  { id: "progression", name: "Progression" },
 ] as const;
 
 export type BackgroundSourceDefinition =
