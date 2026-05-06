@@ -20,6 +20,7 @@ import { ParticleWave } from "../../backgrounds/ParticleWave";
 import { ParticleHelix } from "../../backgrounds/ParticleHelix";
 import { Endless } from "../../backgrounds/Endless";
 import { Progression } from "../../backgrounds/Progression";
+import { LightWaves } from "../../backgrounds/LightWaves";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
   type BackgroundSourceId,
@@ -59,6 +60,7 @@ const BackgroundComponentById = {
   "particle-helix": ParticleHelix,
   endless: Endless,
   progression: Progression,
+  "light-waves": LightWaves,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
 export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({
