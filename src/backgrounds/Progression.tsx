@@ -58,9 +58,9 @@ const COLOR_3 = vec3(0.0, 0.294, 0.678);
 const COLOR_4 = vec3(1.0, 0.349, 0.0);
 
 const BREATH_RESPONSE_RATE = 5.6;
-const BREATH_MOTION_GAIN = 3.4;
-const BREATH_MOTION_ATTACK_RATE = 5.4;
-const BREATH_MOTION_RELEASE_RATE = 2.1;
+const BREATH_MOTION_GAIN = 1.8;
+const BREATH_MOTION_ATTACK_RATE = 3.6;
+const BREATH_MOTION_RELEASE_RATE = 1.6;
 
 type TrailBuild = {
   geometry: THREE.BufferGeometry;
@@ -336,12 +336,12 @@ export const Progression = ({
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
       const speedBoost = float(1.0)
-        .add(breathEase.mul(0.34))
-        .add(breathMotionU.mul(0.72));
+        .add(breathEase.mul(0.14))
+        .add(breathMotionU.mul(0.22));
       const trailTime = timeU.mul(aSpeed).mul(speedBoost);
       const t = fract(trailTime.add(aOffset));
       const dist = fract(t.sub(uvCoord.x).add(1.0));
-      const tailLength = aTailLength.add(breathEase.mul(0.045));
+      const tailLength = aTailLength.add(breathEase.mul(0.018));
       const baseTrail = pow(
         max(float(0.0), smoothstep(tailLength, 0.0, dist)),
         float(1.2),
@@ -363,7 +363,7 @@ export const Progression = ({
       const movingUV = uvCoord.x
         .sub(trailTime.mul(DOT_SPEED))
         .sub(aOffset)
-        .sub(breathMotionU.mul(0.035));
+        .sub(breathMotionU.mul(0.012));
       const signalPos = movingUV.mul(DOT_DENSITY);
       const dotId = floor(signalPos);
       const dotLocal = fract(signalPos);
@@ -389,7 +389,7 @@ export const Progression = ({
             .add(0.7),
         )
         .mul(baseAlpha)
-        .mul(float(1.0).add(breathMotionU.mul(0.45)));
+        .mul(float(1.0).add(breathMotionU.mul(0.16)));
 
       const reflectionFade = float(1.0).sub(
         smoothstep(float(bendUv - 0.015), float(bendUv), uvCoord.x),
@@ -412,7 +412,7 @@ export const Progression = ({
 
       const trailColor = selectTrailColor(aColorIdx);
       const brightness = float(TRAIL_BRIGHTNESS).mul(
-        float(0.78).add(breathEase.mul(0.28)).add(breathMotionU.mul(0.34)),
+        float(0.82).add(breathEase.mul(0.12)).add(breathMotionU.mul(0.12)),
       );
       const colorBase = trailColor
         .mul(baseAlpha.add(core.mul(1.5)))
@@ -499,12 +499,12 @@ export const Progression = ({
       sceneTime +=
         deltaSeconds *
         SPEED_MULTIPLIER *
-        (1.0 + breathEase * 0.22 + breathMotion * 0.8);
+        (1.0 + breathEase * 0.08 + breathMotion * 0.24);
 
       camera.position.x = Math.sin(sceneTime * 0.34) * 2.2;
-      camera.position.y = 20 + breathEase * 2.4 + breathMotion * 2.8;
-      camera.position.z = 140 - breathEase * 8.0 - breathMotion * 11.0;
-      camera.lookAt(0, 20 + breathEase * 1.2, -50);
+      camera.position.y = 20 + breathEase * 0.8 + breathMotion * 0.7;
+      camera.position.z = 140 - breathEase * 2.4 - breathMotion * 3.0;
+      camera.lookAt(0, 20 + breathEase * 0.4, -50);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current
