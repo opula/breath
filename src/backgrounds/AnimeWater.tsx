@@ -50,6 +50,12 @@ const SEABED_SCALE = 0.42;
 const SEABED_EDGE_THRESHOLD = 0.092;
 const SEABED_EDGE_SOFTNESS = 0.09;
 
+const VIEW_WIDTH = 6.35;
+const VIEW_LENGTH = 10.6;
+const VIEW_FORWARD_PITCH = 1.55;
+const VIEW_UPSTREAM_SKEW = 0.18;
+const VIEW_FLOW_DRIFT = 0.42;
+
 const BREATH_RESPONSE_RATE = 4.8;
 const BREATH_MOTION_GAIN = 1.25;
 const BREATH_MOTION_ATTACK_RATE = 3.4;
@@ -261,13 +267,17 @@ export const AnimeWater = ({
       const flowTime = timeU.mul(
         float(0.72).add(breathEase.mul(0.035)).add(breathMotionU.mul(0.05)),
       );
-      const zoom = float(1.0).add(breathEase.mul(0.035));
+      const zoom = float(1.18).add(breathEase.mul(0.03));
       const perspective = float(1.0).div(
-        float(1.34).sub(screen.y.mul(0.42)).add(breathMotionU.mul(0.012)),
+        float(1.52).sub(screen.y.mul(0.58)).add(breathMotionU.mul(0.012)),
       );
+      const upstreamScreen = screen.x.add(screen.y.mul(VIEW_UPSTREAM_SKEW));
       const world = vec2(
-        screen.x.mul(float(4.7).mul(perspective)).mul(zoom),
-        perspective.mul(7.5).sub(screen.y.mul(1.2)).add(flowTime.mul(0.3)),
+        upstreamScreen.mul(float(VIEW_WIDTH).mul(perspective)).mul(zoom),
+        perspective
+          .mul(VIEW_LENGTH)
+          .sub(screen.y.mul(VIEW_FORWARD_PITCH))
+          .add(flowTime.mul(VIEW_FLOW_DRIFT)),
       );
 
       const surfaceT = animeWaterMask(
