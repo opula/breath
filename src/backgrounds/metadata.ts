@@ -22,6 +22,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "endless", name: "Endless" },
   { id: "progression", name: "Traversal" },
   { id: "light-waves", name: "Light Waves" },
+  { id: "anime-water", name: "Anime Water" },
 ] as const;
 
 export type BackgroundSourceDefinition =
