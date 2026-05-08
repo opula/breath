@@ -7,6 +7,7 @@ import { MeshBasicNodeMaterial } from "three/webgpu";
 import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
+  Loop,
   abs,
   cos,
   dot,
@@ -29,7 +30,7 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-const RAY_STEPS = 44;
+const RAY_STEPS = 32;
 
 const SPEED = 3.0;
 const TERRAIN_HEIGHT = 0.5;
@@ -111,7 +112,7 @@ const valueNoise = Fn(([x]: [ReturnType<typeof vec3>]) => {
   const x11 = mix(hash1(n.add(270.0)), hash1(n.add(271.0)), f.x);
   const xy1 = mix(x01, x11, f.y);
 
-  return mix(xy0, xy1, f.z).mul(1.8).add(1.7);
+  return mix(xy0, xy1, f.z).mul(2.0).sub(1.0);
 });
 
 const fineNoise = Fn(
@@ -182,30 +183,29 @@ export const Atmosphere = ({
       const breathEase = breathU
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
-      const breathEnergy = breathEase.mul(0.5).add(breathMotionU.mul(0.5));
-      const speed = float(SPEED).mul(
-        float(1.0).add(breathEase.mul(0.08)).add(breathMotionU.mul(0.12)),
-      );
+      const breathEnergy = breathEase.mul(0.55).add(breathMotionU.mul(0.45));
+      const speed = float(SPEED);
       const terrainHeight = float(TERRAIN_HEIGHT).mul(
-        float(0.9).add(breathEase.mul(0.14)).add(breathMotionU.mul(0.06)),
+        float(0.82).add(breathEase.mul(0.08)).add(breathMotionU.mul(0.04)),
       );
       const fogStep = float(FOG_STEP_SIZE).mul(
-        float(1.0).add(breathEnergy.mul(0.08)),
+        float(0.96).add(breathEnergy.mul(0.04)),
       );
       const noiseAmp = float(NOISE_AMP).mul(
-        float(0.94).add(breathEnergy.mul(0.12)),
+        float(0.9).add(breathEnergy.mul(0.06)),
       );
 
       const rayPos = vec3(-1.0, 0.8, timeU.mul(speed)).toVar();
-      const rayDirBase = normalize(vec3(screen.x, screen.y, float(0.3)));
-      const tiltedYZ = rotate2(vec2(rayDirBase.y, rayDirBase.z), float(0.76));
+      const viewY = screen.y.add(0.18);
+      const rayDirBase = normalize(vec3(screen.x, viewY, float(0.3)));
+      const tiltedYZ = rotate2(vec2(rayDirBase.y, rayDirBase.z), float(0.62));
       const rayDir = normalize(vec3(rayDirBase.x, tiltedYZ.x, tiltedYZ.y));
       const dither = hash12(fragCoord);
       rayPos.assign(rayPos.add(rayDir.mul(dither.mul(0.8))));
 
-      const accumulatedLight = vec3(27.2, 27.2, 27.2).toVar();
+      const accumulatedLight = vec3(0.06, 0.055, 0.05).toVar();
 
-      for (let step = 0; step < RAY_STEPS; step++) {
+      Loop(RAY_STEPS, () => {
         const rayXZ = vec2(rayPos.x, rayPos.z).mul(0.52);
         const heightSample = fineNoise(
           vec3(rayXZ.x, rayXZ.y, float(4.3)),
@@ -216,21 +216,25 @@ export const Atmosphere = ({
         const dist = max(abs(distRaw), float(0.4));
         rayPos.assign(rayPos.add(rayDir.mul(dist).mul(fogStep)));
 
-        const i = 8.8 + step;
-        const phase = float(i)
-          .mul(0.12)
+        const phase = length(rayPos)
+          .mul(0.05)
           .add(length(vec2(rayPos.x, rayPos.z).mul(0.15)));
         const color = vec3(1.0, 1.0, 1.0).add(sin(phase.add(COLOR_PHASE)));
-        accumulatedLight.assign(accumulatedLight.add(color.div(dist)));
-      }
+        const density = float(1.0)
+          .div(dist.add(0.08))
+          .mul(float(0.94).add(breathEnergy.mul(0.14)));
+        accumulatedLight.assign(accumulatedLight.add(color.mul(density)));
+      });
 
       const finalColor = accumulatedLight
         .mul(accumulatedLight)
-        .div(3009.0)
-        .add(vec3(dither.mul(0.0425), dither.mul(0.0425), dither.mul(0.0425)));
+        .div(4200.0)
+        .add(vec3(dither.mul(0.012), dither.mul(0.012), dither.mul(0.012)));
       const mapped = pow(max(toneMap(finalColor), vec3(0, 0, 0)), vec3(0.92));
-      const lum = dot(mapped, vec3(0.299, 0.587, 0.114));
-      return mix(mapped, vec3(lum, lum, lum), grayscaleU);
+      const atmosphereMask = float(1.0).sub(smoothstep(-0.48, -0.12, screen.y));
+      const composed = mix(vec3(0.004, 0.005, 0.007), mapped, atmosphereMask);
+      const lum = dot(composed, vec3(0.299, 0.587, 0.114));
+      return mix(composed, vec3(lum, lum, lum), grayscaleU);
     });
 
     const material = new MeshBasicNodeMaterial();
