@@ -15,6 +15,8 @@ import {
   floor,
   mix,
   smoothstep,
+  pow,
+  clamp,
   max,
   min,
   abs,
@@ -33,26 +35,20 @@ const HIGHLIGHT_WATER = vec3(0.96, 1.0, 0.98);
 const SEABED_LOW = vec3(0.02, 0.09, 0.16);
 const SEABED_HIGH = vec3(0.18, 0.58, 0.72);
 
-const SURFACE_SCALE = 0.54;
-const SURFACE_SMOOTHNESS = 0.42;
-const SURFACE_EDGE_THRESHOLD = 0.074;
-const SURFACE_EDGE_SOFTNESS = 0.018;
-const SURFACE_NOISE_SCALE = 0.38;
-const SURFACE_DISTORT = 0.055;
-const SURFACE_CELL_SPEED = 0.24;
+const SURFACE_SCALE = 0.92;
+const SURFACE_SMOOTHNESS = 0.46;
+const SURFACE_EDGE_THRESHOLD = 0.085;
+const SURFACE_EDGE_SOFTNESS = 0.048;
+const SURFACE_NOISE_SCALE = 0.72;
+const SURFACE_DISTORT = 0.25;
+const SURFACE_CELL_SPEED = 0.34;
 const SURFACE_FLOW_X = 0.035;
-const SURFACE_FLOW_Y = -0.09;
+const SURFACE_FLOW_Y = -0.115;
+const MID_POS = 0.32;
 
-const SEABED_SCALE = 0.26;
-const SEABED_EDGE_THRESHOLD = 0.082;
-const SEABED_EDGE_SOFTNESS = 0.036;
-
-const VIEW_WIDTH = 10.8;
-const VIEW_LENGTH = 17.4;
-const VIEW_FORWARD_PITCH = 2.15;
-const VIEW_UPSTREAM_SKEW = 0.08;
-const VIEW_FAR_SCALE = 0.62;
-const VIEW_FLOW_DRIFT = 0.36;
+const SEABED_SCALE = 0.42;
+const SEABED_EDGE_THRESHOLD = 0.092;
+const SEABED_EDGE_SOFTNESS = 0.09;
 
 const BREATH_RESPONSE_RATE = 4.8;
 const BREATH_MOTION_GAIN = 1.25;
@@ -70,7 +66,10 @@ const damp = (
 ) => current + (target - current) * (1 - Math.exp(-rate * deltaSeconds));
 
 const hash2 = Fn(([p]: [ReturnType<typeof vec2>]) => {
-  const q = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  const q = vec2(
+    dot(p, vec2(127.1, 311.7)),
+    dot(p, vec2(269.5, 183.3)),
+  );
   return fract(sin(q).mul(43758.5453));
 });
 
@@ -262,18 +261,13 @@ export const AnimeWater = ({
       const flowTime = timeU.mul(
         float(0.72).add(breathEase.mul(0.035)).add(breathMotionU.mul(0.05)),
       );
-      const zoom = float(1.08).add(breathEase.mul(0.025));
-      const streamDepth = smoothstep(-1.0, 1.0, centered.y);
-      const rowScale = mix(float(1.12), float(VIEW_FAR_SCALE), streamDepth);
-      const upstreamScreen = screen.x.add(
-        streamDepth.sub(0.5).mul(VIEW_UPSTREAM_SKEW),
+      const zoom = float(1.0).add(breathEase.mul(0.035));
+      const perspective = float(1.0).div(
+        float(1.34).sub(screen.y.mul(0.42)).add(breathMotionU.mul(0.012)),
       );
       const world = vec2(
-        upstreamScreen.mul(VIEW_WIDTH).mul(rowScale).mul(zoom),
-        streamDepth
-          .mul(VIEW_LENGTH)
-          .sub(centered.y.mul(VIEW_FORWARD_PITCH))
-          .add(flowTime.mul(VIEW_FLOW_DRIFT)),
+        screen.x.mul(float(4.7).mul(perspective)).mul(zoom),
+        perspective.mul(7.5).sub(screen.y.mul(1.2)).add(flowTime.mul(0.3)),
       );
 
       const surfaceT = animeWaterMask(
@@ -296,35 +290,47 @@ export const AnimeWater = ({
         float(0.42),
         float(SEABED_EDGE_THRESHOLD),
         float(SEABED_EDGE_SOFTNESS),
-        float(0.3),
-        float(0.035),
+        float(0.42),
+        float(0.08),
         float(0.16),
         vec2(-0.018, -0.036),
       );
 
-      const surfaceMid = surfaceT.step(float(0.08));
-      const surfaceHighlight = surfaceT.step(float(0.64));
+      const seg0 = clamp(surfaceT.div(MID_POS), float(0.0), float(1.0));
+      const seg1 = clamp(
+        surfaceT.sub(MID_POS).div(1.0 - MID_POS),
+        float(0.0),
+        float(1.0),
+      );
+      const lowerRamp = mix(DEEP_WATER, MID_WATER, seg0);
+      const upperRamp = mix(MID_WATER, HIGHLIGHT_WATER, seg1);
       const waterColor = mix(
-        mix(DEEP_WATER, MID_WATER, surfaceMid),
-        HIGHLIGHT_WATER,
-        surfaceHighlight,
+        lowerRamp,
+        upperRamp,
+        surfaceT.step(float(MID_POS)),
       );
 
-      const seabedBand = seabedT.step(float(0.18));
-      const seabedColor = mix(SEABED_LOW, SEABED_HIGH, seabedBand.mul(0.78));
-      const depthTint = mix(seabedColor, DEEP_WATER, float(0.3));
-      const waterOpacity = float(0.42)
-        .add(surfaceMid.mul(0.36))
-        .add(surfaceHighlight.mul(0.2));
-      const shimmer = surfaceHighlight.mul(
-        float(0.18).add(breathEnergy.mul(0.06)),
+      const seabedColor = mix(SEABED_LOW, SEABED_HIGH, seabedT.mul(0.78));
+      const depthTint = mix(seabedColor, DEEP_WATER, float(0.42));
+      const waterOpacity = float(0.58).add(surfaceT.mul(0.38));
+      const causticNoise = fbm2(world.mul(2.2).add(flowTime.mul(0.2)));
+      const caustic = pow(
+        smoothstep(0.58, 0.95, causticNoise.mul(seabedT.add(0.35))),
+        float(2.2),
+      );
+      const shimmer = pow(surfaceT, float(4.0)).mul(
+        float(0.42).add(breathEnergy.mul(0.18)),
       );
       const horizonFade = smoothstep(-1.05, 0.95, centered.y);
       const vignette = float(1.0).sub(
         smoothstep(0.55, 1.85, length(screen)).mul(0.34),
       );
 
-      const baseColor = mix(depthTint, waterColor, waterOpacity);
+      const baseColor = mix(
+        depthTint.add(SEABED_HIGH.mul(caustic.mul(0.18))),
+        waterColor,
+        waterOpacity,
+      );
       const highlightedColor = baseColor.add(HIGHLIGHT_WATER.mul(shimmer));
       const horizonColor = mix(
         highlightedColor.mul(0.72),
