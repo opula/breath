@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -27,6 +27,47 @@ export const MusicControls = () => {
 
   const files = useSelector(sortedMusicFilesSelector);
   const activeFileId = useSelector(activeFileIdSelector);
+
+  const listRef = useRef<FlatList<MusicFile>>(null);
+  const filesRef = useRef(files);
+  const activeFileIdRef = useRef(activeFileId);
+  filesRef.current = files;
+  activeFileIdRef.current = activeFileId;
+
+  // After mount, animate the list down to the active track if it isn't already
+  // near the top. Runs once per modal open (the modal remounts on each show).
+  useEffect(() => {
+    const id = activeFileIdRef.current;
+    if (!id) return;
+    const idx = filesRef.current.findIndex((f) => f.id === id);
+    if (idx < 2) return;
+    const t = setTimeout(() => {
+      listRef.current?.scrollToIndex({
+        index: idx,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    }, 350);
+    return () => clearTimeout(t);
+  }, []);
+
+  const onScrollToIndexFailed = useCallback(
+    ({
+      index,
+      averageItemLength,
+    }: {
+      index: number;
+      averageItemLength: number;
+    }) => {
+      setTimeout(() => {
+        listRef.current?.scrollToOffset({
+          offset: Math.max(0, index * averageItemLength - 100),
+          animated: true,
+        });
+      }, 100);
+    },
+    [],
+  );
 
   const onVolumeChange = useCallback(
     (value: number) => {
@@ -147,9 +188,11 @@ export const MusicControls = () => {
           <Overline right={`${files.length} tracks`}>Library</Overline>
 
           <FlatList
+            ref={listRef}
             data={files}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
+            onScrollToIndexFailed={onScrollToIndexFailed}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View style={tw`py-6`}>

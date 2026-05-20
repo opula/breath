@@ -335,10 +335,7 @@ export const Traversal = ({
       const breathEase = breathU
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
-      const speedBoost = float(1.0)
-        .add(breathEase.mul(0.14))
-        .add(breathMotionU.mul(0.22));
-      const trailTime = timeU.mul(aSpeed).mul(speedBoost);
+      const trailTime = timeU.mul(aSpeed);
       const t = fract(trailTime.add(aOffset));
       const dist = fract(t.sub(uvCoord.x).add(1.0));
       const tailLength = aTailLength.add(breathEase.mul(0.018));
@@ -495,15 +492,16 @@ export const Traversal = ({
       );
       previousElapsed = elapsed;
 
-      const breathEase = smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      const breathEase =
+        smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
       sceneTime +=
         deltaSeconds *
         SPEED_MULTIPLIER *
-        (1.0 + breathEase * 0.08 + breathMotion * 0.24);
+        (1.0 + breathEase * 0.04 + breathMotion * 0.08);
 
       camera.position.x = Math.sin(sceneTime * 0.34) * 2.2;
-      camera.position.y = 20 + breathEase * 0.8 + breathMotion * 0.7;
-      camera.position.z = 140 - breathEase * 2.4 - breathMotion * 3.0;
+      camera.position.y = 20 + breathEase * 0.45 + breathMotion * 0.25;
+      camera.position.z = 140 - breathEase * 1.2 - breathMotion * 0.8;
       camera.lookAt(0, 20 + breathEase * 0.4, -50);
 
       (timeU as unknown as { value: number }).value = sceneTime;

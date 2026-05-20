@@ -1,5 +1,11 @@
-import React, { useMemo } from "react";
-import { View, ScrollView, Text, Pressable } from "react-native";
+import React, { useCallback, useMemo, useRef } from "react";
+import {
+  View,
+  ScrollView,
+  Text,
+  Pressable,
+  LayoutChangeEvent,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationProp } from "@react-navigation/native";
 import uuid from "react-native-uuid";
@@ -42,6 +48,24 @@ export const Home = ({ navigation }: Props) => {
     () => (lastPlayedAt ? formatRelativeTime(lastPlayedAt) : null),
     [lastPlayedAt],
   );
+
+  // Scroll to the last-played row once it lays out, so users land on their
+  // most recent session without having to hunt for it. Fires only once per
+  // mount and only if the row is far enough down to be worth animating to.
+  const scrollRef = useRef<ScrollView>(null);
+  const hasScrolledToLastPlayedRef = useRef(false);
+  const handleLastPlayedLayout = useCallback((e: LayoutChangeEvent) => {
+    if (hasScrolledToLastPlayedRef.current) return;
+    const y = e.nativeEvent.layout.y;
+    if (y < 160) return;
+    hasScrolledToLastPlayedRef.current = true;
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, y - 80),
+        animated: true,
+      });
+    }, 250);
+  }, []);
 
   const handleTapExercise = (exerciseId: string) => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
@@ -93,6 +117,7 @@ export const Home = ({ navigation }: Props) => {
 
         {/* Library list */}
         <ScrollView
+          ref={scrollRef}
           style={tw`flex-1`}
           contentContainerStyle={tw`px-6 pb-8`}
           showsVerticalScrollIndicator={false}
@@ -101,17 +126,26 @@ export const Home = ({ navigation }: Props) => {
             Library ({exercises.length})
           </Overline>
 
-          {sorted.map((ex, i) => (
-            <ExerciseRow
-              key={ex.id}
-              exercise={ex}
-              index={i}
-              isFavorite={favorites.includes(ex.id)}
-              isLastPlayed={lastPlayed === ex.id}
-              onPress={() => handleTapExercise(ex.id)}
-              onLongPress={() => handleLongPressExercise(ex.id)}
-            />
-          ))}
+          {sorted.map((ex, i) => {
+            const isLastPlayed = lastPlayed === ex.id;
+            const row = (
+              <ExerciseRow
+                exercise={ex}
+                index={i}
+                isFavorite={favorites.includes(ex.id)}
+                isLastPlayed={isLastPlayed}
+                onPress={() => handleTapExercise(ex.id)}
+                onLongPress={() => handleLongPressExercise(ex.id)}
+              />
+            );
+            return isLastPlayed ? (
+              <View key={ex.id} onLayout={handleLastPlayedLayout}>
+                {row}
+              </View>
+            ) : (
+              <React.Fragment key={ex.id}>{row}</React.Fragment>
+            );
+          })}
 
           {/* New exercise affordance */}
           <Pressable

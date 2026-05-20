@@ -6,6 +6,8 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "ios:release": "expo run:ios --device --configuration Release",
+    "ios:release:ipa": "node scripts/archive-ios-debugging.js",
+    "ios:archive:debugging": "node scripts/archive-ios-debugging.js",
     "android": "expo run:android",
     "android:release": "expo run:android --device --variant release",
     "web": "expo start --web",

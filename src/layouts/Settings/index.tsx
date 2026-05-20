@@ -9,12 +9,15 @@ import {
   soundsEnabledSelector,
   hapticsEnabledSelector,
   hideCenterHintsSelector,
+  timerProgressModeSelector,
 } from "../../state/configuration.selectors";
 import {
   toggleGrayscale,
   toggleSounds,
   toggleHaptics,
   toggleHideCenterHints,
+  setTimerProgressMode,
+  type TimerProgressMode,
 } from "../../state/configuration.reducer";
 // Accent picker is parked — see note below the Display group.
 // import { accentColorSelector } from "../../state/accent.selectors";
@@ -31,6 +34,33 @@ import { Icon } from "../../components/Icon";
 //   { id: "lime", hex: "#C8F26D" },
 //   { id: "paper", hex: "#EDEDEA" },
 // ];
+
+const TIMER_PROGRESS_OPTIONS: {
+  mode: TimerProgressMode;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    mode: "always",
+    label: "Always on",
+    hint: "show during timed sessions",
+  },
+  {
+    mode: "minuteFade",
+    label: "Minute pulse",
+    hint: "fade at each minute",
+  },
+  {
+    mode: "endOn",
+    label: "End on",
+    hint: "show after target time",
+  },
+  {
+    mode: "endFade",
+    label: "End pulse",
+    hint: "fade after target time",
+  },
+];
 
 const ToggleRow = ({
   label,
@@ -106,6 +136,55 @@ const AboutRow = ({ label, value }: { label: string; value: string }) => (
   </View>
 );
 
+const OptionRow = ({
+  label,
+  hint,
+  selected,
+  onPress,
+}: {
+  label: string;
+  hint: string;
+  selected: boolean;
+  onPress: () => void;
+}) => (
+  <Pressable
+    onPress={onPress}
+    style={({ pressed }) => [
+      tw`flex-row items-center py-4 border-b border-mb-line`,
+      pressed && tw`opacity-70`,
+    ]}
+  >
+    <View style={tw`flex-1`}>
+      <Text
+        style={[
+          tw`font-display text-[18px] uppercase`,
+          selected ? tw`text-mb-accent` : tw`text-mb-fg`,
+          { letterSpacing: -0.4 },
+        ]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={[
+          tw`font-mono text-[9px] text-mb-mute uppercase mt-1`,
+          { letterSpacing: 1.8 },
+        ]}
+      >
+        {hint}
+      </Text>
+    </View>
+    <Text
+      style={[
+        tw`font-mono text-[12px] uppercase`,
+        selected ? tw`text-mb-accent` : tw`text-mb-dim`,
+        { letterSpacing: 1.5 },
+      ]}
+    >
+      {selected ? "ON" : "--"}
+    </Text>
+  </Pressable>
+);
+
 export const Settings = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams>>();
   const dispatch = useAppDispatch();
@@ -115,6 +194,7 @@ export const Settings = () => {
   const soundsEnabled = useAppSelector(soundsEnabledSelector);
   const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
   const hideCenterHints = useAppSelector(hideCenterHintsSelector);
+  const timerProgressMode = useAppSelector(timerProgressModeSelector);
   // const accentColor = useAppSelector(accentColorSelector);
 
   return (
@@ -197,6 +277,19 @@ export const Settings = () => {
             enabled={hideCenterHints}
             onPress={() => dispatch(toggleHideCenterHints())}
           />
+
+          <View style={tw`mt-8`}>
+            <Overline>Timer bar</Overline>
+          </View>
+          {TIMER_PROGRESS_OPTIONS.map((option) => (
+            <OptionRow
+              key={option.mode}
+              label={option.label}
+              hint={option.hint}
+              selected={timerProgressMode === option.mode}
+              onPress={() => dispatch(setTimerProgressMode(option.mode))}
+            />
+          ))}
 
           {/* Accent picker — hidden until runtime palette swap is wired.
               `mb-accent` resolves via twrnc at compile time, so selecting a new

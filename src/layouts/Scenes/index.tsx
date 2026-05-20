@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -45,6 +45,45 @@ export const Scenes = () => {
   const [previewSourceId, setPreviewSourceId] =
     useState<BackgroundSourceId | null>(null);
   const [isPreviewReady, setIsPreviewReady] = useState(false);
+
+  const listRef = useRef<FlatList<SortedScene>>(null);
+  const activeSourceIdRef = useRef(activeSourceId);
+  activeSourceIdRef.current = activeSourceId;
+
+  // After mount, animate the list down to the active scene if it isn't already
+  // near the top. Runs once per modal open.
+  useEffect(() => {
+    const id = activeSourceIdRef.current;
+    if (!id) return;
+    const idx = sortedBackgrounds.findIndex((s) => s.id === id);
+    if (idx < 2) return;
+    const t = setTimeout(() => {
+      listRef.current?.scrollToIndex({
+        index: idx,
+        animated: true,
+        viewPosition: 0.3,
+      });
+    }, 350);
+    return () => clearTimeout(t);
+  }, []);
+
+  const onScrollToIndexFailed = useCallback(
+    ({
+      index,
+      averageItemLength,
+    }: {
+      index: number;
+      averageItemLength: number;
+    }) => {
+      setTimeout(() => {
+        listRef.current?.scrollToOffset({
+          offset: Math.max(0, index * averageItemLength - 100),
+          animated: true,
+        });
+      }, 100);
+    },
+    [],
+  );
 
   // Drop preview when leaving the screen so no shader keeps running.
   useFocusEffect(
@@ -210,9 +249,11 @@ export const Scenes = () => {
 
         <View style={tw`flex-1 px-6`}>
           <FlatList
+            ref={listRef}
             data={sortedBackgrounds}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
+            onScrollToIndexFailed={onScrollToIndexFailed}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={tw`pb-8`}
           />

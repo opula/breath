@@ -139,13 +139,14 @@ export const Fluid = ({
           .mul(dot(rotAxis, pos))
           .sub(cross(rotAxis, pos));
 
-        // Fractal fold: 4 iterations, scale starts at 14.9, +=7.5 each step
-        let ts: ReturnType<typeof vec3> = twistedBase;
-        for (const scale of [14.9, 22.4, 29.9, 37.4]) {
+        // Fractal fold: 4 iterations, scale starts at 14.9, +=7.5 each step.
+        const ts = twistedBase.toVar();
+        Loop(4, ({ i }) => {
+          const scale = float(14.9).add(float(i).mul(7.5));
           const shifted = sin(ts.mul(scale).add(tAnim));
           const yzx = vec3(shifted.y, shifted.z, shifted.x);
-          ts = ts.add(yzx.div(scale));
-        }
+          ts.assign(ts.add(yzx.div(scale)));
+        });
 
         const structuralVal = ts.y;
 

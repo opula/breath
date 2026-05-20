@@ -23,6 +23,7 @@ export const BACKGROUND_SOURCE_DEFINITIONS = [
   { id: "progression", name: "Traversal" },
   { id: "light-waves", name: "Light Waves" },
   { id: "atmosphere", name: "Atmosphere" },
+  { id: "magical-landscape", name: "Magical Landscape" },
 ] as const;
 
 export type BackgroundSourceDefinition =

@@ -101,6 +101,17 @@ export const ExerciseActions = () => {
     }, 200);
   };
 
+  const handleTimer = () => {
+    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
+    setTimeout(() => {
+      navigation.goBack();
+      setTimeout(
+        () => navigation.navigate("ExerciseTimer", { exerciseId }),
+        50,
+      );
+    }, 200);
+  };
+
   const handleFavorite = () => {
     dispatch(toggleFavorite(exerciseId));
   };
@@ -142,6 +153,13 @@ export const ExerciseActions = () => {
       tone: "accent",
       right: "▶",
       onPick: handlePlay,
+    },
+    {
+      key: "timer",
+      label: "Timer",
+      hint: "choose a target duration",
+      right: "→",
+      onPick: handleTimer,
     },
     {
       key: "fav",

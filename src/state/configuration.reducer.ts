@@ -9,6 +9,12 @@ import {
   type SceneSourceId,
 } from "../backgrounds/metadata";
 
+export type TimerProgressMode =
+  | "always"
+  | "minuteFade"
+  | "endOn"
+  | "endFade";
+
 interface ConfigurationState {
   isPaused: boolean;
   isGrayscale: boolean;
@@ -16,6 +22,7 @@ interface ConfigurationState {
   soundsEnabled: boolean;
   hapticsEnabled: boolean;
   hideCenterHints: boolean;
+  timerProgressMode: TimerProgressMode;
   bgSourceIndex?: number;
 }
 
@@ -26,6 +33,7 @@ const initialState: ConfigurationState = {
   soundsEnabled: true,
   hapticsEnabled: true,
   hideCenterHints: false,
+  timerProgressMode: "always",
 };
 
 export const configurationSlice = createSlice({
@@ -49,6 +57,9 @@ export const configurationSlice = createSlice({
     },
     toggleHideCenterHints(state) {
       state.hideCenterHints = !state.hideCenterHints;
+    },
+    setTimerProgressMode(state, action: PayloadAction<TimerProgressMode>) {
+      state.timerProgressMode = action.payload;
     },
     updateSource(state, action: PayloadAction<SceneSourceId>) {
       state.bgSourceId = action.payload;
@@ -102,5 +113,6 @@ export const {
   toggleSounds,
   toggleHaptics,
   toggleHideCenterHints,
+  setTimerProgressMode,
   updateSource,
 } = configurationSlice.actions;

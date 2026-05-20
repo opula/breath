@@ -44,18 +44,37 @@ const quantizeValue = (value: number, precision: number) => {
   return Number(value.toFixed(precision));
 };
 
-const getTickHeight = (index: number) => {
-  if (index % 10 === 0) return _rulerHeight;
-  if (index % 5 === 0) return Math.round(_rulerHeight * 0.72);
+const isNearMultiple = (value: number, interval: number, precision: number) => {
+  const normalizedValue = quantizeValue(value, precision);
+  const nearest = Math.round(normalizedValue / interval) * interval;
+  return Math.abs(normalizedValue - nearest) < 10 ** -(precision + 2);
+};
+
+const getTickHeight = (value: number, step: number, precision: number) => {
+  const normalizedValue = quantizeValue(value, precision);
+  const majorInterval = step * 10;
+  const mediumInterval = step * 5;
+  if (isNearMultiple(normalizedValue, majorInterval, precision)) {
+    return _rulerHeight;
+  }
+  if (isNearMultiple(normalizedValue, mediumInterval, precision)) {
+    return Math.round(_rulerHeight * 0.72);
+  }
   return Math.round(_rulerHeight * 0.45);
 };
 
 type RulerLineProps = {
-  index: number;
+  value: number;
+  step: number;
+  precision: number;
 };
 
-const RulerLine = React.memo(function RulerLine({ index }: RulerLineProps) {
-  const lineHeight = getTickHeight(index);
+const RulerLine = React.memo(function RulerLine({
+  value,
+  step,
+  precision,
+}: RulerLineProps) {
+  const lineHeight = getTickHeight(value, step, precision);
   return (
     <View style={styles.tickSlot}>
       <View style={[styles.tick, { height: lineHeight }]} />
@@ -184,8 +203,14 @@ export const HorizontalDial = ({
   );
 
   const renderTick = useCallback(
-    ({ index }: { index: number }) => <RulerLine index={index} />,
-    [],
+    ({ index }: { index: number }) => (
+      <RulerLine
+        value={min + index * step}
+        step={step}
+        precision={precision}
+      />
+    ),
+    [min, precision, step],
   );
 
   useEffect(() => {

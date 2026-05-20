@@ -7,6 +7,7 @@ import { MeshBasicNodeMaterial } from "three/webgpu";
 import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
+  Loop,
   float,
   vec2,
   vec3,
@@ -38,7 +39,7 @@ const LAYER_BRIGHTNESS = 1.55;
 const MAX_DELTA_SECONDS = 0.1;
 const BREATH_RESPONSE_RATE = 4.4;
 const INHALE_RESPONSE_RATE = 5.2;
-const INHALE_FLOW_GAIN = 3.0;
+const INHALE_FLOW_GAIN = 1.6;
 
 const clampNumber = (value: number, minValue: number, maxValue: number) =>
   Math.max(minValue, Math.min(maxValue, value));
@@ -110,7 +111,7 @@ const starContribution = Fn(
       .add(0.2);
 
     const pulsation = sin(
-      time.mul(float(0.54).add(inhale.mul(0.38))).add(n.mul(TAU)),
+      time.mul(0.54).add(inhale.mul(0.22)).add(n.mul(TAU)),
     )
       .mul(0.5)
       .add(0.5);
@@ -183,83 +184,89 @@ export const Starfield = ({
     const aspectU = uniform(float(aspect));
     const breathU = uniform(float(0));
     const inhaleU = uniform(float(0));
-
-    // UV: center to (-1,1) with aspect correction
-    const uvRaw = uv();
-    const uvCentered = uvRaw.sub(0.5).mul(2.0);
-    const uvFinal = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
-
-    // Motion offset
-    const breathEase = breathU
-      .mul(breathU)
-      .mul(float(3.0).sub(breathU.mul(2.0)));
-    const inhaleEase = smoothstep(float(0.02), float(1.0), inhaleU);
-    const motionPhase = timeU.mul(0.22).add(breathEase.mul(0.54));
-    const M = vec2(sin(motionPhase).negate(), cos(motionPhase)).mul(
-      float(1.0).add(breathEase.mul(0.28)).add(inhaleEase.mul(0.36)),
-    );
-
-    // Time advancement
-    const t = timeU.mul(BASE_VELOCITY);
-
-    // Accumulate depth layers
-    let col = vec3(0.0, 0.0, 0.0);
-    for (let layerIdx = 0; layerIdx < NUM_LAYERS; layerIdx++) {
-      const i = layerIdx / NUM_LAYERS;
-      const depth = fract(float(i).add(t));
-      const scale = mix(
-        float(CANVAS_VIEW).add(inhaleEase.mul(2.4)),
-        float(0.5),
-        depth,
-      );
-      const fade = depth
-        .mul(smoothstep(float(1.0), float(0.9), depth))
-        .mul(float(0.82).add(breathEase.mul(0.24)).add(inhaleEase.mul(0.46)))
-        .mul(LAYER_BRIGHTNESS);
-      const layerUV = uvFinal
-        .mul(scale)
-        .add(i * 453.2)
-        .sub(timeU.mul(float(0.04).add(inhaleEase.mul(0.035))))
-        .add(M);
-      col = col.add(starLayer(layerUV, timeU, breathEase, inhaleEase).mul(fade));
-    }
-
-    // Fog
-    const uvLen = length(uvFinal);
-    const fogColor = vec3(0.1, 0.2, 0.4).mul(
-      palette(timeU.mul(0.05).add(breathEase.mul(0.1))),
-    );
-    const fogAmount = float(0.08)
-      .add(breathEase.mul(0.04))
-      .add(inhaleEase.mul(0.06))
-      .mul(float(1.0).sub(exp(uvLen.mul(-0.5))));
-    col = col.add(fogColor.mul(fogAmount));
-
-    const centerHalo = float(1.0).sub(
-      smoothstep(float(0.04), float(0.72), uvLen),
-    );
-    col = col.add(
-      fogColor.mul(centerHalo.mul(float(0.035).add(inhaleEase.mul(0.075)))),
-    );
-
-    // Center fade vignette
-    const centerFade = smoothstep(float(0.01), float(0.25), uvLen.sub(0.02));
-    const edgeFade = float(1.0).sub(
-      smoothstep(float(1.05), float(1.86), uvLen),
-    );
-    const finalColor = col
-      .mul(centerFade)
-      .mul(edgeFade)
-      .mul(float(0.88).add(breathEase.mul(0.16)).add(inhaleEase.mul(0.22)));
-
-    // Grayscale desaturation
     const grayscaleU = uniform(float(0));
-    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+
+    const computeColor = Fn(() => {
+      // UV: center to (-1,1) with aspect correction
+      const uvRaw = uv();
+      const uvCentered = uvRaw.sub(0.5).mul(2.0);
+      const uvFinal = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
+
+      // Motion offset
+      const breathEase = breathU
+        .mul(breathU)
+        .mul(float(3.0).sub(breathU.mul(2.0)));
+      const inhaleEase = smoothstep(float(0.02), float(1.0), inhaleU);
+      const motionPhase = timeU.mul(0.22).add(breathEase.mul(0.54));
+      const M = vec2(sin(motionPhase).negate(), cos(motionPhase)).mul(
+        float(1.0).add(breathEase.mul(0.28)).add(inhaleEase.mul(0.36)),
+      );
+
+      // Time advancement
+      const t = timeU.mul(BASE_VELOCITY);
+
+      // Accumulate depth layers
+      const col = vec3(0.0, 0.0, 0.0).toVar();
+      Loop(NUM_LAYERS, ({ i }) => {
+        const layerProgress = float(i).div(NUM_LAYERS);
+        const depth = fract(layerProgress.add(t));
+        const scale = mix(
+          float(CANVAS_VIEW).add(inhaleEase.mul(1.0)),
+          float(0.5),
+          depth,
+        );
+        const fade = depth
+          .mul(smoothstep(float(1.0), float(0.9), depth))
+          .mul(float(0.84).add(breathEase.mul(0.16)).add(inhaleEase.mul(0.18)))
+          .mul(LAYER_BRIGHTNESS);
+        const layerUV = uvFinal
+          .mul(scale)
+          .add(layerProgress.mul(453.2))
+          .sub(timeU.mul(0.04).add(inhaleEase.mul(0.035)))
+          .add(M);
+        col.assign(
+          col.add(starLayer(layerUV, timeU, breathEase, inhaleEase).mul(fade)),
+        );
+      });
+
+      // Fog
+      const uvLen = length(uvFinal);
+      const fogColor = vec3(0.1, 0.2, 0.4).mul(
+        palette(timeU.mul(0.05).add(breathEase.mul(0.1))),
+      );
+      const fogAmount = float(0.08)
+        .add(breathEase.mul(0.04))
+        .add(inhaleEase.mul(0.06))
+        .mul(float(1.0).sub(exp(uvLen.mul(-0.5))));
+      col.assign(col.add(fogColor.mul(fogAmount)));
+
+      const centerHalo = float(1.0).sub(
+        smoothstep(float(0.04), float(0.72), uvLen),
+      );
+      col.assign(
+        col.add(
+          fogColor.mul(centerHalo.mul(float(0.035).add(inhaleEase.mul(0.075)))),
+        ),
+      );
+
+      // Center fade vignette
+      const centerFade = smoothstep(float(0.01), float(0.25), uvLen.sub(0.02));
+      const edgeFade = float(1.0).sub(
+        smoothstep(float(1.05), float(1.86), uvLen),
+      );
+      const finalColor = col
+        .mul(centerFade)
+        .mul(edgeFade)
+        .mul(float(0.88).add(breathEase.mul(0.16)).add(inhaleEase.mul(0.22)));
+
+      // Grayscale desaturation
+      const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+      return mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+    });
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = outputColor;
+    material.colorNode = computeColor();
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -292,8 +299,7 @@ export const Starfield = ({
         INHALE_RESPONSE_RATE,
         delta,
       );
-      starTime +=
-        delta * (1.0 + smoothedBreath * 0.28 + inhalePower * 1.7);
+      starTime += delta * (1.0 + smoothedBreath * 0.08 + inhalePower * 0.18);
       (timeU as unknown as { value: number }).value = starTime;
       (breathU as unknown as { value: number }).value = smoothedBreath;
       (inhaleU as unknown as { value: number }).value = inhalePower;

@@ -5,6 +5,7 @@ import {
   isSceneSourceId,
 } from "../backgrounds/metadata";
 import { RootState } from "../store";
+import type { TimerProgressMode } from "./configuration.reducer";
 
 export const isPausedSelector = (state: RootState) =>
   state.configuration.isPaused;
@@ -35,3 +36,6 @@ export const hapticsEnabledSelector = (state: RootState) =>
 
 export const hideCenterHintsSelector = (state: RootState) =>
   state.configuration.hideCenterHints ?? false;
+
+export const timerProgressModeSelector = (state: RootState): TimerProgressMode =>
+  state.configuration.timerProgressMode ?? "always";

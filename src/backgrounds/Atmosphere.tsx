@@ -30,7 +30,7 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-const RAY_STEPS = 32;
+const RAY_STEPS = 44;
 
 const SPEED = 3.0;
 const TERRAIN_HEIGHT = 0.5;
@@ -38,6 +38,11 @@ const FOG_STEP_SIZE = 1.9;
 const NOISE_FREQ = 2.0;
 const NOISE_AMP = 0.27;
 const COLOR_PHASE = vec3(3.7, 1.5, 1.0);
+const VIEW_Y_OFFSET = 0.55;
+const ATMOSPHERE_GRADE_MIX = 0.9;
+const SKY_FADE_START = -0.2;
+const SKY_FADE_END = 0.92;
+const SKY_DARKEN_AMOUNT = 0.985;
 
 const BREATH_RESPONSE_RATE = 4.8;
 const BREATH_MOTION_GAIN = 1.8;
@@ -112,7 +117,7 @@ const valueNoise = Fn(([x]: [ReturnType<typeof vec3>]) => {
   const x11 = mix(hash1(n.add(270.0)), hash1(n.add(271.0)), f.x);
   const xy1 = mix(x01, x11, f.y);
 
-  return mix(xy0, xy1, f.z).mul(2.0).sub(1.0);
+  return mix(xy0, xy1, f.z).mul(1.8).add(1.7);
 });
 
 const fineNoise = Fn(
@@ -121,15 +126,15 @@ const fineNoise = Fn(
     ReturnType<typeof float>,
     ReturnType<typeof float>,
   ]) => {
-    let p: ReturnType<typeof vec3> = pIn.mul(frequency);
-    let value: ReturnType<typeof float> = float(-1.1);
-    let amplitude: ReturnType<typeof float> = amplitudeIn;
+    const p = pIn.mul(frequency).toVar();
+    const value = float(-1.1).toVar();
+    const amplitude = amplitudeIn.toVar();
 
-    for (let i = 0; i < 3; i++) {
-      value = value.add(valueNoise(p).mul(amplitude));
-      p = p.mul(1.8);
-      amplitude = amplitude.mul(0.9);
-    }
+    Loop(3, () => {
+      value.assign(value.add(valueNoise(p).mul(amplitude)));
+      p.assign(p.mul(1.8));
+      amplitude.assign(amplitude.mul(0.9));
+    });
 
     return value;
   },
@@ -183,29 +188,30 @@ export const Atmosphere = ({
       const breathEase = breathU
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
-      const breathEnergy = breathEase.mul(0.55).add(breathMotionU.mul(0.45));
+      const breathEnergy = breathEase.mul(0.5).add(breathMotionU.mul(0.5));
       const speed = float(SPEED);
       const terrainHeight = float(TERRAIN_HEIGHT).mul(
-        float(0.82).add(breathEase.mul(0.08)).add(breathMotionU.mul(0.04)),
+        float(0.9).add(breathEase.mul(0.14)).add(breathMotionU.mul(0.06)),
       );
       const fogStep = float(FOG_STEP_SIZE).mul(
-        float(0.96).add(breathEnergy.mul(0.04)),
+        float(1.0).add(breathEnergy.mul(0.08)),
       );
       const noiseAmp = float(NOISE_AMP).mul(
-        float(0.9).add(breathEnergy.mul(0.06)),
+        float(0.94).add(breathEnergy.mul(0.12)),
       );
 
       const rayPos = vec3(-1.0, 0.8, timeU.mul(speed)).toVar();
-      const viewY = screen.y.add(0.18);
-      const rayDirBase = normalize(vec3(screen.x, viewY, float(0.3)));
-      const tiltedYZ = rotate2(vec2(rayDirBase.y, rayDirBase.z), float(0.62));
+      const rayDirBase = normalize(
+        vec3(screen.x, screen.y.add(VIEW_Y_OFFSET), float(0.3)),
+      );
+      const tiltedYZ = rotate2(vec2(rayDirBase.y, rayDirBase.z), float(0.76));
       const rayDir = normalize(vec3(rayDirBase.x, tiltedYZ.x, tiltedYZ.y));
       const dither = hash12(fragCoord);
       rayPos.assign(rayPos.add(rayDir.mul(dither.mul(0.8))));
 
-      const accumulatedLight = vec3(0.06, 0.055, 0.05).toVar();
+      const accumulatedLight = vec3(27.2, 27.2, 27.2).toVar();
 
-      Loop(RAY_STEPS, () => {
+      Loop(RAY_STEPS, ({ i }) => {
         const rayXZ = vec2(rayPos.x, rayPos.z).mul(0.52);
         const heightSample = fineNoise(
           vec3(rayXZ.x, rayXZ.y, float(4.3)),
@@ -216,25 +222,35 @@ export const Atmosphere = ({
         const dist = max(abs(distRaw), float(0.4));
         rayPos.assign(rayPos.add(rayDir.mul(dist).mul(fogStep)));
 
-        const phase = length(rayPos)
-          .mul(0.05)
+        const phase = float(i)
+          .add(8.8)
+          .mul(0.12)
           .add(length(vec2(rayPos.x, rayPos.z).mul(0.15)));
         const color = vec3(1.0, 1.0, 1.0).add(sin(phase.add(COLOR_PHASE)));
-        const density = float(1.0)
-          .div(dist.add(0.08))
-          .mul(float(0.94).add(breathEnergy.mul(0.14)));
-        accumulatedLight.assign(accumulatedLight.add(color.mul(density)));
+        accumulatedLight.assign(accumulatedLight.add(color.div(dist)));
       });
 
       const finalColor = accumulatedLight
         .mul(accumulatedLight)
-        .div(4200.0)
-        .add(vec3(dither.mul(0.012), dither.mul(0.012), dither.mul(0.012)));
+        .div(3009.0)
+        .add(vec3(dither.mul(0.0425), dither.mul(0.0425), dither.mul(0.0425)));
       const mapped = pow(max(toneMap(finalColor), vec3(0, 0, 0)), vec3(0.92));
-      const atmosphereMask = float(1.0).sub(smoothstep(-0.48, -0.12, screen.y));
-      const composed = mix(vec3(0.004, 0.005, 0.007), mapped, atmosphereMask);
-      const lum = dot(composed, vec3(0.299, 0.587, 0.114));
-      return mix(composed, vec3(lum, lum, lum), grayscaleU);
+      const lum = dot(mapped, vec3(0.299, 0.587, 0.114));
+      const brightMist = smoothstep(float(0.35), float(0.95), lum);
+      const atmosphericGrade = mix(
+        vec3(lum.mul(0.1), lum.mul(0.36), lum.mul(0.44)),
+        vec3(lum.mul(0.72), lum.mul(0.9), lum.mul(0.96)),
+        brightMist,
+      );
+      const graded = mix(mapped, atmosphericGrade, float(ATMOSPHERE_GRADE_MIX));
+      const skyFade = smoothstep(
+        float(SKY_FADE_START),
+        float(SKY_FADE_END),
+        screen.y,
+      ).mul(SKY_DARKEN_AMOUNT);
+      const composed = mix(graded, vec3(0.004, 0.009, 0.01), skyFade);
+      const composedLum = dot(composed, vec3(0.299, 0.587, 0.114));
+      return mix(composed, vec3(composedLum, composedLum, composedLum), grayscaleU);
     });
 
     const material = new MeshBasicNodeMaterial();
@@ -284,7 +300,11 @@ export const Atmosphere = ({
         deltaSeconds,
       );
       previousElapsed = elapsed;
-      sceneTime += deltaSeconds;
+
+      const breathEase =
+        smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      sceneTime +=
+        deltaSeconds * (1.0 + breathEase * 0.04 + breathMotion * 0.06);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current

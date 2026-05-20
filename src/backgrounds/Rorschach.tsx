@@ -7,17 +7,24 @@ import { MeshBasicNodeMaterial } from "three/webgpu";
 import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
+  Loop,
   float,
   vec3,
   vec2,
+  vec4,
   sin,
   fract,
   floor,
   mix,
   smoothstep,
+  pow,
   abs,
   dot,
   length,
+  mod,
+  max,
+  min,
+  step,
   uv,
   uniform,
 } from "three/tsl";
@@ -26,29 +33,30 @@ import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Parameters ---
-const SEED = 42.17;
-const SCALE = 1.82;
-const DRIFT_SPEED = 0.42;
-const WARP_STRENGTH = 0.34;
-const BREATH_ZOOM_AMOUNT = 0.14;
-const BREATH_WARP_AMOUNT = 0.2;
-const BREATH_THRESHOLD_AMOUNT = 0.12;
-const BREATH_GLOW_AMOUNT = 0.22;
+const SCALE = 1.0;
+const DRIFT_SPEED = 1.0;
+const BREATH_ZOOM_AMOUNT = 0.045;
+const BREATH_THRESHOLD_AMOUNT = 0.035;
+const BREATH_GLOW_AMOUNT = 0.08;
 const BREATH_RESPONSE_RATE = 4.8;
-const EDGE_FADE_INNER = 0.66;
-const EDGE_FADE_OUTER = 1.58;
-const CENTER_DIM = 0.72;
+const BREATH_MOTION_GAIN = 4.2;
+const BREATH_MOTION_ATTACK_RATE = 7.0;
+const BREATH_MOTION_RELEASE_RATE = 2.8;
+const HOLD_TIME_SCALE = 0.0015;
+const BREATH_TIME_SCALE = 0.72;
+const HOLD_OSCILLATION_AMOUNT = 0.28;
+const HOLD_OSCILLATION_SPEED = 0.34;
+const HOLD_OSCILLATION_DETAIL_AMOUNT = 0.06;
+const HOLD_OSCILLATION_DETAIL_SPEED = 0.63;
+const INK_EDGE_WIDTH = 0.035;
+const VIGNETTE_POWER = 0.3;
+const GRAIN_STRENGTH = 0.05;
 
-const COLOR_BG_DEEP = vec3(0.01, 0.015, 0.026);
-const COLOR_BG_HALO = vec3(0.035, 0.075, 0.09);
-const COLOR_INK_LOW = vec3(0.055, 0.16, 0.18);
-const COLOR_INK_MID = vec3(0.22, 0.58, 0.56);
-const COLOR_INK_HIGH = vec3(0.88, 0.88, 0.76);
-const COLOR_WARM_TRACE = vec3(0.74, 0.42, 0.31);
-
-// FBM: 5 octaves, base scale 2.5, lacunarity 2.3, gain 0.5
-const FBM_SCALE = [2.5, 5.75, 13.225, 30.4175, 69.96025];
-const FBM_AMP = [0.5, 0.25, 0.125, 0.0625, 0.03125];
+const COLOR_PAPER = vec3(0.008, 0.373, 0.494);
+const COLOR_PAPER_GLOW = vec3(0.086, 0.557, 0.714);
+const COLOR_INK_1 = vec3(0.006, 0.045, 0.07);
+const COLOR_INK_2 = vec3(0.141, 0.827, 1.0);
+const COLOR_INK_3 = vec3(0.478, 0.965, 1.0);
 
 const damp = (
   current: number,
@@ -59,53 +67,134 @@ const damp = (
 
 // --- TSL shader functions ---
 
-// Simpler hash: vec3 → vec3 in [-0.5, 0.5]^3
-const random3 = Fn(([i]: [ReturnType<typeof vec3>]) => {
-  const seed1 = vec3(31.06, 19.86, 30.19);
-  const seed2 = vec3(6640.0, 5790.4, 10798.861);
-  return fract(sin(dot(i, seed1)).mul(seed2)).sub(0.5);
+const permute = Fn(([x]: [ReturnType<typeof vec4>]) => {
+  return mod(x.mul(34.0).add(1.0).mul(x), float(289.0));
 });
 
-// 3D gradient noise with quintic Hermite interpolation
-const gradientNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
-  const i = floor(p);
-  const f = fract(p);
-
-  // Quintic Hermite: f^3 * (f * (6f - 15) + 10)
-  const c = f
-    .mul(f)
-    .mul(f)
-    .mul(f.mul(float(6.0).mul(f).sub(15.0)).add(10.0));
-
-  // 8 corner gradient evaluations
-  const n000 = dot(random3(i), f);
-  const n100 = dot(random3(i.add(vec3(1, 0, 0))), f.sub(vec3(1, 0, 0)));
-  const n010 = dot(random3(i.add(vec3(0, 1, 0))), f.sub(vec3(0, 1, 0)));
-  const n110 = dot(random3(i.add(vec3(1, 1, 0))), f.sub(vec3(1, 1, 0)));
-  const n001 = dot(random3(i.add(vec3(0, 0, 1))), f.sub(vec3(0, 0, 1)));
-  const n101 = dot(random3(i.add(vec3(1, 0, 1))), f.sub(vec3(1, 0, 1)));
-  const n011 = dot(random3(i.add(vec3(0, 1, 1))), f.sub(vec3(0, 1, 1)));
-  const n111 = dot(random3(i.add(vec3(1, 1, 1))), f.sub(vec3(1, 1, 1)));
-
-  // Trilinear interpolation
-  const nX00 = mix(n000, n100, c.x);
-  const nX01 = mix(n001, n101, c.x);
-  const nX10 = mix(n010, n110, c.x);
-  const nX11 = mix(n011, n111, c.x);
-  const nXX0 = mix(nX00, nX10, c.y);
-  const nXX1 = mix(nX01, nX11, c.y);
-  return mix(nXX0, nXX1, c.z);
+const taylorInvSqrt = Fn(([r]: [ReturnType<typeof vec4>]) => {
+  return float(1.79284291400159).sub(r.mul(0.85373472095314));
 });
 
-// 5-octave FBM (unrolled)
-const layeredNoise = Fn(([p]: [ReturnType<typeof vec3>]) => {
-  let total = gradientNoise(p.mul(FBM_SCALE[0])).mul(FBM_AMP[0]);
-  total = total.add(gradientNoise(p.mul(FBM_SCALE[1])).mul(FBM_AMP[1]));
-  total = total.add(gradientNoise(p.mul(FBM_SCALE[2])).mul(FBM_AMP[2]));
-  total = total.add(gradientNoise(p.mul(FBM_SCALE[3])).mul(FBM_AMP[3]));
-  total = total.add(gradientNoise(p.mul(FBM_SCALE[4])).mul(FBM_AMP[4]));
-  return total;
+const simplexNoise = Fn(([v]: [ReturnType<typeof vec3>]) => {
+  const c = vec2(1.0 / 6.0, 1.0 / 3.0);
+  const i0 = floor(v.add(dot(v, vec3(c.y, c.y, c.y))));
+  const x0 = v.sub(i0).add(dot(i0, vec3(c.x, c.x, c.x)));
+
+  const g = step(vec3(x0.y, x0.z, x0.x), x0);
+  const l = float(1.0).sub(g);
+  const i1 = min(g, vec3(l.z, l.x, l.y));
+  const i2 = max(g, vec3(l.z, l.x, l.y));
+
+  const x1 = x0.sub(i1).add(c.x);
+  const x2 = x0.sub(i2).add(c.x.mul(2.0));
+  const x3 = x0.sub(1.0).add(c.x.mul(3.0));
+
+  const i = mod(i0, float(289.0));
+  const p = permute(
+    permute(
+      permute(vec4(i.z, i.z.add(i1.z), i.z.add(i2.z), i.z.add(1.0))).add(
+        vec4(i.y, i.y.add(i1.y), i.y.add(i2.y), i.y.add(1.0)),
+      ),
+    ).add(vec4(i.x, i.x.add(i1.x), i.x.add(i2.x), i.x.add(1.0))),
+  );
+
+  const ns = vec3(2.0 / 7.0, 0.5 / 7.0 - 1.0, 1.0 / 7.0);
+  const j = p.sub(floor(p.mul(ns.z).mul(ns.z)).mul(49.0));
+  const x_ = floor(j.mul(ns.z));
+  const y_ = floor(j.sub(x_.mul(7.0)));
+  const x = x_.mul(ns.x).add(ns.y);
+  const y = y_.mul(ns.x).add(ns.y);
+  const h = float(1.0).sub(abs(x)).sub(abs(y));
+
+  const b0 = vec4(x.x, x.y, y.x, y.y);
+  const b1 = vec4(x.z, x.w, y.z, y.w);
+  const s0 = floor(b0).mul(2.0).add(1.0);
+  const s1 = floor(b1).mul(2.0).add(1.0);
+  const sh = float(0.0).sub(step(h, vec4(0.0)));
+
+  const a0 = vec4(b0.x, b0.z, b0.y, b0.w).add(
+    vec4(s0.x, s0.z, s0.y, s0.w).mul(vec4(sh.x, sh.x, sh.y, sh.y)),
+  );
+  const a1 = vec4(b1.x, b1.z, b1.y, b1.w).add(
+    vec4(s1.x, s1.z, s1.y, s1.w).mul(vec4(sh.z, sh.z, sh.w, sh.w)),
+  );
+
+  const p0Raw = vec3(a0.x, a0.y, h.x);
+  const p1Raw = vec3(a0.z, a0.w, h.y);
+  const p2Raw = vec3(a1.x, a1.y, h.z);
+  const p3Raw = vec3(a1.z, a1.w, h.w);
+  const norm = taylorInvSqrt(
+    vec4(
+      dot(p0Raw, p0Raw),
+      dot(p1Raw, p1Raw),
+      dot(p2Raw, p2Raw),
+      dot(p3Raw, p3Raw),
+    ),
+  );
+  const p0 = p0Raw.mul(norm.x);
+  const p1 = p1Raw.mul(norm.y);
+  const p2 = p2Raw.mul(norm.z);
+  const p3 = p3Raw.mul(norm.w);
+
+  const m = max(
+    float(0.6).sub(
+      vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)),
+    ),
+    vec4(0.0),
+  ).toVar();
+  m.assign(m.mul(m));
+
+  return dot(
+    m.mul(m),
+    vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)),
+  ).mul(42.0);
 });
+
+const fbm7 = Fn(([pIn]: [ReturnType<typeof vec3>]) => {
+  const p = pIn.toVar();
+  const acc = float(0.0).toVar();
+  const amp = float(0.5).toVar();
+
+  Loop(7, () => {
+    acc.assign(acc.add(simplexNoise(p).mul(amp)));
+    p.assign(p.mul(2.0));
+    amp.assign(amp.mul(0.5));
+  });
+
+  return acc;
+});
+
+const fbm5 = Fn(([pIn]: [ReturnType<typeof vec3>]) => {
+  const p = pIn.toVar();
+  const acc = float(0.0).toVar();
+  const amp = float(0.5).toVar();
+
+  Loop(5, () => {
+    acc.assign(acc.add(simplexNoise(p).mul(amp)));
+    p.assign(p.mul(2.0));
+    amp.assign(amp.mul(0.5));
+  });
+
+  return acc;
+});
+
+const hash21 = Fn(([p]: [ReturnType<typeof vec2>]) => {
+  return fract(sin(dot(p, vec2(532.1231, 1378.3453))).mul(53211.1223));
+});
+
+const vignette = Fn(
+  ([color, q]: [ReturnType<typeof vec3>, ReturnType<typeof vec2>]) => {
+    const v = float(16.0)
+      .mul(q.x)
+      .mul(q.y)
+      .mul(float(1.0).sub(q.x))
+      .mul(float(1.0).sub(q.y));
+    const falloff = float(0.3).add(
+      float(0.8).mul(pow(v, float(VIGNETTE_POWER))),
+    );
+    return color.mul(falloff);
+  },
+);
 
 // --- Component ---
 
@@ -146,126 +235,90 @@ export const Rorschach = ({
     const grayscaleU = uniform(float(0));
     const breathU = uniform(float(0));
 
-    const breathEase = breathU
-      .mul(breathU)
-      .mul(float(3.0).sub(breathU.mul(2.0)));
-    const driftTime = timeU.mul(DRIFT_SPEED);
-    const breathZoom = float(1.0).sub(breathEase.mul(BREATH_ZOOM_AMOUNT));
-    const breathWarp = float(WARP_STRENGTH).mul(
-      float(0.88).add(breathEase.mul(BREATH_WARP_AMOUNT)),
-    );
+    const computeColor = Fn(() => {
+      const breathEase = breathU
+        .mul(breathU)
+        .mul(float(3.0).sub(breathU.mul(2.0)));
+      const time = timeU.mul(DRIFT_SPEED);
+      const breathZoom = float(1.0).sub(breathEase.mul(BREATH_ZOOM_AMOUNT));
 
-    // UV: center to (-1,1)
-    const uvRaw = uv();
-    const uvCentered = uvRaw.mul(2.0).sub(1.0);
-    const stRaw = vec2(uvCentered.x.mul(aspectU), uvCentered.y);
-    const radial = length(stRaw);
-    const st = stRaw.mul(SCALE).mul(breathZoom);
-    const mirrored = vec2(abs(st.x), st.y);
+      const uvRaw = uv();
+      const uvCentered = uvRaw.mul(2.0).sub(1.0);
+      const p = vec2(uvCentered.x.mul(aspectU), uvCentered.y)
+        .mul(SCALE)
+        .mul(breathZoom);
+      const mirrored = vec2(abs(p.x), p.y);
+      const radial = length(p);
 
-    const ambientPulse = sin(
-      driftTime
-        .mul(0.37)
-        .add(sin(driftTime.mul(0.13)).mul(0.7))
-        .add(1.9),
-    )
-      .mul(0.5)
-      .add(0.5);
-    const driftX = sin(driftTime.mul(0.31))
-      .mul(0.26)
-      .add(sin(driftTime.mul(0.17).add(2.4)).mul(0.18));
-    const driftY = sin(driftTime.mul(0.27).add(1.1))
-      .mul(0.24)
-      .add(sin(driftTime.mul(0.11).add(3.6)).mul(0.16));
+      const grain = hash21(p).mul(GRAIN_STRENGTH);
+      let color: ReturnType<typeof vec3> = mix(
+        COLOR_PAPER,
+        COLOR_PAPER_GLOW,
+        smoothstep(float(0.0), float(1.45), radial).mul(0.34),
+      ).add(vec3(grain, grain, grain));
 
-    const flowX = layeredNoise(
-      vec3(
-        mirrored.x.mul(0.66).add(driftX),
-        mirrored.y.mul(0.66).add(SEED * 0.03),
-        driftTime.mul(0.18),
-      ),
-    );
-    const flowY = layeredNoise(
-      vec3(
-        mirrored.x.mul(0.62).add(SEED * 0.05),
-        mirrored.y.mul(0.62).add(driftY),
-        driftTime.mul(0.15).add(7.3),
-      ),
-    );
-    const warped = vec2(
-      mirrored.x.add(flowX.mul(breathWarp)),
-      mirrored.y.add(flowY.mul(breathWarp)),
-    );
+      const inkField1 = fbm7(
+        vec3(
+          mirrored.x,
+          mirrored.y,
+          time.mul(0.05).add(30.0).add(breathEase.mul(0.08)),
+        ),
+      )
+        .sub(0.2)
+        .add(radial.mul(0.5))
+        .sub(breathEase.mul(BREATH_THRESHOLD_AMOUNT));
+      const inkField2 = fbm7(
+        vec3(
+          mirrored.x,
+          mirrored.y,
+          time.mul(0.04).add(16.0).sub(breathEase.mul(0.04)),
+        ),
+      )
+        .add(radial.mul(0.5))
+        .sub(breathEase.mul(BREATH_THRESHOLD_AMOUNT * 0.5));
 
-    const body = layeredNoise(
-      vec3(
-        warped.x.mul(0.82).add(driftX.mul(0.4)),
-        warped.y.mul(0.82).add(SEED),
-        driftTime.mul(0.13).add(breathEase.mul(0.18)),
-      ),
-    ).add(0.5);
-    const undertow = layeredNoise(
-      vec3(
-        warped.x.mul(0.38).sub(driftY.mul(0.35)).add(8.2),
-        warped.y.mul(0.5).add(driftX.mul(0.25)).sub(4.1),
-        driftTime.mul(0.08).sub(breathEase.mul(0.09)),
-      ),
-    ).add(0.5);
-    const lace = gradientNoise(
-      vec3(
-        warped.x.mul(3.2).add(12.7),
-        warped.y.mul(2.8).sub(6.4),
-        driftTime.mul(0.22),
-      ),
-    ).add(0.5);
+      const ink1 = smoothstep(float(INK_EDGE_WIDTH), float(0.0), inkField1);
+      const ink2 = smoothstep(float(INK_EDGE_WIDTH), float(0.0), inkField2);
+      const inkTexture1 = float(0.4).add(
+        fbm5(
+          vec3(
+            p.x.mul(0.75),
+            p.y.mul(0.75),
+            time.mul(0.04).add(2445.0),
+          ),
+        ).mul(0.6),
+      );
+      const inkTexture2 = float(0.4).add(
+        fbm5(
+          vec3(
+            p.x.mul(0.75),
+            p.y.mul(0.75),
+            time.mul(0.04).add(256.0),
+          ),
+        ).mul(0.6),
+      );
 
-    const edgeFade = float(1.0).sub(
-      smoothstep(float(EDGE_FADE_INNER), float(EDGE_FADE_OUTER), radial),
-    );
-    const axisGlow = float(1.0)
-      .sub(smoothstep(float(0.0), float(0.16), abs(stRaw.x)))
-      .mul(0.12);
-    const density = body
-      .mul(0.74)
-      .add(undertow.mul(0.34))
-      .add(lace.mul(0.12))
-      .add(axisGlow)
-      .mul(edgeFade);
+      color = mix(
+        color,
+        mix(COLOR_INK_2, COLOR_INK_3, inkTexture2.mul(0.72)),
+        ink2
+          .mul(inkTexture2)
+          .mul(float(0.86).add(breathEase.mul(BREATH_GLOW_AMOUNT))),
+      );
+      color = mix(
+        color,
+        COLOR_INK_1,
+        ink1.mul(inkTexture1).mul(float(0.96).add(breathEase.mul(0.04))),
+      );
 
-    const threshold = float(0.52)
-      .sub(breathEase.mul(BREATH_THRESHOLD_AMOUNT))
-      .add(ambientPulse.sub(0.5).mul(0.08));
-    const veil = smoothstep(threshold.sub(0.32), threshold.add(0.22), density);
-    const core = smoothstep(threshold.add(0.02), threshold.add(0.36), density);
-    const highlight = smoothstep(
-      threshold.add(0.2),
-      threshold.add(0.52),
-      density.add(lace.mul(0.12)),
-    ).mul(float(0.68).add(breathEase.mul(BREATH_GLOW_AMOUNT)));
-
-    const centerDim = float(CENTER_DIM).add(
-      smoothstep(float(0.15), float(0.56), radial).mul(1.0 - CENTER_DIM),
-    );
-    const bgColor = mix(
-      COLOR_BG_DEEP,
-      COLOR_BG_HALO,
-      smoothstep(float(0.08), float(1.08), radial).mul(0.58),
-    );
-    const inkBase = mix(COLOR_INK_LOW, COLOR_INK_MID, veil);
-    const inkColor = mix(inkBase, COLOR_INK_HIGH, highlight);
-    const warmTrace = smoothstep(float(0.52), float(0.92), undertow).mul(
-      core.mul(0.2),
-    );
-    const livingInk = mix(inkColor, COLOR_WARM_TRACE, warmTrace);
-    const finalColor = mix(bgColor, livingInk, veil.mul(centerDim));
-
-    // Grayscale desaturation
-    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+      const vignetted = vignette(color, uvRaw);
+      const lum = dot(vignetted, vec3(0.299, 0.587, 0.114));
+      return mix(vignetted, vec3(lum, lum, lum), grayscaleU);
+    });
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = outputColor;
+    material.colorNode = computeColor();
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);
@@ -276,7 +329,9 @@ export const Rorschach = ({
 
     let disposed = false;
     let previousElapsed = 0;
+    let sceneTime = 0;
     let smoothedBreath = breathRef.current?.value ?? 0;
+    let breathMotion = 0;
 
     function animate() {
       if (disposed) {
@@ -287,15 +342,42 @@ export const Rorschach = ({
         previousElapsed > 0
           ? Math.max(1 / 120, Math.min(elapsed - previousElapsed, 0.12))
           : 1 / 60;
+      const targetBreath = breathRef.current?.value ?? 0.0;
+      const breathDelta = targetBreath - smoothedBreath;
       smoothedBreath = damp(
         smoothedBreath,
-        breathRef.current?.value ?? 0.0,
+        targetBreath,
         BREATH_RESPONSE_RATE,
         deltaSeconds,
       );
+      const motionTarget = Math.min(
+        Math.abs(breathDelta) * BREATH_MOTION_GAIN,
+        1.0,
+      );
+      breathMotion = damp(
+        breathMotion,
+        motionTarget,
+        motionTarget > breathMotion
+          ? BREATH_MOTION_ATTACK_RATE
+          : BREATH_MOTION_RELEASE_RATE,
+        deltaSeconds,
+      );
+      sceneTime +=
+        deltaSeconds *
+        (HOLD_TIME_SCALE +
+          breathMotion * (BREATH_TIME_SCALE - HOLD_TIME_SCALE));
+      const holdInfluence = Math.max(0, 1 - breathMotion);
+      const holdOscillation =
+        holdInfluence *
+        holdInfluence *
+        (Math.sin(elapsed * HOLD_OSCILLATION_SPEED) *
+          HOLD_OSCILLATION_AMOUNT +
+          Math.sin(elapsed * HOLD_OSCILLATION_DETAIL_SPEED + 1.7) *
+            HOLD_OSCILLATION_DETAIL_AMOUNT);
       previousElapsed = elapsed;
 
-      (timeU as unknown as { value: number }).value = elapsed;
+      (timeU as unknown as { value: number }).value =
+        sceneTime + holdOscillation;
       (grayscaleU as unknown as { value: number }).value =
         grayscaleRef.current ? 1.0 : 0.0;
       (breathU as unknown as { value: number }).value = smoothedBreath;

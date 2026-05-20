@@ -24,11 +24,13 @@ import { Background } from "./Background";
 import { BreathRing } from "../../components/DynamicExercise/BreathRing";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
+import { usePausableClock } from "../../hooks/usePausableClock";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import { exercisesSelector } from "../../state/exercises.selectors";
 import {
   isPausedSelector,
   hideCenterHintsSelector,
+  timerProgressModeSelector,
 } from "../../state/configuration.selectors";
 import { setPause as setPauseAction } from "../../state/configuration.reducer";
 import { MainStackParams } from "../../navigation";
@@ -37,18 +39,26 @@ import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
 const CHROME_TIMEOUT_MS = 6000;
 const FIRST_SESSION_CHROME_TIMEOUT_MS = 12000;
 const HINT_TIMEOUT_MS = 4000;
+const TIMER_PROGRESS_TICK_MS = 250;
+const TIMER_PROGRESS_PULSE_MS = 5000;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
 export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const route = useRoute<RouteProp<MainStackParams, "Main">>();
   const autoplay = route.params?.autoplay ?? false;
+  const timerMinutes = route.params?.timerMinutes;
+  const timerTargetSeconds = useMemo(() => {
+    if (!timerMinutes || timerMinutes <= 0) return null;
+    return timerMinutes * 60;
+  }, [timerMinutes]);
   const exercises = useAppSelector(exercisesSelector);
   const dispatch = useAppDispatch();
   const isAppActive = useAppIsActive();
   const insets = useSafeAreaInsets();
   const isPaused = useAppSelector(isPausedSelector);
   const hideCenterHints = useAppSelector(hideCenterHintsSelector);
+  const timerProgressMode = useAppSelector(timerProgressModeSelector);
 
   const setPause = useCallback(
     (status: boolean) => {
@@ -109,13 +119,52 @@ export const Main = () => {
     return () => clearTimeout(timer);
   }, [autoplay, handleStart]);
 
+  const [sessionClockResetKey, setSessionClockResetKey] = useState(0);
+  const sessionElapsed = usePausableClock({
+    running: isStarted && !isPaused,
+    resetKey: sessionClockResetKey,
+    tickMs: TIMER_PROGRESS_TICK_MS,
+  });
+  const [showTimerProgressPulse, setShowTimerProgressPulse] = useState(false);
+  const lastTimerPulseMinuteRef = useRef(0);
+  const hasShownTimerEndPulseRef = useRef(false);
+  const timerProgressPulseTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerTimerProgressPulse = useCallback(() => {
+    setShowTimerProgressPulse(true);
+    if (timerProgressPulseTimeoutRef.current) {
+      clearTimeout(timerProgressPulseTimeoutRef.current);
+    }
+    timerProgressPulseTimeoutRef.current = setTimeout(() => {
+      setShowTimerProgressPulse(false);
+      timerProgressPulseTimeoutRef.current = null;
+    }, TIMER_PROGRESS_PULSE_MS);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
+      setSessionClockResetKey((key) => key + 1);
+      lastTimerPulseMinuteRef.current = 0;
+      hasShownTimerEndPulseRef.current = false;
+      setShowTimerProgressPulse(false);
+
       return () => {
+        if (timerProgressPulseTimeoutRef.current) {
+          clearTimeout(timerProgressPulseTimeoutRef.current);
+          timerProgressPulseTimeoutRef.current = null;
+        }
         handleStop();
       };
     }, [handleStop]),
   );
+
+  useEffect(() => {
+    setSessionClockResetKey((key) => key + 1);
+    lastTimerPulseMinuteRef.current = 0;
+    hasShownTimerEndPulseRef.current = false;
+    setShowTimerProgressPulse(false);
+  }, [timerTargetSeconds]);
 
   // Auto-fading chrome: show on mount and any gesture; hide after timeout.
   // First session gets a longer window so the legend is readable; subsequent
@@ -144,19 +193,45 @@ export const Main = () => {
     };
   }, [revealChrome]);
 
-  // Elapsed time — ticks at 10Hz, pauses when engine pauses.
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (isPaused) return;
-    const id = setInterval(() => setElapsed((e) => e + 0.1), 100);
-    return () => clearInterval(id);
-  }, [isPaused]);
-
   useEffect(() => {
     if (!isStarted || !isPaused) return;
     setShowChrome(true);
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
   }, [isPaused, isStarted]);
+
+  useEffect(() => {
+    if (!timerTargetSeconds || timerProgressMode !== "minuteFade") return;
+
+    const completedMinutes = Math.floor(sessionElapsed / 60);
+    if (
+      completedMinutes <= 0 ||
+      completedMinutes === lastTimerPulseMinuteRef.current
+    ) {
+      return;
+    }
+
+    lastTimerPulseMinuteRef.current = completedMinutes;
+    triggerTimerProgressPulse();
+  }, [
+    sessionElapsed,
+    timerProgressMode,
+    timerTargetSeconds,
+    triggerTimerProgressPulse,
+  ]);
+
+  useEffect(() => {
+    if (!timerTargetSeconds || timerProgressMode !== "endFade") return;
+    if (sessionElapsed < timerTargetSeconds) return;
+    if (hasShownTimerEndPulseRef.current) return;
+
+    hasShownTimerEndPulseRef.current = true;
+    triggerTimerProgressPulse();
+  }, [
+    sessionElapsed,
+    timerProgressMode,
+    timerTargetSeconds,
+    triggerTimerProgressPulse,
+  ]);
 
   // Center hints auto-fade after 4s. Re-reveal on gesture / relevant state.
   const [showHints, setShowHints] = useState(false);
@@ -217,8 +292,21 @@ export const Main = () => {
 
   const gesture = Gesture.Exclusive(doubleTap, longPress, singleTap);
 
-  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
-  const ss = String(Math.floor(elapsed % 60)).padStart(2, "0");
+  const mm = String(Math.floor(sessionElapsed / 60)).padStart(2, "0");
+  const ss = String(Math.floor(sessionElapsed % 60)).padStart(2, "0");
+  const timerProgress = timerTargetSeconds
+    ? Math.min(sessionElapsed / timerTargetSeconds, 1)
+    : 0;
+  const timerTargetComplete = timerTargetSeconds
+    ? sessionElapsed >= timerTargetSeconds
+    : false;
+  const showTimerProgress =
+    !!timerTargetSeconds &&
+    (timerProgressMode === "always" ||
+      (timerProgressMode === "endOn" && timerTargetComplete) ||
+      ((timerProgressMode === "minuteFade" ||
+        timerProgressMode === "endFade") &&
+        showTimerProgressPulse));
   const showIndefiniteHint = isStarted && canAdvance && !isPaused;
   const showCenterHints = isStarted && showHints && !hideCenterHints;
   const primaryHint = showIndefiniteHint
@@ -420,6 +508,30 @@ export const Main = () => {
                 {mm}:{ss}
               </Text>
             </View>
+          </MotiView>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showTimerProgress ? (
+          <MotiView
+            key="timer-progress"
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { type: "timing", duration: 900 } }}
+            pointerEvents="none"
+            style={[
+              tw`absolute left-0 right-0 bg-mb-line`,
+              { bottom: insets.bottom, height: 2 },
+            ]}
+          >
+            <View
+              style={[
+                tw`h-full bg-mb-accent`,
+                { opacity: 0.62, width: `${timerProgress * 100}%` },
+              ]}
+            />
           </MotiView>
         ) : null}
       </AnimatePresence>

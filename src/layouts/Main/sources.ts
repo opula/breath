@@ -22,6 +22,7 @@ import { Endless } from "../../backgrounds/Endless";
 import { Traversal } from "../../backgrounds/Traversal";
 import { LightWaves } from "../../backgrounds/LightWaves";
 import { Atmosphere } from "../../backgrounds/Atmosphere";
+import { MagicalLandscape } from "../../backgrounds/MagicalLandscape";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
   type BackgroundSourceId,
@@ -63,6 +64,7 @@ const BackgroundComponentById = {
   progression: Traversal,
   "light-waves": LightWaves,
   atmosphere: Atmosphere,
+  "magical-landscape": MagicalLandscape,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
 export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({

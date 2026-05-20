@@ -25,13 +25,13 @@ import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
 // --- Geometry & motion params ---
-const COUNT = 100;
+const COUNT = 84;
 const RADIUS = 7;
 const TURNS = 3;
-const TUBE_RADIUS = 0.007;
-const TUBULAR_SEGMENTS = 450;
-const RADIAL_SEGMENTS = 12;
-const CURVE_DIVISIONS = 200;
+const TUBE_RADIUS = 0.008;
+const TUBULAR_SEGMENTS = 360;
+const RADIAL_SEGMENTS = 10;
+const CURVE_DIVISIONS = 180;
 
 // Initial mesh transform (from reference example)
 // const MESH_ROTATE_X = -1.1;
@@ -93,48 +93,17 @@ function buildSpiralCurve(randomOffset: number) {
   return new THREE.CatmullRomCurve3(points, false, "centripetal");
 }
 
+let mergedSpiralGeometryCache: THREE.BufferGeometry | null = null;
+
 // Merge N TubeGeometries into one BufferGeometry with per-vertex
 // aOffset / aSpeed / aColorIdx attributes (avoids needing addons/BufferGeometryUtils).
 function buildMergedSpiralGeometry() {
-  type Tube = {
-    position: Float32Array;
-    normal: Float32Array;
-    uv: Float32Array;
-    index: ArrayLike<number>;
-    offset: number;
-    speed: number;
-    colorIdx: number;
-  };
-  const tubes: Tube[] = [];
-  let totalVerts = 0;
-  let totalIndices = 0;
-
-  for (let i = 0; i < COUNT; i++) {
-    const curve = buildSpiralCurve(Math.random() * Math.PI * 2);
-    const geo = new THREE.TubeGeometry(
-      curve,
-      TUBULAR_SEGMENTS,
-      TUBE_RADIUS,
-      RADIAL_SEGMENTS,
-      false,
-    );
-    const index = geo.index!.array;
-    tubes.push({
-      position: geo.attributes.position.array as Float32Array,
-      normal: geo.attributes.normal.array as Float32Array,
-      uv: geo.attributes.uv.array as Float32Array,
-      index,
-      offset: Math.random() * 100,
-      speed: 0.8 + Math.random() * 0.4,
-      colorIdx: Math.floor(Math.random() * 4),
-    });
-    totalVerts += geo.attributes.position.count;
-    totalIndices += index.length;
-    geo.dispose();
-  }
+  const vertsPerTube = (TUBULAR_SEGMENTS + 1) * (RADIAL_SEGMENTS + 1);
+  const indicesPerTube = TUBULAR_SEGMENTS * RADIAL_SEGMENTS * 6;
+  const totalVerts = COUNT * vertsPerTube;
+  const totalIndices = COUNT * indicesPerTube;
 
   const positions = new Float32Array(totalVerts * 3);
-  const normals = new Float32Array(totalVerts * 3);
   const uvs = new Float32Array(totalVerts * 2);
   const aOffsets = new Float32Array(totalVerts);
   const aSpeeds = new Float32Array(totalVerts);
@@ -146,32 +115,51 @@ function buildMergedSpiralGeometry() {
 
   let vOffset = 0;
   let iOffset = 0;
-  for (const tube of tubes) {
-    const vCount = tube.position.length / 3;
-    positions.set(tube.position, vOffset * 3);
-    normals.set(tube.normal, vOffset * 3);
-    uvs.set(tube.uv, vOffset * 2);
+  for (let i = 0; i < COUNT; i++) {
+    const curve = buildSpiralCurve(Math.random() * Math.PI * 2);
+    const geo = new THREE.TubeGeometry(
+      curve,
+      TUBULAR_SEGMENTS,
+      TUBE_RADIUS,
+      RADIAL_SEGMENTS,
+      false,
+    );
+    const index = geo.index!.array;
+    const position = geo.attributes.position.array as Float32Array;
+    const uvAttr = geo.attributes.uv.array as Float32Array;
+    const vCount = geo.attributes.position.count;
+    const offset = Math.random() * 100;
+    const speed = 0.8 + Math.random() * 0.4;
+    const colorIdx = Math.floor(Math.random() * 4);
+
+    positions.set(position, vOffset * 3);
+    uvs.set(uvAttr, vOffset * 2);
     for (let j = 0; j < vCount; j++) {
-      aOffsets[vOffset + j] = tube.offset;
-      aSpeeds[vOffset + j] = tube.speed;
-      aColorIdx[vOffset + j] = tube.colorIdx;
+      aOffsets[vOffset + j] = offset;
+      aSpeeds[vOffset + j] = speed;
+      aColorIdx[vOffset + j] = colorIdx;
     }
-    for (let k = 0; k < tube.index.length; k++) {
-      indices[iOffset + k] = tube.index[k] + vOffset;
+    for (let k = 0; k < index.length; k++) {
+      indices[iOffset + k] = index[k] + vOffset;
     }
     vOffset += vCount;
-    iOffset += tube.index.length;
+    iOffset += index.length;
+    geo.dispose();
   }
 
   const merged = new THREE.BufferGeometry();
   merged.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  merged.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
   merged.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
   merged.setAttribute("aOffset", new THREE.BufferAttribute(aOffsets, 1));
   merged.setAttribute("aSpeed", new THREE.BufferAttribute(aSpeeds, 1));
   merged.setAttribute("aColorIdx", new THREE.BufferAttribute(aColorIdx, 1));
   merged.setIndex(new THREE.BufferAttribute(indices, 1));
   return merged;
+}
+
+function getMergedSpiralGeometry() {
+  mergedSpiralGeometryCache ??= buildMergedSpiralGeometry();
+  return mergedSpiralGeometryCache;
 }
 
 export const Circular = ({
@@ -276,7 +264,7 @@ export const Circular = ({
     material.positionNode = displacedPos;
     material.colorNode = vec4(finalColor, alpha);
 
-    const geometry = buildMergedSpiralGeometry();
+    const geometry = getMergedSpiralGeometry();
     const mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = MESH_ROTATE_X;
     mesh.rotation.y = MESH_ROTATE_Y;
@@ -289,6 +277,7 @@ export const Circular = ({
 
     let disposed = false;
     let previousElapsed = 0;
+    let sceneTime = 0;
     let smoothedBreath = breathRef.current?.value ?? 0;
     let breathMotion = 0;
 
@@ -324,6 +313,9 @@ export const Circular = ({
 
       const breathEase =
         smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      sceneTime +=
+        deltaSeconds *
+        (1.0 + breathEase * BREATH_SPEED_AMOUNT * 0.45 + breathMotion * 0.06);
       const scale =
         1 + breathEase * BREATH_SCALE_AMOUNT + breathMotion * 0.018;
       mesh.scale.setScalar(scale);
@@ -332,16 +324,15 @@ export const Circular = ({
         Math.sin(elapsed * 0.019 + 2.4) * 0.035 +
         breathEase * 0.035;
 
-      (timeU as unknown as { value: number }).value = elapsed;
-      (speedU as unknown as { value: number }).value =
-        SPEED * (1 + breathEase * BREATH_SPEED_AMOUNT + breathMotion * 0.12);
+      (timeU as unknown as { value: number }).value = sceneTime;
+      (speedU as unknown as { value: number }).value = SPEED;
       (trailLenU as unknown as { value: number }).value =
-        TRAIL_LENGTH + breathEase * BREATH_TRAIL_AMOUNT + breathMotion * 0.018;
+        TRAIL_LENGTH + breathEase * BREATH_TRAIL_AMOUNT + breathMotion * 0.01;
       (waveAmpU as unknown as { value: number }).value =
         WAVE_AMPLITUDE *
-        (1 + breathEase * BREATH_WAVE_AMOUNT + breathMotion * 0.45);
+        (1 + breathEase * BREATH_WAVE_AMOUNT * 0.65 + breathMotion * 0.18);
       (breathGlowU as unknown as { value: number }).value = clampNumber(
-        breathEase + breathMotion * 0.38,
+        breathEase + breathMotion * 0.2,
         0.0,
         1.0,
       );
@@ -362,7 +353,6 @@ export const Circular = ({
       disposed = true;
       renderer.setAnimationLoop(null);
       scene.remove(mesh);
-      geometry.dispose();
       material.dispose();
       renderer.dispose();
     };

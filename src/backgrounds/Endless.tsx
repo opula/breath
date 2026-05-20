@@ -34,7 +34,7 @@ import {
 import { makeWebGPURenderer } from "../lib/make-webgpu-renderer";
 import { startWebGPUAnimationLoop } from "../lib/start-webgpu-animation-loop";
 
-const RAY_STEPS = 80;
+const RAY_STEPS = 180;
 const MAX_TRACE_DIST = 30.0;
 const SURFACE_EPSILON = 0.001;
 
@@ -43,7 +43,7 @@ const FLY_SPEED = 2.0;
 // Primary tuning knobs: speed controls all motion, zoom back widens the view
 // and pulls the ray origin away from the water surface.
 const SPEED_KNOB = 1.0;
-const ZOOM_BACK_KNOB = 10.0;
+const ZOOM_BACK_KNOB = 8.0;
 const NOISE_SCALE = 2.3;
 const WARP_INTENSITY = 1.2;
 const SPARKLE_INTENSITY = 0.34;
@@ -97,15 +97,15 @@ const noise = Fn(([p]: [ReturnType<typeof vec2>]) => {
 });
 
 const fbm = Fn(([pIn]: [ReturnType<typeof vec2>]) => {
-  let p: ReturnType<typeof vec2> = pIn;
-  let v: ReturnType<typeof float> = float(0.0);
-  let a = 0.5;
+  const p = pIn.toVar();
+  const v = float(0.0).toVar();
+  const a = float(0.5).toVar();
 
-  for (let i = 0; i < 5; i++) {
-    v = v.add(noise(p).mul(a));
-    p = p.mul(NOISE_SCALE);
-    a *= 0.5;
-  }
+  Loop(5, () => {
+    v.assign(v.add(noise(p).mul(a)));
+    p.assign(p.mul(NOISE_SCALE));
+    a.assign(a.mul(0.5));
+  });
 
   return v;
 });
@@ -238,14 +238,14 @@ export const Endless = ({
 
       const cameraSway = vec2(
         sin(timeU.mul(0.13)).mul(0.08).add(breathEase.sub(0.5).mul(0.04)),
-        cos(timeU.mul(0.09)).mul(0.05).add(breathMotionU.mul(0.035)),
+        cos(timeU.mul(0.09)).mul(0.05).add(breathMotionU.mul(0.02)),
       );
       const ro = vec3(
         float(-0.3).add(cameraSway.x),
         float(4.0)
           .add(zoomBack.mul(0.24))
-          .sub(breathEase.mul(0.34))
-          .add(breathMotionU.mul(0.1)),
+          .sub(breathEase.mul(0.22))
+          .add(breathMotionU.mul(0.04)),
         float(-8.5).sub(zoomBack.mul(1.6)).add(flyOffsetU),
       );
 
@@ -253,8 +253,8 @@ export const Endless = ({
         vec3(viewUV.x.mul(zoomScale), viewUV.y.mul(zoomScale), float(1.0)),
       );
       const tilt = float(-0.35)
-        .sub(breathEase.mul(0.035))
-        .sub(breathMotionU.mul(0.025));
+        .sub(breathEase.mul(0.02))
+        .sub(breathMotionU.mul(0.01));
       const tiltSin = sin(tilt);
       const tiltCos = cos(tilt);
       const rd = normalize(
@@ -293,8 +293,8 @@ export const Endless = ({
         const viewDir = rd.negate();
 
         const lensCenter = vec2(
-          sin(timeU.mul(0.11)).mul(0.22).add(breathEase.sub(0.5).mul(0.08)),
-          cos(timeU.mul(0.07)).mul(0.14).sub(breathMotionU.mul(0.06)),
+          sin(timeU.mul(0.11)).mul(0.22).add(breathEase.sub(0.5).mul(0.04)),
+          cos(timeU.mul(0.07)).mul(0.14).sub(breathMotionU.mul(0.025)),
         );
         const delta = viewUV.sub(lensCenter);
         const lensEffect = smoothstep(0.48, 0.0, length(delta));
@@ -302,12 +302,12 @@ export const Endless = ({
         const distortion = delta
           .mul(lensEffect)
           .mul(depthFade)
-          .mul(float(0.1).add(breathMotionU.mul(0.07)));
+          .mul(float(0.1).add(breathMotionU.mul(0.025)));
 
         const tTime = fractalTimeU.mul(0.2);
         const texUV = vec2(p.x, p.z).mul(0.17).sub(distortion);
         const warp = float(WARP_INTENSITY).mul(
-          float(0.9).add(breathEase.mul(0.34)).add(breathMotionU.mul(0.22)),
+          float(0.94).add(breathEase.mul(0.18)).add(breathMotionU.mul(0.08)),
         );
         const warpTime = tTime.mul(warp);
 
@@ -341,7 +341,7 @@ export const Endless = ({
           float(32.0),
         ).mul(
           float(SPARKLE_INTENSITY).mul(
-            float(0.78).add(breathEase.mul(0.34)).add(breathMotionU.mul(0.8)),
+            float(0.82).add(breathEase.mul(0.18)).add(breathMotionU.mul(0.22)),
           ),
         );
 
@@ -358,7 +358,7 @@ export const Endless = ({
           .add(texColor.mul(fresnel).mul(1.1));
         water = water.div(max(float(1.0).sub(microLines), float(0.001)));
         water = applyHue(water, float(HUE));
-        water = water.add(float(WAVE_BRIGHTNESS).add(breathMotionU.mul(0.045)));
+        water = water.add(float(WAVE_BRIGHTNESS).add(breathMotionU.mul(0.015)));
         water = mix(vec3(0.5, 0.5, 0.5), water, float(CONTRAST));
 
         const lumaA = dot(water, vec3(0.299, 0.587, 0.114));
@@ -442,11 +442,11 @@ export const Endless = ({
       const speed = SPEED * SPEED_KNOB;
       const flySpeed = FLY_SPEED * SPEED_KNOB;
       sceneTime +=
-        deltaSeconds * speed * (1 + breathEase * 0.3 + motionPulse * 0.32);
+        deltaSeconds * speed * (1 + breathEase * 0.08 + motionPulse * 0.08);
       fractalTime +=
-        deltaSeconds * speed * (1 + breathEase * 0.46 + motionPulse * 0.68);
+        deltaSeconds * speed * (1 + breathEase * 0.12 + motionPulse * 0.14);
       flyOffset +=
-        deltaSeconds * flySpeed * (1 + breathEase * 0.22 + motionPulse * 0.78);
+        deltaSeconds * flySpeed * (1 + breathEase * 0.06 + motionPulse * 0.12);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (fractalTimeU as unknown as { value: number }).value = fractalTime;

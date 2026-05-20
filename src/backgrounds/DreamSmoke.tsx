@@ -7,6 +7,7 @@ import { MeshBasicNodeMaterial } from "three/webgpu";
 import type { SharedValue } from "react-native-reanimated";
 import {
   Fn,
+  Loop,
   float,
   vec2,
   vec3,
@@ -80,16 +81,18 @@ const noise2 = Fn(([p]: [ReturnType<typeof vec2>]) => {
 
 // 4-octave fbm (unrolled) — reference uses mat2 rotation + shift per octave
 const fbm2 = Fn(([xIn]: [ReturnType<typeof vec2>]) => {
-  let x: ReturnType<typeof vec2> = xIn;
-  let v: ReturnType<typeof float> = float(0);
-  let a = 0.5;
-  for (let i = 0; i < 4; i++) {
-    v = v.add(noise2(x).mul(a));
+  const x = xIn.toVar();
+  const v = float(0).toVar();
+  const a = float(0.5).toVar();
+
+  Loop(4, () => {
+    v.assign(v.add(noise2(x).mul(a)));
     const nx = x.x.mul(FBM_ROT_C).add(x.y.mul(FBM_ROT_S)).mul(2.0).add(100.0);
     const ny = x.x.mul(-FBM_ROT_S).add(x.y.mul(FBM_ROT_C)).mul(2.0).add(100.0);
-    x = vec2(nx, ny);
-    a *= 0.5;
-  }
+    x.assign(vec2(nx, ny));
+    a.assign(a.mul(0.5));
+  });
+
   return v;
 });
 

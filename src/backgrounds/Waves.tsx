@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
 import {
   Fn,
+  Loop,
   float,
   vec2,
   vec3,
@@ -110,77 +111,83 @@ export const Waves = ({
     // Uniforms
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
-
-    // UV: center to (-1,1) with aspect correction + slow breathing pulse
-    const uvRaw = uv();
-    const uvCentered = uvRaw.mul(2.0).sub(1.0);
-    const pulse = float(1.0).sub(
-      float(PULSE_AMOUNT).mul(sin(timeU.mul(PULSE_SPEED)).mul(0.5).add(0.5)),
-    );
-    const uvStart = vec2(
-      uvCentered.x.mul(aspectU).mul(pulse),
-      uvCentered.y.mul(pulse),
-    );
-
-    // --- Backward advection (15 steps, unrolled) ---
-    const noiseTime = timeU.mul(FLOW_TIME_SCALE);
-    let p = uvStart;
-    for (let i = 0; i < ADVECTION_STEPS; i++) {
-      const samplePos = vec3(
-        p.x.mul(NOISE_SCALE),
-        p.y.mul(NOISE_SCALE),
-        noiseTime,
-      );
-      const flow = getFlow(samplePos);
-      p = p.sub(flow.mul(FLOW_STEP));
-    }
-
-    // --- Color calculation from advected position ---
-    const blendPhase = p.x
-      .mul(COLOR_FREQUENCY * 0.5)
-      .add(p.y.mul(COLOR_FREQUENCY * 0.8));
-    const timePhase = timeU.mul(COLOR_TIME_SCALE);
-
-    const blend1 = float(0.5).add(
-      float(0.5).mul(sin(blendPhase.add(timePhase))),
-    );
-    const blend2 = float(0.5).add(
-      float(0.5).mul(sin(blendPhase.mul(0.8).add(timePhase.mul(1.2)).add(2.0))),
-    );
-    const blend3 = float(0.5).add(
-      float(0.5).mul(sin(blendPhase.mul(1.2).add(timePhase.mul(0.7)).add(4.0))),
-    );
-
-    // Normalize blend factors
-    const totalBlend = blend1.add(blend2).add(blend3).add(0.00001);
-    const b1 = blend1.div(totalBlend);
-    const b2 = blend2.div(totalBlend);
-    const b3 = blend3.div(totalBlend);
-
-    // Three-color blend — richer, more saturated palette
-    const c1 = vec3(0.02, 0.05, 0.25); // Deep ocean
-    const c2 = vec3(0.3, 0.55, 1.0); // Electric ice blue
-    const c3 = vec3(0.1, 0.95, 0.8); // Bright cyan-mint
-    const baseColor = c1.mul(b1).add(c2.mul(b2)).add(c3.mul(b3));
-
-    // Brightness variation — glowing ribbons from flow-distorted noise
-    const brightNoise = noise3D(
-      vec3(p.x.mul(3.0), p.y.mul(3.0), timeU.mul(0.06)),
-    );
-    const glow = pow(
-      clamp(abs(brightNoise).mul(1.8), float(0.0), float(1.0)),
-      float(1.5),
-    );
-    const finalColor = baseColor.mul(float(0.5).add(glow.mul(0.8)));
-
-    // Grayscale desaturation
     const grayscaleU = uniform(float(0));
-    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+
+    const computeColor = Fn(() => {
+      // UV: center to (-1,1) with aspect correction + slow breathing pulse
+      const uvRaw = uv();
+      const uvCentered = uvRaw.mul(2.0).sub(1.0);
+      const pulse = float(1.0).sub(
+        float(PULSE_AMOUNT).mul(sin(timeU.mul(PULSE_SPEED)).mul(0.5).add(0.5)),
+      );
+      const uvStart = vec2(
+        uvCentered.x.mul(aspectU).mul(pulse),
+        uvCentered.y.mul(pulse),
+      );
+
+      // --- Backward advection ---
+      const noiseTime = timeU.mul(FLOW_TIME_SCALE);
+      const p = uvStart.toVar();
+      Loop(ADVECTION_STEPS, () => {
+        const samplePos = vec3(
+          p.x.mul(NOISE_SCALE),
+          p.y.mul(NOISE_SCALE),
+          noiseTime,
+        );
+        const flow = getFlow(samplePos);
+        p.assign(p.sub(flow.mul(FLOW_STEP)));
+      });
+
+      // --- Color calculation from advected position ---
+      const blendPhase = p.x
+        .mul(COLOR_FREQUENCY * 0.5)
+        .add(p.y.mul(COLOR_FREQUENCY * 0.8));
+      const timePhase = timeU.mul(COLOR_TIME_SCALE);
+
+      const blend1 = float(0.5).add(
+        float(0.5).mul(sin(blendPhase.add(timePhase))),
+      );
+      const blend2 = float(0.5).add(
+        float(0.5).mul(
+          sin(blendPhase.mul(0.8).add(timePhase.mul(1.2)).add(2.0)),
+        ),
+      );
+      const blend3 = float(0.5).add(
+        float(0.5).mul(
+          sin(blendPhase.mul(1.2).add(timePhase.mul(0.7)).add(4.0)),
+        ),
+      );
+
+      // Normalize blend factors
+      const totalBlend = blend1.add(blend2).add(blend3).add(0.00001);
+      const b1 = blend1.div(totalBlend);
+      const b2 = blend2.div(totalBlend);
+      const b3 = blend3.div(totalBlend);
+
+      // Three-color blend — richer, more saturated palette
+      const c1 = vec3(0.02, 0.05, 0.25); // Deep ocean
+      const c2 = vec3(0.3, 0.55, 1.0); // Electric ice blue
+      const c3 = vec3(0.1, 0.95, 0.8); // Bright cyan-mint
+      const baseColor = c1.mul(b1).add(c2.mul(b2)).add(c3.mul(b3));
+
+      // Brightness variation — glowing ribbons from flow-distorted noise
+      const brightNoise = noise3D(
+        vec3(p.x.mul(3.0), p.y.mul(3.0), timeU.mul(0.06)),
+      );
+      const glow = pow(
+        clamp(abs(brightNoise).mul(1.8), float(0.0), float(1.0)),
+        float(1.5),
+      );
+      const finalColor = baseColor.mul(float(0.5).add(glow.mul(0.8)));
+
+      // Grayscale desaturation
+      const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+      return mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+    });
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = outputColor;
+    material.colorNode = computeColor();
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);

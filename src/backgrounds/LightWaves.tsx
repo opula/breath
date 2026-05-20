@@ -116,21 +116,17 @@ export const LightWaves = ({
       const breathEase = breathU
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
-      const timeElapsed = timeU.mul(TIME_SCALE).mul(
-        float(1.0).add(breathEase.mul(0.16)).add(breathMotionU.mul(0.42)),
-      );
-      const waveDrive = timeElapsed.mul(WAVE_SPEED).mul(
-        float(1.0).add(breathEase.mul(0.12)).add(breathMotionU.mul(0.28)),
-      );
+      const timeElapsed = timeU.mul(TIME_SCALE);
+      const waveDrive = timeElapsed.mul(WAVE_SPEED);
       const waveGain = float(WAVE_HEIGHT).mul(
-        float(0.84).add(breathEase.mul(0.42)).add(breathMotionU.mul(0.3)),
+        float(0.88).add(breathEase.mul(0.22)).add(breathMotionU.mul(0.12)),
       );
       const glowGain = float(0.82)
-        .add(breathEase.mul(0.34))
-        .add(breathMotionU.mul(0.72));
+        .add(breathEase.mul(0.18))
+        .add(breathMotionU.mul(0.18));
       const cameraDepth = float(2.0)
-        .add(breathEase.mul(0.24))
-        .add(breathMotionU.mul(0.12));
+        .add(breathEase.mul(0.12))
+        .add(breathMotionU.mul(0.05));
 
       const fragCoord = uvRaw.mul(resolutionU);
       const rayDir = normalize(vec3(rayUV.x, rayUV.y, float(1.0)));
@@ -253,7 +249,11 @@ export const LightWaves = ({
         deltaSeconds,
       );
       previousElapsed = elapsed;
-      sceneTime += deltaSeconds;
+
+      const breathEase =
+        smoothedBreath * smoothedBreath * (3 - 2 * smoothedBreath);
+      sceneTime +=
+        deltaSeconds * (1.0 + breathEase * 0.04 + breathMotion * 0.08);
 
       (timeU as unknown as { value: number }).value = sceneTime;
       (grayscaleU as unknown as { value: number }).value = grayscaleRef.current

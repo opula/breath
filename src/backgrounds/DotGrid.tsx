@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
 import {
   Fn,
+  Loop,
   float,
   vec2,
   vec3,
@@ -108,87 +109,89 @@ export const DotGrid = ({
     // Uniforms
     const timeU = uniform(float(0));
     const aspectU = uniform(float(aspect));
-
-    // UV → grid space: [0, GRID_COLS] x [0, GRID_ROWS]
-    const uvRaw = uv();
-    const gridRows = float(GRID_COLS).div(aspectU);
-    const gridUV = vec2(
-      uvRaw.x.mul(GRID_COLS),
-      uvRaw.y.mul(gridRows),
-    );
-
-    // Cell coordinate (which dot) and position within cell
-    const cellId = floor(gridUV);
-    const cellUV = fract(gridUV).sub(0.5); // centered [-0.5, 0.5]
-    const cellCenter = cellId.add(0.5);
-
-    // Accumulate ripple intensity from all concurrent sources (unrolled)
-    // Each ripple slot i fires every (RIPPLE_LIFETIME) seconds,
-    // staggered by i * RIPPLE_STAGGER. The origin is derived from
-    // a hash of the "which firing" index, so it jumps to a new
-    // random spot each cycle.
-    let rippleAccum = float(0.0);
-
-    for (let i = 0; i < NUM_RIPPLES; i++) {
-      const offset = i * RIPPLE_STAGGER;
-      // Local time within this ripple's current cycle
-      const localTime = mod(timeU.sub(offset), float(RIPPLE_LIFETIME));
-      // Which firing are we on? Used to seed the random origin
-      const firingIndex = floor(timeU.sub(offset).div(RIPPLE_LIFETIME));
-      const seed = firingIndex.add(i * 100.0);
-
-      // Random origin for this firing (in grid-cell units)
-      const randPos = hash12(seed);
-      const origin = vec2(
-        randPos.x.mul(GRID_COLS),
-        randPos.y.mul(gridRows),
-      );
-
-      // Euclidean distance from this cell to the ripple origin
-      const dist = length(cellCenter.sub(origin));
-
-      // Current ripple radius
-      const currentRadius = localTime.mul(RIPPLE_SPEED);
-
-      // Ring: how close is this cell to the expanding ring edge?
-      const ringDist = abs(dist.sub(currentRadius));
-      const ring = smoothstep(float(RIPPLE_RING_WIDTH), float(0.0), ringDist);
-
-      // Fade out over the ripple lifetime
-      const lifeFade = smoothstep(
-        float(RIPPLE_LIFETIME),
-        float(RIPPLE_LIFETIME * 0.3),
-        localTime,
-      );
-
-      rippleAccum = max(rippleAccum, ring.mul(lifeFade));
-    }
-
-    // Dot scale and brightness modulated by ripple
-    const dotScale = mix(float(SCALE_REST), float(SCALE_PEAK), rippleAccum);
-    const brightness = mix(
-      float(BASE_BRIGHTNESS),
-      float(PEAK_BRIGHTNESS),
-      rippleAccum,
-    );
-
-    // SDF circle
-    const d = length(cellUV);
-    const radius = float(DOT_RADIUS).mul(dotScale);
-    const circle = smoothstep(radius.add(DOT_SOFTNESS), radius, d);
-
-    // Color: palette driven by ripple intensity + time for shimmer
-    const col = palette(rippleAccum.add(timeU.mul(0.06)));
-    const finalColor = col.mul(circle).mul(brightness);
-
-    // Grayscale desaturation
     const grayscaleU = uniform(float(0));
-    const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
-    const outputColor = mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+
+    const computeColor = Fn(() => {
+      // UV → grid space: [0, GRID_COLS] x [0, GRID_ROWS]
+      const uvRaw = uv();
+      const gridRows = float(GRID_COLS).div(aspectU);
+      const gridUV = vec2(
+        uvRaw.x.mul(GRID_COLS),
+        uvRaw.y.mul(gridRows),
+      );
+
+      // Cell coordinate (which dot) and position within cell
+      const cellId = floor(gridUV);
+      const cellUV = fract(gridUV).sub(0.5); // centered [-0.5, 0.5]
+      const cellCenter = cellId.add(0.5);
+
+      // Accumulate ripple intensity from all concurrent sources.
+      // Each ripple slot i fires every (RIPPLE_LIFETIME) seconds,
+      // staggered by i * RIPPLE_STAGGER. The origin is derived from
+      // a hash of the "which firing" index, so it jumps to a new
+      // random spot each cycle.
+      const rippleAccum = float(0.0).toVar();
+
+      Loop(NUM_RIPPLES, ({ i }) => {
+        const offset = float(i).mul(RIPPLE_STAGGER);
+        // Local time within this ripple's current cycle
+        const localTime = mod(timeU.sub(offset), float(RIPPLE_LIFETIME));
+        // Which firing are we on? Used to seed the random origin
+        const firingIndex = floor(timeU.sub(offset).div(RIPPLE_LIFETIME));
+        const seed = firingIndex.add(float(i).mul(100.0));
+
+        // Random origin for this firing (in grid-cell units)
+        const randPos = hash12(seed);
+        const origin = vec2(
+          randPos.x.mul(GRID_COLS),
+          randPos.y.mul(gridRows),
+        );
+
+        // Euclidean distance from this cell to the ripple origin
+        const dist = length(cellCenter.sub(origin));
+
+        // Current ripple radius
+        const currentRadius = localTime.mul(RIPPLE_SPEED);
+
+        // Ring: how close is this cell to the expanding ring edge?
+        const ringDist = abs(dist.sub(currentRadius));
+        const ring = smoothstep(float(RIPPLE_RING_WIDTH), float(0.0), ringDist);
+
+        // Fade out over the ripple lifetime
+        const lifeFade = smoothstep(
+          float(RIPPLE_LIFETIME),
+          float(RIPPLE_LIFETIME * 0.3),
+          localTime,
+        );
+
+        rippleAccum.assign(max(rippleAccum, ring.mul(lifeFade)));
+      });
+
+      // Dot scale and brightness modulated by ripple
+      const dotScale = mix(float(SCALE_REST), float(SCALE_PEAK), rippleAccum);
+      const brightness = mix(
+        float(BASE_BRIGHTNESS),
+        float(PEAK_BRIGHTNESS),
+        rippleAccum,
+      );
+
+      // SDF circle
+      const d = length(cellUV);
+      const radius = float(DOT_RADIUS).mul(dotScale);
+      const circle = smoothstep(radius.add(DOT_SOFTNESS), radius, d);
+
+      // Color: palette driven by ripple intensity + time for shimmer
+      const col = palette(rippleAccum.add(timeU.mul(0.06)));
+      const finalColor = col.mul(circle).mul(brightness);
+
+      // Grayscale desaturation
+      const lum = dot(finalColor, vec3(0.299, 0.587, 0.114));
+      return mix(finalColor, vec3(lum, lum, lum), grayscaleU);
+    });
 
     // Material + mesh
     const material = new MeshBasicNodeMaterial();
-    material.colorNode = outputColor;
+    material.colorNode = computeColor();
 
     const geometry = new THREE.PlaneGeometry(2, 2);
     const mesh = new THREE.Mesh(geometry, material);

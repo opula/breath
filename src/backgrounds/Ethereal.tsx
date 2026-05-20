@@ -50,7 +50,7 @@ const GLOW_RADIUS = 8.8;
 const COLOR_PHASE_R = 0.4;
 const COLOR_PHASE_G = 1.9;
 const COLOR_PHASE_B = 3.4;
-const BREATH_RESPONSE_RATE = 3.2;
+const BREATH_RESPONSE_RATE = 2.8;
 
 const damp = (
   current: number,
@@ -129,22 +129,22 @@ export const Ethereal = ({
         .mul(breathU)
         .mul(float(3.0).sub(breathU.mul(2.0)));
       const apertureRadius = holeRadiusU.mul(
-        float(0.96).add(breathEase.mul(0.08)),
+        float(0.98).add(breathEase.mul(0.035)),
       );
       const wallThickness = thicknessU.mul(
-        float(1.12).sub(breathEase.mul(0.1)),
+        float(1.08).sub(breathEase.mul(0.045)),
       );
       const warpAmplitude = amplitudeU.mul(
-        float(0.92).add(breathEase.mul(0.1)),
+        float(0.94).add(breathEase.mul(0.045)),
       );
       const warpFrequency = warpFrequencyU.mul(
-        float(0.97).add(breathEase.mul(0.04)),
+        float(0.98).add(breathEase.mul(0.018)),
       );
       const glowIntensity = glowIntensityU.mul(
-        float(0.9).add(breathEase.mul(0.16)),
+        float(0.94).add(breathEase.mul(0.065)),
       );
       const glowRadius = glowRadiusU.mul(
-        float(1.04).sub(breathEase.mul(0.04)),
+        float(1.02).sub(breathEase.mul(0.018)),
       );
       const centerCalm = mix(
         float(0.68),
@@ -156,7 +156,7 @@ export const Ethereal = ({
       const ro = vec3(
         sin(time.mul(0.36)).mul(0.42),
         cos(time.mul(0.24)).mul(0.42),
-        time.mul(1.45).add(breathEase.mul(0.08)),
+        time.mul(1.45).add(breathEase.mul(0.032)),
       );
       const rd = normalize(vec3(uvAdj.x, uvAdj.y, float(1.0)));
 
@@ -179,20 +179,21 @@ export const Ethereal = ({
 
         // Flow vector for liquid distortion
         const flow = vec3(
-          time.mul(flowDirU.x).add(breathEase.mul(0.05)),
-          time.mul(flowDirU.y).sub(breathEase.mul(0.015)),
-          time.mul(flowDirU.z).add(breathEase.mul(0.07)),
+          time.mul(flowDirU.x).add(breathEase.mul(0.02)),
+          time.mul(flowDirU.y).sub(breathEase.mul(0.006)),
+          time.mul(flowDirU.z).add(breathEase.mul(0.028)),
         );
 
         // Sine-based domain warp: n = 0.9, 2.0 (two iterations)
-        let q: ReturnType<typeof vec3> = p;
-        for (const n of [0.9, 2.0]) {
+        const q = p.toVar();
+        Loop(2, ({ i }) => {
+          const n = float(0.9).add(float(i).mul(1.1));
           const qyzx = vec3(q.y, q.z, q.x);
           const warped = sin(qyzx.add(flow).mul(n).mul(warpFrequency))
             .mul(warpAmplitude)
             .div(n);
-          q = q.add(warped);
-        }
+          q.assign(q.add(warped));
+        });
 
         // Volumetric hollow tube, walled by thickness
         const dRaw = length(vec2(q.x, q.y)).sub(apertureRadius);
@@ -211,7 +212,7 @@ export const Ethereal = ({
         const baseColor = mix(
           vec3(colorLum, colorLum, colorLum),
           rawColor,
-          float(0.48).add(breathEase.mul(0.04)),
+          float(0.48).add(breathEase.mul(0.016)),
         );
 
         // Volumetric glow + near-camera fade + distance falloff
