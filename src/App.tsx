@@ -25,6 +25,8 @@ import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
 import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 
+const SPLASH_BACKGROUND = "#101010";
+
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 // Set the animation options. This is optional.
@@ -38,8 +40,8 @@ const DarkTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: "black",
-    card: "black",
+    background: SPLASH_BACKGROUND,
+    card: SPLASH_BACKGROUND,
     text: "white",
     border: "transparent",
     primary: "blue",
@@ -88,7 +90,10 @@ const Main = () => {
 
   return (
     <NavigationContainer theme={DarkTheme}>
-      <View style={tw`flex-1 bg-black`} onLayout={onLayoutRootView}>
+      <View
+        style={[tw`flex-1`, { backgroundColor: SPLASH_BACKGROUND }]}
+        onLayout={onLayoutRootView}
+      >
         <MainStack />
       </View>
     </NavigationContainer>
@@ -97,13 +102,15 @@ const Main = () => {
 
 const App = () => {
   return (
-    <GestureHandlerRootView style={tw`flex-1 bg-black`}>
+    <GestureHandlerRootView
+      style={[tw`flex-1`, { backgroundColor: SPLASH_BACKGROUND }]}
+    >
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
-          <SafeAreaProvider style={tw`bg-black`}>
+          <SafeAreaProvider style={{ backgroundColor: SPLASH_BACKGROUND }}>
             <StatusBar
               hidden
-              backgroundColor="black"
+              backgroundColor={SPLASH_BACKGROUND}
               barStyle="light-content"
             />
             <AudioPlayerProvider>

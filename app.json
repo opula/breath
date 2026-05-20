@@ -6,12 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#000000",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#000000"
-    },
+    "backgroundColor": "#101010",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -33,7 +28,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#101010"
       },
       "newArchEnabled": true,
       "package": "com.mdnt.brwk"
@@ -43,7 +38,15 @@
     },
     "plugins": [
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#101010",
+          "image": "./assets/splash.png",
+          "imageWidth": 360,
+          "resizeMode": "contain"
+        }
+      ],
       ["expo-audio", { "enableBackgroundPlayback": true }],
       ["react-native-audio-api", { "iosBackgroundMode": true }]
     ],

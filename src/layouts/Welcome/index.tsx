@@ -29,19 +29,19 @@ type Card = {
 
 const cards: Card[] = [
   {
-    kind: "What this is",
-    title: "Breathing,\nnot breathwork.",
-    body: "Fifteen exercises. No feeds, no streak-shaming. One tap to start, one tap to stop. Everything else is dials.",
+    kind: "About",
+    title: "Breathwork,\nyour way.",
+    body: "A library of breathing exercises with you in mind. Easy to start and shape until each one matches your exact need.",
   },
   {
-    kind: "How it guides you",
-    title: "A ring that\nbreathes\nwith you.",
-    body: "The inner disc grows on inhale and shrinks on exhale. The accent arc counts down the current phase. Numbers for precision, not for gamification.",
+    kind: "Atmosphere",
+    title: "Set the\nscene.",
+    body: "Pair an exercise with a scene and ambient music, or let everything go quiet. The ring at the center moves with your breath either way.",
   },
   {
-    kind: "Safety",
-    title: "Sit, or\nlie down.",
-    body: "Some of these exercises can make you dizzy. Never practice in water or while driving. If a session feels wrong, stop. You are never behind.",
+    kind: "Your turn",
+    title: "Pick one,\nbegin.",
+    body: "Open the library, choose an exercise, and breathe along with the ring. Close it whenever you're done.",
   },
 ];
 
@@ -69,6 +69,11 @@ export const Welcome = ({ navigation }: Props) => {
     }
   };
 
+  const handleSkip = () => {
+    storage.set(HAS_COMPLETED_WELCOME, true);
+    navigation.navigate("Home");
+  };
+
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={tw`absolute inset-0`}>
@@ -80,43 +85,8 @@ export const Welcome = ({ navigation }: Props) => {
         <OrientationLocker orientation={PORTRAIT} />
       ) : null}
 
-      <View
-        style={[tw`flex-1`, { paddingTop: insets.top }]}
-      >
-        {/* Top nav: index indicator + skip */}
-        <View
-          style={tw`flex-row items-center justify-between px-6 py-3`}
-        >
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px]`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            intro {String(currentIndex + 1).padStart(2, "0")}
-            <Text style={tw`text-mb-dim`}> / {cards.length}</Text>
-          </Text>
-          {!isLastCard ? (
-            <Pressable
-              onPress={() => {
-                storage.set(HAS_COMPLETED_WELCOME, true);
-                navigation.navigate("Home");
-              }}
-              style={tw`py-2 active:opacity-60`}
-            >
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute uppercase text-[10px]`,
-                  { letterSpacing: 3 },
-                ]}
-              >
-                skip
-              </Text>
-            </Pressable>
-          ) : (
-            <View style={tw`w-10`} />
-          )}
-        </View>
+      <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
+        <View style={tw`h-8`} />
 
         <Carousel
           ref={carouselRef as Ref<ICarouselInstance>}
@@ -126,25 +96,20 @@ export const Welcome = ({ navigation }: Props) => {
           width={width}
           data={cards}
           onSnapToItem={setCurrentIndex}
-          renderItem={({ item, index }: { item: Card; index: number }) => (
+          renderItem={({ item }: { item: Card }) => (
             <View style={tw`flex-1 px-6 pt-6`}>
-              <Overline
-                accent
-                right={String(index + 1).padStart(2, "0")}
-              >
-                {item.kind}
-              </Overline>
-              <View style={tw`mt-10`}>
+              <Overline accent>{item.kind}</Overline>
+              <View style={tw`flex-1 justify-center`}>
                 <BigTitle size={42}>{item.title}</BigTitle>
+                <Text
+                  style={[
+                    tw`font-inter text-base text-mb-mute leading-relaxed mt-6`,
+                    { maxWidth: 360 },
+                  ]}
+                >
+                  {item.body}
+                </Text>
               </View>
-              <Text
-                style={[
-                  tw`font-inter text-base text-mb-mute leading-relaxed mt-7`,
-                  { maxWidth: 360 },
-                ]}
-              >
-                {item.body}
-              </Text>
             </View>
           )}
           onProgressChange={(_, absoluteProgress) =>
@@ -153,9 +118,7 @@ export const Welcome = ({ navigation }: Props) => {
         />
 
         {/* Progress segments + CTA */}
-        <View
-          style={[tw`px-6`, { paddingBottom: insets.bottom + 12 }]}
-        >
+        <View style={[tw`px-6`, { paddingBottom: insets.bottom + 12 }]}>
           <View style={tw`flex-row mb-5`}>
             {cards.map((_, i) => (
               <View
@@ -171,30 +134,40 @@ export const Welcome = ({ navigation }: Props) => {
             ))}
           </View>
 
-          <Pressable
-            onPress={handleAdvance}
-            style={({ pressed }) => [
-              tw`flex-row items-center justify-between py-5 border-t border-b border-mb-line`,
-              pressed && tw`opacity-70`,
-            ]}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
+          <View style={tw`flex-row items-center justify-between py-4`}>
+            {!isLastCard ? (
+              <Pressable
+                onPress={handleSkip}
+                hitSlop={12}
+                style={({ pressed }) => [tw`py-2`, pressed && tw`opacity-60`]}
+              >
+                <Text
+                  style={[
+                    tw`font-mono text-mb-mute uppercase text-[9px]`,
+                    { letterSpacing: 3 },
+                  ]}
+                >
+                  skip
+                </Text>
+              </Pressable>
+            ) : (
+              <View />
+            )}
+            <Pressable
+              onPress={handleAdvance}
+              hitSlop={12}
+              style={({ pressed }) => [tw`py-2`, pressed && tw`opacity-70`]}
             >
-              {isLastCard ? "begin" : "continue"}
-            </Text>
-            <Text
-              style={[
-                tw`font-display text-mb-accent uppercase`,
-                { fontSize: 22, letterSpacing: -0.5 },
-              ]}
-            >
-              {isLastCard ? "ENTER ↵" : "NEXT →"}
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  tw`font-display text-mb-accent uppercase`,
+                  { fontSize: 15, letterSpacing: -0.2 },
+                ]}
+              >
+                {isLastCard ? "ENTER" : "NEXT"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>

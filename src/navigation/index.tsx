@@ -29,11 +29,20 @@ import { FileTransfer } from "../layouts/FileTransfer";
 import { AddMusic } from "../layouts/AddMusic";
 import { ExerciseActions } from "../layouts/ExerciseActions";
 import { ExerciseTimer } from "../layouts/ExerciseTimer";
+import { Freestyle } from "../layouts/Freestyle";
+import { FreestyleSession } from "../layouts/FreestyleSession";
+
+export type FreestyleRatio = "2:1" | "1:1" | "1:2" | "1:3";
 
 export type MainStackParams = {
   Welcome: undefined;
   Home: undefined;
-  Main: { autoplay?: boolean; timerMinutes?: number } | undefined;
+  Main:
+    | {
+        autoplay?: boolean;
+        timerMinutes?: number;
+      }
+    | undefined;
   MusicControls: undefined;
   MusicHelp: undefined;
   Scenes: undefined;
@@ -49,6 +58,8 @@ export type MainStackParams = {
   AddMusic: undefined;
   ExerciseActions: { exerciseId: string };
   ExerciseTimer: { exerciseId: string };
+  Freestyle: undefined;
+  FreestyleSession: { ratio: FreestyleRatio; timerMinutes?: number };
 };
 
 const Stack = createStackNavigator<MainStackParams>();
@@ -86,12 +97,14 @@ const modalScreenOptions: StackNavigationOptions = {
 export const MainStack = () => {
   return (
     <Stack.Navigator
-      initialRouteName={hasCompletedWelcome ? "Home" : "Welcome"}
+      // initialRouteName={hasCompletedWelcome ? "Home" : "Welcome"}
+      initialRouteName={"Welcome"}
       screenOptions={defaultScreenOptions}
     >
       <Stack.Screen name="Welcome" component={Welcome} />
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="Main" component={Main} />
+      <Stack.Screen name="FreestyleSession" component={FreestyleSession} />
       <Stack.Screen
         name="ExercisesList"
         component={ExercisesList}
@@ -142,6 +155,7 @@ export const MainStack = () => {
         <Stack.Screen name="NewStepMenu" component={NewStepMenu} />
         <Stack.Screen name="ExerciseActions" component={ExerciseActions} />
         <Stack.Screen name="ExerciseTimer" component={ExerciseTimer} />
+        <Stack.Screen name="Freestyle" component={Freestyle} />
       </Stack.Group>
     </Stack.Navigator>
   );

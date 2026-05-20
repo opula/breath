@@ -80,6 +80,10 @@ export const Home = ({ navigation }: Props) => {
     navigation.navigate("ExerciseActions", { exerciseId });
   };
 
+  const handleFreestyle = () => {
+    navigation.navigate("Freestyle");
+  };
+
   const handleNewExercise = () => {
     const id = uuid.v4() as string;
     dispatch(addExercise({ exerciseId: id }));
@@ -146,6 +150,32 @@ export const Home = ({ navigation }: Props) => {
               <React.Fragment key={ex.id}>{row}</React.Fragment>
             );
           })}
+
+          <Pressable
+            onPress={handleFreestyle}
+            style={({ pressed }) => [
+              tw`flex-row items-center py-5 border-b border-mb-line`,
+              pressed && tw`opacity-70`,
+            ]}
+          >
+            <Text
+              style={[
+                tw`font-mono text-[10px] text-mb-mute uppercase w-8`,
+                { letterSpacing: 1.5 },
+              ]}
+            >
+              FS
+            </Text>
+            <Text
+              style={[
+                tw`font-display text-[22px] text-mb-fg uppercase`,
+                { letterSpacing: -0.5 },
+              ]}
+              numberOfLines={1}
+            >
+              Freestyle
+            </Text>
+          </Pressable>
 
           {/* New exercise affordance */}
           <Pressable
