@@ -97,8 +97,7 @@ const modalScreenOptions: StackNavigationOptions = {
 export const MainStack = () => {
   return (
     <Stack.Navigator
-      // initialRouteName={hasCompletedWelcome ? "Home" : "Welcome"}
-      initialRouteName={"Welcome"}
+      initialRouteName={hasCompletedWelcome ? "Home" : "Welcome"}
       screenOptions={defaultScreenOptions}
     >
       <Stack.Screen name="Welcome" component={Welcome} />

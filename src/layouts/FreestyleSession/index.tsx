@@ -1,5 +1,11 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
 import {
@@ -102,8 +108,9 @@ export const FreestyleSession = () => {
   const [showTimerProgressPulse, setShowTimerProgressPulse] = useState(false);
   const lastTimerPulseMinuteRef = useRef(0);
   const hasShownTimerEndPulseRef = useRef(false);
-  const timerProgressPulseTimeoutRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerProgressPulseTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const triggerTimerProgressPulse = useCallback(() => {
     setShowTimerProgressPulse(true);
@@ -181,8 +188,7 @@ export const FreestyleSession = () => {
       MIN_INHALE_SECONDS,
       now - phaseStartedAtRef.current,
     );
-    const exhaleDuration =
-      inhaleDuration * FREESTYLE_EXHALE_MULTIPLIER[ratio];
+    const exhaleDuration = inhaleDuration * FREESTYLE_EXHALE_MULTIPLIER[ratio];
     phaseStartedAtRef.current = now;
     exhaleEndsAtRef.current = now + exhaleDuration;
     breath.value = withTiming(0, { duration: exhaleDuration * 1000 });
@@ -276,13 +282,13 @@ export const FreestyleSession = () => {
   const holdGesture = useMemo(
     () =>
       Gesture.LongPress()
-        .minDuration(180)
+        .minDuration(150)
+        .maxDistance(10000)
         .onStart(() => {
           runOnJS(revealChrome)();
           runOnJS(handleHoldStart)();
         })
-        .onEnd((_, success) => {
-          if (!success) return;
+        .onFinalize(() => {
           runOnJS(handleHoldEnd)();
         }),
     [handleHoldEnd, handleHoldStart, revealChrome],
@@ -334,9 +340,7 @@ export const FreestyleSession = () => {
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
-      <AnimatePresence>
-        {isAppActive ? <Background /> : null}
-      </AnimatePresence>
+      <AnimatePresence>{isAppActive ? <Background /> : null}</AnimatePresence>
 
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center px-8`}>

@@ -61,7 +61,7 @@ export const Freestyle = () => {
     });
 
   const timerLabel = useMemo(() => {
-    if (!selectedMinutes) return "open";
+    if (!selectedMinutes) return "None";
     return `${selectedMinutes} minute${selectedMinutes === 1 ? "" : "s"}`;
   }, [selectedMinutes]);
 
@@ -96,23 +96,6 @@ export const Freestyle = () => {
             <View style={tw`h-1 w-10 bg-mb-dim rounded-full mt-3`} />
           </Animated.View>
         </GestureDetector>
-
-        <View style={tw`px-6 pb-5 border-b border-mb-line`}>
-          <Overline accent right={timerLabel}>
-            Freestyle
-          </Overline>
-          <View style={tw`mt-3`}>
-            <Text
-              style={[
-                tw`font-display uppercase text-mb-fg text-[28px]`,
-                { letterSpacing: -1 },
-              ]}
-              numberOfLines={1}
-            >
-              Ratio {selectedRatio}
-            </Text>
-          </View>
-        </View>
 
         <View style={tw`px-6 pt-5`}>
           <Overline>Ratio</Overline>
@@ -150,7 +133,7 @@ export const Freestyle = () => {
               max={90}
               step={1}
               suffix="min"
-              zeroLabel="open"
+              zeroLabel="none"
               defaultValue={0}
               onChange={(value) => setSelectedMinutes(Math.round(value))}
             />

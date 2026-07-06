@@ -153,6 +153,7 @@ export const Home = ({ navigation }: Props) => {
 
           <Pressable
             onPress={handleFreestyle}
+            onLongPress={handleFreestyle}
             style={({ pressed }) => [
               tw`flex-row items-center py-5 border-b border-mb-line`,
               pressed && tw`opacity-70`,

@@ -24,6 +24,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
 import { AudioPlayerProvider } from "./context/AudioPlayerContext";
+import { delay } from "lodash";
 
 const SPLASH_BACKGROUND = "#101010";
 
@@ -50,7 +51,7 @@ const DarkTheme = {
 };
 
 const Main = () => {
-  const [appIsReady, setAppIsReady] = useState(false);
+  const [appIsReady, setIsReady] = useState(false);
 
   // Load Rubik + JetBrains Mono at runtime so the mapping between tw class
   // names (font-display, font-mono) and the iOS-registered family is
@@ -70,11 +71,11 @@ const Main = () => {
         console.warn(e);
       } finally {
         // Tell the application to render
-        setAppIsReady(true);
+        setIsReady(true);
       }
     }
 
-    prepare();
+    delay(prepare, 2000);
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
