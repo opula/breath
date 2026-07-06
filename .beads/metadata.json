@@ -1,7 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "server",
-  "dolt_database": "breath",
-  "project_id": "04365ee6-fb31-447b-a406-9e396bd357ec"
-}
