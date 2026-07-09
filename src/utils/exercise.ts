@@ -34,7 +34,7 @@ export const incrementalCompletionTimer = (
   incTime?: number,
   incCb?: (value: number) => void,
 ): Promise<void> => {
-  let timer: NodeJS.Timer | undefined;
+  let timer: ReturnType<typeof setInterval> | undefined;
   let count = 0;
 
   if (incTime && !!incCb) {

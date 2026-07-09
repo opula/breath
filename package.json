@@ -22,10 +22,11 @@
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/native": "^7",
     "@react-navigation/stack": "^7",
-    "@react-three/fiber": "^9.4.0",
+    "@react-three/fiber": "^9.6.1",
     "@reduxjs/toolkit": "^2.6.1",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.2.12",
+    "@typegpu/three": "^0.11.0",
     "decimal.js": "^10.5.0",
     "eventemitter3": "^5.0.1",
     "expo": "^54",
@@ -60,16 +61,17 @@
     "react-native-screens": "~4.16.0",
     "react-native-swipeable-item": "^2.0.9",
     "react-native-uuid": "^2.0.1",
-    "react-native-wgpu": "^0.5.4",
+    "react-native-webgpu": "^0.5.16",
     "react-native-worklets": "^0.7.4",
     "react-redux": "^9.1.0",
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "rxjs": "^7.8.1",
-    "three": "0.172.0",
+    "three": "0.184.0",
     "twrnc": "^3.6.7",
+    "typegpu": "^0.11.9",
     "use-debounce": "^10.0.0",
-    "wgpu-matrix": "^3.0.2"
+    "wgpu-matrix": "^3.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -77,11 +79,12 @@
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.14.202",
     "@types/react": "~19.1.10",
-    "@types/three": "0.172.0",
+    "@types/three": "0.184.1",
     "jest": "^30.2.0",
     "tailwindcss": "^3.0.0",
     "ts-jest": "^29.4.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3",
+    "unplugin-typegpu": "^0.11.6"
   },
   "private": true,
   "packageManager": "yarn@4.7.0"

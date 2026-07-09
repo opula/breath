@@ -1,4 +1,4 @@
-import { AudioContext } from "react-native-audio-api";
+import { AudioContext, type AudioBuffer } from "react-native-audio-api";
 
 export const normalizeAudioBufferChannels = (
   buffer: AudioBuffer,

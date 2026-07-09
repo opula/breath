@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(agent-device snapshot *)",
+      "Bash(agent-device screenshot *)",
+      "Bash(agent-device devices *)",
+      "Bash(agent-device apps *)",
+      "Bash(agent-device --version)",
+      "Bash(bun run typecheck *)",
+      "Bash(bun run test *)",
+      "Bash(bunx tsc --noEmit *)",
+      "Bash(bd list *)",
+      "Bash(bd ready *)",
+      "Bash(xcrun simctl io booted screenshot *)",
+      "Bash(xcrun simctl spawn booted log show *)",
+      "Bash(npm view *)",
+      "Bash(bunx jest *)",
+      "Bash(agent-device appstate *)",
+      "mcp__ide__getDiagnostics",
+      "mcp__Blender__get_screenshot_of_area_as_image"
+    ]
+  }
+}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { SinPulse } from "../../backgrounds/SinPulse";
+// Welcome still renders the archived Harmonic Tide shader; swapping the
+// splash to one of the new scenes is a separate product decision.
+import { SinPulse } from "../../backgrounds/archive/SinPulse";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 
 const DELAY_MS = 1500;

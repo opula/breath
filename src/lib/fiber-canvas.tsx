@@ -10,7 +10,7 @@ import {
 } from "@react-three/fiber";
 import type { ViewProps } from "react-native";
 import { PixelRatio } from "react-native";
-import { Canvas, type CanvasRef } from "react-native-wgpu";
+import { Canvas, type CanvasRef, type NativeCanvas } from "react-native-webgpu";
 
 import { makeWebGPURenderer, ReactNativeCanvas } from "./make-webgpu-renderer";
 
@@ -38,17 +38,17 @@ export const FiberCanvas = ({
     }
     const renderer = makeWebGPURenderer(context);
 
-    // @ts-expect-error - RN canvas doesn't match HTMLCanvasElement type
-    const canvas = new ReactNativeCanvas(context.canvas) as HTMLCanvasElement;
-    canvas.width = canvas.clientWidth * PixelRatio.get();
-    canvas.height = canvas.clientHeight * PixelRatio.get();
+    const rnCanvas = new ReactNativeCanvas(context.canvas as unknown as NativeCanvas);
+    rnCanvas.width = rnCanvas.clientWidth * PixelRatio.get();
+    rnCanvas.height = rnCanvas.clientHeight * PixelRatio.get();
     const size = {
       top: 0,
       left: 0,
-      width: canvas.clientWidth,
-      height: canvas.clientHeight,
+      width: rnCanvas.clientWidth,
+      height: rnCanvas.clientHeight,
     };
 
+    const canvas = rnCanvas as unknown as HTMLCanvasElement;
     const rootInstance = createRoot(canvas);
     root.current = rootInstance;
     rootInstance.configure({

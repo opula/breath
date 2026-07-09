@@ -1,29 +1,17 @@
 export const NO_BACKGROUND_SOURCE_ID = "none" as const;
 
 export const BACKGROUND_SOURCE_DEFINITIONS = [
-  { id: "aurora", name: "Northern Drift" },
-  { id: "circular", name: "Circular" },
-  { id: "echo", name: "Echo" },
-  { id: "rorschach", name: "Mirror Bloom" },
-  { id: "starfield", name: "Starfield" },
-  { id: "waves", name: "Waves" },
-  { id: "wormhole", name: "Wormhole" },
-  { id: "dither-pulse", name: "Signal Bloom" },
-  { id: "particles", name: "Particles" },
-  { id: "terrain", name: "Terrain" },
-  { id: "dot-grid", name: "DotGrid" },
-  { id: "game-of-life", name: "Game of Life" },
-  { id: "sin-pulse", name: "Harmonic Tide" },
-  { id: "fluid", name: "Fluid" },
-  { id: "ethereal", name: "Inner Current" },
-  { id: "dream-smoke", name: "Tidal Veil" },
-  { id: "particle-wave", name: "Stillwater" },
-  { id: "particle-helix", name: "ParticleHelix" },
-  { id: "endless", name: "Endless" },
-  { id: "progression", name: "Traversal" },
-  { id: "light-waves", name: "Light Waves" },
-  { id: "atmosphere", name: "Atmosphere" },
-  { id: "magical-landscape", name: "Magical Landscape" },
+  { id: "iris", name: "Iris" },
+  { id: "longwater", name: "Longwater" },
+  { id: "lightstream", name: "Lightstream" },
+  { id: "passage", name: "Passage" },
+  { id: "sea-smoke", name: "Sea Smoke" },
+  { id: "stillwater", name: "Stillwater" },
+  { id: "sundown", name: "Sundown" },
+  { id: "undercurrent", name: "Undercurrent" },
+  { id: "ember-vale", name: "Ember Vale" },
+  { id: "isobar", name: "Isobar" },
+  { id: "seagrass", name: "Seagrass" },
 ] as const;
 
 export type BackgroundSourceDefinition =
@@ -31,7 +19,9 @@ export type BackgroundSourceDefinition =
 export type BackgroundSourceId = BackgroundSourceDefinition["id"];
 export type SceneSourceId = BackgroundSourceId | typeof NO_BACKGROUND_SOURCE_ID;
 
-export const DEFAULT_BACKGROUND_SOURCE_ID: BackgroundSourceId = "sin-pulse";
+// Stale persisted ids (including every archived scene) fall back here via
+// the isSceneSourceId guard + BackgroundSurface fallback.
+export const DEFAULT_BACKGROUND_SOURCE_ID: BackgroundSourceId = "longwater";
 
 const backgroundSourceIds = new Set<string>(
   BACKGROUND_SOURCE_DEFINITIONS.map((source) => source.id),

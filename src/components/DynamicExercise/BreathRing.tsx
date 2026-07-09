@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import type { CanvasRef } from "react-native-wgpu";
-import { Canvas } from "react-native-wgpu";
+import type { CanvasRef } from "react-native-webgpu";
+import { Canvas } from "react-native-webgpu";
 import { View } from "react-native";
 import { useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
@@ -27,7 +27,7 @@ import { startWebGPUAnimationLoop } from "../../lib/start-webgpu-animation-loop"
 // --- TSL shader functions ---
 
 const hashFn = Fn(
-  ([a, time]: [ReturnType<typeof vec2>, ReturnType<typeof float>]) => {
+  ([a, time]: [TSLNode, TSLNode]) => {
     return fract(
       sin(a.x.mul(3433.8).add(a.y.mul(3843.98)))
         .mul(45933.8)

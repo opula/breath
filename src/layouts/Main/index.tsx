@@ -35,6 +35,7 @@ import {
 import { setPause as setPauseAction } from "../../state/configuration.reducer";
 import { MainStackParams } from "../../navigation";
 import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
+import { FrameStatsOverlay } from "../../lib/FrameStatsOverlay";
 
 const CHROME_TIMEOUT_MS = 6000;
 const FIRST_SESSION_CHROME_TIMEOUT_MS = 12000;
@@ -369,6 +370,7 @@ export const Main = () => {
           <Background breath={iBreath} />
         ) : null}
       </AnimatePresence>
+      <FrameStatsOverlay />
 
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center`}>

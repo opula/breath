@@ -103,7 +103,6 @@ export const NumberWheelPicker = memo(({
           <AnimatedFlashList
             data={items}
             initialScrollIndex={initialIndex || INITIAL_INDEX}
-            estimatedItemSize={ITEM_WIDTH}
             snapToInterval={ITEM_WIDTH}
             snapToAlignment="start"
             keyExtractor={(item) => `${item}`}
@@ -112,7 +111,6 @@ export const NumberWheelPicker = memo(({
             renderItem={renderItem}
             horizontal
             showsHorizontalScrollIndicator={false}
-            estimatedFirstItemOffset={0}
             contentContainerStyle={{ paddingHorizontal: WHEEL_PADDING }}
           />
           <View style={tw`self-center pt-0.5`}>

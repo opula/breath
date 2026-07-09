@@ -2,8 +2,17 @@ import { Animated, Easing, Platform } from 'react-native';
 import {
   StackCardInterpolationProps,
   StackCardInterpolatedStyle,
-  TransitionSpec
 } from '@react-navigation/stack';
+
+// @react-navigation/stack v7 stopped exporting TransitionSpec; this mirrors
+// its timing branch structurally.
+type TransitionSpec = {
+  animation: 'timing';
+  config: {
+    duration: number;
+    easing: (value: number) => number;
+  };
+};
 
 /**
  * Custom transition configurations for smoother cross-platform transitions

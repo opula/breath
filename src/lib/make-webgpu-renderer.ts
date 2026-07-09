@@ -1,5 +1,5 @@
 // https://github.com/wcandillon/react-native-webgpu/blob/578ad989b4326724702b14245d5c82622849ee23/apps/example/src/ThreeJS/components/makeWebGPURenderer.ts#L1
-import type { NativeCanvas } from "react-native-wgpu";
+import type { NativeCanvas } from "react-native-webgpu";
 import * as THREE from "three/webgpu";
 import { markWebGPUInitError, markWebGPUReady } from "./webgpu-ready";
 
@@ -60,10 +60,41 @@ export class ReactNativeCanvas {
   }
 }
 
+export type DawnToggles = {
+  enabledToggles?: string[];
+  disabledToggles?: string[];
+};
+
+export type MakeWebGPURendererOptions = {
+  antialias?: boolean;
+  alpha?: boolean;
+  /**
+   * Render at a fraction of native canvas pixels (fragment-cost lever for
+   * raymarch-heavy scenes); the surface is upscaled to the view on present.
+   */
+  renderScale?: number;
+  /** Dawn-only device toggles (e.g. skip_validation); non-portable. */
+  dawnToggles?: DawnToggles;
+};
+
 export const makeWebGPURenderer = (
   context: GPUCanvasContext,
-  { antialias = true, alpha = false }: { antialias?: boolean; alpha?: boolean } = {},
+  {
+    antialias = true,
+    alpha = false,
+    renderScale = 1,
+    dawnToggles,
+  }: MakeWebGPURendererOptions = {},
 ) => {
+  if (renderScale !== 1) {
+    const canvas = context.canvas as unknown as {
+      width: number;
+      height: number;
+    };
+    canvas.width = Math.max(1, Math.round(canvas.width * renderScale));
+    canvas.height = Math.max(1, Math.round(canvas.height * renderScale));
+  }
+
   const renderer = new THREE.WebGPURenderer({
     antialias,
     alpha,
@@ -72,13 +103,27 @@ export const makeWebGPURenderer = (
     context,
   });
 
-  const originalInit = renderer.init.bind(renderer) as (
-    ...args: unknown[]
-  ) => Promise<unknown>;
+  const originalInit = renderer.init.bind(renderer);
 
-  renderer.init = async (...args: unknown[]) => {
+  renderer.init = async () => {
     try {
-      const result = await originalInit(...args);
+      if (dawnToggles) {
+        // three uses parameters.device verbatim when provided, so request the
+        // device ourselves to chain Dawn toggles onto the native descriptor.
+        const adapter = await navigator.gpu.requestAdapter();
+        if (adapter) {
+          const device = await adapter.requestDevice({
+            requiredFeatures: [...adapter.features] as GPUFeatureName[],
+            dawnToggles,
+          } as GPUDeviceDescriptor);
+          (
+            renderer.backend as unknown as {
+              parameters: { device?: GPUDevice };
+            }
+          ).parameters.device = device;
+        }
+      }
+      const result = await originalInit();
       markWebGPUReady();
       return result;
     } catch (error) {

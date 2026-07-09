@@ -10,13 +10,12 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
       "three": ["./node_modules/@types/three/src/Three.WebGPU"],
-      "three/tsl": ["./node_modules/@types/three/src/Three.TSL"],
+      "three/tsl": ["./src/types/three-tsl.d.ts"],
       "three/webgpu": ["./node_modules/@types/three/src/Three.WebGPU"],
       "three/addons/*": ["./node_modules/@types/three/examples/jsm/*"]
     }

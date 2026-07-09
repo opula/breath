@@ -1,28 +1,16 @@
 import type { ComponentType } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { Aurora } from "../../backgrounds/Aurora";
-import { Wormhole } from "../../backgrounds/Wormhole";
-import { Starfield } from "../../backgrounds/Starfield";
-import { Rorschach } from "../../backgrounds/Rorschach";
-import { Waves } from "../../backgrounds/Waves";
-import { Circular } from "../../backgrounds/Circular";
-import { Echo } from "../../backgrounds/Echo";
-import { DitherPulse } from "../../backgrounds/DitherPulse";
-import { Particles } from "../../backgrounds/Particles";
-import { Terrain } from "../../backgrounds/Terrain";
-import { DotGrid } from "../../backgrounds/DotGrid";
-import { GameOfLife } from "../../backgrounds/GameOfLife";
-import { SinPulse } from "../../backgrounds/SinPulse";
-import { Fluid } from "../../backgrounds/Fluid";
-import { Ethereal } from "../../backgrounds/Ethereal";
-import { DreamSmoke } from "../../backgrounds/DreamSmoke";
-import { ParticleWave } from "../../backgrounds/ParticleWave";
-import { ParticleHelix } from "../../backgrounds/ParticleHelix";
-import { Endless } from "../../backgrounds/Endless";
-import { Traversal } from "../../backgrounds/Traversal";
-import { LightWaves } from "../../backgrounds/LightWaves";
-import { Atmosphere } from "../../backgrounds/Atmosphere";
-import { MagicalLandscape } from "../../backgrounds/MagicalLandscape";
+import { Iris } from "../../backgrounds/Iris";
+import { Longwater } from "../../backgrounds/Longwater";
+import { Lightstream } from "../../backgrounds/Lightstream";
+import { Passage } from "../../backgrounds/Passage";
+import { SeaSmoke } from "../../backgrounds/SeaSmoke";
+import { Stillwater } from "../../backgrounds/Stillwater";
+import { Sundown } from "../../backgrounds/Sundown";
+import { Undercurrent } from "../../backgrounds/Undercurrent";
+import { EmberVale } from "../../backgrounds/EmberVale";
+import { Isobar } from "../../backgrounds/Isobar";
+import { Seagrass } from "../../backgrounds/Seagrass";
 import {
   BACKGROUND_SOURCE_DEFINITIONS,
   type BackgroundSourceId,
@@ -41,30 +29,19 @@ type BackgroundProps = {
   onReady?: () => void;
 };
 
+// Retired scenes live in src/backgrounds/archive (unregistered, code kept).
 const BackgroundComponentById = {
-  aurora: Aurora,
-  circular: Circular,
-  echo: Echo,
-  rorschach: Rorschach,
-  starfield: Starfield,
-  waves: Waves,
-  wormhole: Wormhole,
-  "dither-pulse": DitherPulse,
-  particles: Particles,
-  terrain: Terrain,
-  "dot-grid": DotGrid,
-  "game-of-life": GameOfLife,
-  "sin-pulse": SinPulse,
-  fluid: Fluid,
-  ethereal: Ethereal,
-  "dream-smoke": DreamSmoke,
-  "particle-wave": ParticleWave,
-  "particle-helix": ParticleHelix,
-  endless: Endless,
-  progression: Traversal,
-  "light-waves": LightWaves,
-  atmosphere: Atmosphere,
-  "magical-landscape": MagicalLandscape,
+  iris: Iris,
+  longwater: Longwater,
+  lightstream: Lightstream,
+  passage: Passage,
+  "sea-smoke": SeaSmoke,
+  stillwater: Stillwater,
+  sundown: Sundown,
+  undercurrent: Undercurrent,
+  "ember-vale": EmberVale,
+  isobar: Isobar,
+  seagrass: Seagrass,
 } satisfies Record<BackgroundSourceId, ComponentType<BackgroundProps>>;
 
 export const backgroundSources = BACKGROUND_SOURCE_DEFINITIONS.map((source) => ({

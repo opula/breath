@@ -38,3 +38,6 @@ yarn-error.*
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# Claude Code local (per-machine) settings
+.claude/settings.local.json
