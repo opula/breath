@@ -84,8 +84,7 @@ const ToggleRow = ({
     <View style={tw`flex-1`}>
       <Text
         style={[
-          tw`font-display text-[18px] text-mb-fg uppercase`,
-          { letterSpacing: -0.4 },
+          tw`font-item text-[18px] text-mb-ink`,
         ]}
       >
         {label}
@@ -120,8 +119,7 @@ const AboutRow = ({ label, value }: { label: string; value: string }) => (
   <View style={tw`flex-row items-center py-3 border-b border-mb-line`}>
     <Text
       style={[
-        tw`font-display text-[15px] text-mb-fg uppercase flex-1`,
-        { letterSpacing: -0.3 },
+        tw`font-item text-[15px] text-mb-ink flex-1`,
       ]}
     >
       {label}
@@ -158,9 +156,8 @@ const OptionRow = ({
     <View style={tw`flex-1`}>
       <Text
         style={[
-          tw`font-display text-[18px] uppercase`,
-          selected ? tw`text-mb-accent` : tw`text-mb-fg`,
-          { letterSpacing: -0.4 },
+          tw`font-item text-[18px]`,
+          selected ? tw`text-mb-accent` : tw`text-mb-ink`,
         ]}
       >
         {label}
@@ -304,7 +301,7 @@ export const Settings = () => {
                   <Text
                     style={[
                       tw`font-mono uppercase text-[9px] mt-2`,
-                      selected ? tw`text-mb-fg` : tw`text-mb-mute`,
+                      selected ? tw`text-mb-ink` : tw`text-mb-mute`,
                       { letterSpacing: 1.5 },
                     ]}
                   >
@@ -319,12 +316,6 @@ export const Settings = () => {
           <View style={tw`mt-8`}>
             <Overline>About</Overline>
           </View>
-          <AboutRow
-            label="Version"
-            value={`v${Constants.expoConfig?.version ?? "1.0"}`}
-          />
-          {/* <AboutRow label="No accounts" value="nothing is collected" />
-          <AboutRow label="No streaks" value="nothing is counted at you" /> */}
           <Pressable
             onPress={() => navigation.navigate("Help")}
             style={({ pressed }) => [
@@ -334,8 +325,7 @@ export const Settings = () => {
           >
             <Text
               style={[
-                tw`font-display text-[15px] text-mb-fg uppercase flex-1`,
-                { letterSpacing: -0.3 },
+                tw`font-item text-[15px] text-mb-ink flex-1`,
               ]}
             >
               Help
@@ -349,6 +339,12 @@ export const Settings = () => {
               guide · tips
             </Text>
           </Pressable>
+          <AboutRow
+            label="Version"
+            value={`v${Constants.expoConfig?.version ?? "1.0"}`}
+          />
+          {/* <AboutRow label="No accounts" value="nothing is collected" />
+          <AboutRow label="No streaks" value="nothing is counted at you" /> */}
         </ScrollView>
       </View>
     </View>

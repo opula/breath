@@ -59,6 +59,8 @@ const Main = () => {
   const [fontsLoaded] = useFonts({
     Rubik: require("../assets/fonts/Rubik-Regular.ttf"),
     "Rubik-ExtraBold": require("../assets/fonts/Rubik-ExtraBold.ttf"),
+    "Rubik-Medium": require("../assets/fonts/Rubik-Medium.ttf"),
+    "Rubik-Bold": require("../assets/fonts/Rubik-Bold.ttf"),
     JetBrainsMono: require("../assets/fonts/JetBrainsMono-Regular.ttf"),
     "JetBrainsMono-Medium": require("../assets/fonts/JetBrainsMono-Medium.ttf"),
   });

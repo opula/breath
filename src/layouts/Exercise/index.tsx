@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  NavigationProp,
-  RouteProp,
-} from "@react-navigation/native";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
@@ -21,13 +18,8 @@ import DraggableFlatList, {
   ScaleDecorator,
   ShadowDecorator,
 } from "react-native-draggable-flatlist";
-import SwipeableItem, {
-  OpenDirection,
-} from "react-native-swipeable-item";
-import {
-  removeExercise,
-  updateExercise,
-} from "../../state/exercises.reducer";
+import SwipeableItem, { OpenDirection } from "react-native-swipeable-item";
+import { removeExercise, updateExercise } from "../../state/exercises.reducer";
 import { type Exercise as ExerciseItem } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { EditName } from "./EditName";
@@ -145,7 +137,7 @@ export const Exercise = ({ navigation, route }: Props) => {
         <NavHeader
           title="edit exercise"
           onClose={() => navigation.goBack()}
-          leftAction={{ label: "run →", onPress: handleRun, accent: true }}
+          leftAction={{ label: "run now", onPress: handleRun, accent: true }}
         />
 
         <View style={tw`flex-1 px-6`}>
@@ -216,8 +208,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                   </Text>
                   <Text
                     style={[
-                      tw`font-display text-mb-fg uppercase text-[18px]`,
-                      { letterSpacing: -0.4 },
+                      tw`font-item text-mb-ink text-[18px]`,
                     ]}
                   >
                     Add phase
@@ -244,11 +235,9 @@ export const Exercise = ({ navigation, route }: Props) => {
                     ]}
                   >
                     {/* Index-column spacer to align with step rows */}
-                    <View style={tw`w-8`} />
                     <Text
                       style={[
-                        tw`font-display text-mb-warn uppercase text-[18px] flex-1`,
-                        { letterSpacing: -0.4 },
+                        tw`font-item text-mb-warn text-[18px] flex-1`,
                       ]}
                     >
                       Delete exercise

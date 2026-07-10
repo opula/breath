@@ -52,10 +52,9 @@ export const ExerciseRow = ({
         <Text
           style={[
             tw.style(
-              `font-display text-[22px] text-mb-fg uppercase`,
+              `font-item text-[22px] text-mb-ink`,
               isLastPlayed ? `text-mb-accent` : undefined,
             ),
-            { letterSpacing: -0.5 },
           ]}
           numberOfLines={1}
         >

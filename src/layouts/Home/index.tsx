@@ -102,7 +102,7 @@ export const Home = ({ navigation }: Props) => {
               style={[tw`font-mono text-[9px] uppercase`, { letterSpacing: 3 }]}
             >
               <Text style={tw`text-mb-mute`}>LAST SESSION · </Text>
-              <Text style={tw`text-mb-fg`}>{lastSessionLabel}</Text>
+              <Text style={tw`text-mb-ink`}>{lastSessionLabel}</Text>
             </Text>
           ) : (
             <Text
@@ -169,8 +169,7 @@ export const Home = ({ navigation }: Props) => {
             </Text>
             <Text
               style={[
-                tw`font-display text-[22px] text-mb-fg uppercase`,
-                { letterSpacing: -0.5 },
+                tw`font-item text-[22px] text-mb-ink`,
               ]}
               numberOfLines={1}
             >
@@ -197,8 +196,7 @@ export const Home = ({ navigation }: Props) => {
             </Text>
             <Text
               style={[
-                tw`font-display text-[22px] text-mb-fg uppercase`,
-                { letterSpacing: -0.5 },
+                tw`font-item text-[22px] text-mb-ink`,
               ]}
             >
               New exercise
@@ -240,7 +238,7 @@ export const Home = ({ navigation }: Props) => {
             >
               <Text
                 style={[
-                  tw`font-mono text-[10px] text-mb-fg uppercase`,
+                  tw`font-mono text-[10px] text-mb-ink uppercase`,
                   { letterSpacing: 2.5 },
                 ]}
               >

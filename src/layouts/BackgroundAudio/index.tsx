@@ -247,8 +247,8 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
                 >
                   <Text
                     style={[
-                      tw`font-display text-mb-accent uppercase`,
-                      { fontSize: 24, letterSpacing: -0.5 },
+                      tw`font-item text-mb-accent`,
+                      { fontSize: 24 },
                     ]}
                   >
                     {isPlaying ? "pause" : "play"}

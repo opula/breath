@@ -84,8 +84,7 @@ export const StepCard = ({ exerciseId, step, index, drag }: Props) => {
       <View style={tw`flex-1`}>
         <Text
           style={[
-            tw`font-display text-[18px] text-mb-fg uppercase`,
-            { letterSpacing: -0.4 },
+            tw`font-item text-[18px] text-mb-ink`,
           ]}
           numberOfLines={1}
         >
@@ -106,8 +105,7 @@ export const StepCard = ({ exerciseId, step, index, drag }: Props) => {
 
       <Text
         style={[
-          tw`font-display text-[15px] text-mb-accent uppercase ml-3`,
-          { letterSpacing: -0.3 },
+          tw`font-item text-[15px] text-mb-accent ml-3`,
         ]}
         numberOfLines={1}
       >

@@ -147,9 +147,8 @@ export const Scenes = () => {
           </Text>
           <Text
             style={[
-              tw`font-display text-[18px] uppercase flex-1`,
-              isActive ? tw`text-mb-accent` : tw`text-mb-fg`,
-              { letterSpacing: -0.4 },
+              tw`font-item text-[18px] flex-1`,
+              isActive ? tw`text-mb-accent` : tw`text-mb-ink`,
             ]}
           >
             {formatSceneName(item.name)}

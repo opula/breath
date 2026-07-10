@@ -132,7 +132,7 @@ export const MusicControls = () => {
               </Text>
               {/* <Text
                 style={[
-                  tw`font-mono text-[10px] text-mb-fg`,
+                  tw`font-mono text-[10px] text-mb-ink`,
                   { letterSpacing: 2, fontVariant: ["tabular-nums"] },
                 ]}
               >
@@ -194,8 +194,7 @@ export const MusicControls = () => {
                   </Text>
                   <Text
                     style={[
-                      tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
-                      { letterSpacing: -0.4 },
+                      tw`font-item text-mb-ink text-[18px] flex-1`,
                     ]}
                   >
                     Add music
@@ -226,8 +225,7 @@ export const MusicControls = () => {
                   </Text>
                   <Text
                     style={[
-                      tw`font-display text-mb-fg uppercase text-[18px] flex-1`,
-                      { letterSpacing: -0.4 },
+                      tw`font-item text-mb-ink text-[18px] flex-1`,
                     ]}
                   >
                     Help

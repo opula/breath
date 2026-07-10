@@ -110,10 +110,11 @@ export const ExerciseActions = () => {
     },
     {
       key: "edit",
-      label: "Edit phases",
-      hint: "change durations or steps",
+      label: "Edit exercise",
+      hint: "update the name, steps, and more",
       right: "→",
-      onPick: () => pick(() => navigation.navigate("Exercise", { id: exerciseId })),
+      onPick: () =>
+        pick(() => navigation.navigate("Exercise", { id: exerciseId })),
     },
     ...(isBgEligible
       ? [
@@ -142,7 +143,7 @@ export const ExerciseActions = () => {
   const toneStyle = (tone?: Tone) => {
     if (tone === "accent") return tw`text-mb-accent`;
     if (tone === "danger") return tw`text-mb-warn`;
-    return tw`text-mb-fg`;
+    return tw`text-mb-ink`;
   };
 
   return (
@@ -164,7 +165,7 @@ export const ExerciseActions = () => {
         <View style={tw`mt-3`}>
           <Text
             style={[
-              tw`font-display uppercase text-mb-fg text-[28px]`,
+              tw`font-display text-mb-fg text-[28px]`,
               { letterSpacing: -1 },
             ]}
             numberOfLines={1}
@@ -194,13 +195,7 @@ export const ExerciseActions = () => {
               {String(i + 1).padStart(2, "0")}
             </Text>
             <View style={tw`flex-1`}>
-              <Text
-                style={[
-                  tw`font-display uppercase text-[20px]`,
-                  toneStyle(action.tone),
-                  { letterSpacing: -0.5 },
-                ]}
-              >
+              <Text style={[tw`font-item text-[20px]`, toneStyle(action.tone)]}>
                 {action.label}
               </Text>
               <Text

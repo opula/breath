@@ -90,8 +90,7 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
             <View style={tw`flex-1`}>
               <Text
                 style={[
-                  tw`font-display text-[18px] text-mb-fg uppercase`,
-                  { letterSpacing: -0.4 },
+                  tw`font-item text-[18px] text-mb-ink`,
                 ]}
               >
                 {opt.label}

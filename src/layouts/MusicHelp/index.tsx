@@ -52,8 +52,7 @@ const Row = ({ label, hint }: { label: string; hint: string }) => (
     <View style={tw`flex-1`}>
       <Text
         style={[
-          tw`font-display text-[16px] text-mb-fg uppercase`,
-          { letterSpacing: -0.3 },
+          tw`font-item text-[16px] text-mb-ink`,
         ]}
       >
         {label}
@@ -119,8 +118,7 @@ export const MusicHelp = () => {
               >
                 <Text
                   style={[
-                    tw`font-display text-[16px] text-mb-fg uppercase flex-1`,
-                    { letterSpacing: -0.3 },
+                    tw`font-item text-[16px] text-mb-ink flex-1`,
                   ]}
                   numberOfLines={1}
                 >

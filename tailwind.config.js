@@ -18,8 +18,9 @@ module.exports = {
         // Mid Breath design tokens
         'mb-bg': '#0A0A0B',
         'mb-bg-elev': '#111114',
-        'mb-fg': '#F2F2EF',
-        'mb-mute': '#6E6E74',
+        'mb-fg': '#EDF4F5',
+        'mb-ink': '#C6D5D8',
+        'mb-mute': '#6B7A7E',
         'mb-dim': '#2A2A2E',
         'mb-line': 'rgba(255,255,255,0.08)',
         'mb-line-strong': 'rgba(255,255,255,0.16)',
@@ -32,6 +33,7 @@ module.exports = {
         // Mid Breath type stack
         display: ['Rubik-ExtraBold'],
         'display-regular': ['Rubik'],
+        item: ['Rubik-Bold'],
         mono: ['JetBrainsMono'],
         'mono-medium': ['JetBrainsMono-Medium'],
       },

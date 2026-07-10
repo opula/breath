@@ -62,9 +62,8 @@ export const Freestyle = () => {
               >
                 <Text
                   style={[
-                    tw`font-display uppercase text-[18px]`,
-                    selected ? tw`text-mb-accent` : tw`text-mb-fg`,
-                    { letterSpacing: -0.4 },
+                    tw`font-item text-[18px]`,
+                    selected ? tw`text-mb-accent` : tw`text-mb-ink`,
                   ]}
                 >
                   {ratio}
@@ -106,8 +105,7 @@ export const Freestyle = () => {
             <View style={tw`flex-1`}>
               <Text
                 style={[
-                  tw`font-display uppercase text-[20px] text-mb-accent`,
-                  { letterSpacing: -0.5 },
+                  tw`font-item text-[20px] text-mb-accent`,
                 ]}
               >
                 Start freestyle

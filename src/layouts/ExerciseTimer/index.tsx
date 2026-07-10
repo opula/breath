@@ -109,8 +109,7 @@ export const ExerciseTimer = () => {
             <View style={tw`flex-1`}>
               <Text
                 style={[
-                  tw`font-display uppercase text-[20px] text-mb-accent`,
-                  { letterSpacing: -0.5 },
+                  tw`font-item text-[20px] text-mb-accent`,
                 ]}
               >
                 Start session

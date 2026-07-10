@@ -573,7 +573,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
             {showingDescription ? (
               <View style={tw`px-8 items-center justify-center`}>
                 <Text
-                  style={tw`text-base font-inter text-center text-mb-fg leading-relaxed`}
+                  style={tw`text-base font-inter text-center text-mb-ink leading-relaxed`}
                 >
                   {exercise.description}
                 </Text>
@@ -613,7 +613,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
                 <Text
                   style={[
                     isText
-                      ? tw`font-inter text-base text-mb-fg text-center`
+                      ? tw`font-inter text-base text-mb-ink text-center`
                       : tw`font-display text-mb-fg uppercase text-center`,
                     isText
                       ? { fontStyle: "italic" }
@@ -647,7 +647,7 @@ export const ExerciseInfo = ({ navigation, route }: Props) => {
               const hint = (primary: string, secondary?: string) => (
                 <>
                   <Text
-                    style={tw`font-inter text-sm text-mb-fg text-center`}
+                    style={tw`font-inter text-sm text-mb-ink text-center`}
                   >
                     {primary}
                   </Text>

@@ -376,7 +376,7 @@ export const Main = () => {
         >
           <Text
             style={[
-              tw`font-mono text-mb-fg uppercase text-[9px] text-center`,
+              tw`font-mono text-mb-ink uppercase text-[9px] text-center`,
               hintShadow,
               { letterSpacing: 2.2 },
             ]}

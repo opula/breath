@@ -139,8 +139,7 @@ export const FileTransfer = () => {
             <View style={tw`items-center pt-10`}>
               <Text
                 style={[
-                  tw`font-display text-[18px] text-mb-fg uppercase text-center`,
-                  { letterSpacing: -0.4 },
+                  tw`font-item text-[18px] text-mb-ink text-center`,
                 ]}
               >
                 WiFi required
@@ -160,8 +159,7 @@ export const FileTransfer = () => {
             <View style={tw`items-center pt-10`}>
               <Text
                 style={[
-                  tw`font-display text-[18px] text-mb-warn uppercase text-center`,
-                  { letterSpacing: -0.4 },
+                  tw`font-item text-[18px] text-mb-warn text-center`,
                 ]}
               >
                 Transfer error
@@ -206,7 +204,7 @@ export const FileTransfer = () => {
                   <Text
                     style={[
                       tw`font-mono text-[10px] uppercase`,
-                      copied ? tw`text-mb-accent` : tw`text-mb-fg`,
+                      copied ? tw`text-mb-accent` : tw`text-mb-ink`,
                       { letterSpacing: 2 },
                     ]}
                   >
@@ -222,7 +220,7 @@ export const FileTransfer = () => {
                 >
                   <Text
                     style={[
-                      tw`font-mono text-[10px] text-mb-fg uppercase`,
+                      tw`font-mono text-[10px] text-mb-ink uppercase`,
                       { letterSpacing: 2 },
                     ]}
                   >
@@ -261,8 +259,7 @@ export const FileTransfer = () => {
                       </Text>
                       <Text
                         style={[
-                          tw`font-display text-[16px] text-mb-fg uppercase flex-1`,
-                          { letterSpacing: -0.3 },
+                          tw`font-item text-[16px] text-mb-ink flex-1`,
                         ]}
                         numberOfLines={1}
                       >

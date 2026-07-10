@@ -162,8 +162,8 @@ export const Welcome = ({ navigation }: Props) => {
             >
               <Text
                 style={[
-                  tw`font-display text-mb-accent uppercase`,
-                  { fontSize: 15, letterSpacing: -0.2 },
+                  tw`font-item text-mb-accent`,
+                  { fontSize: 15 },
                 ]}
               >
                 {isLastCard ? "ENTER" : "NEXT"}

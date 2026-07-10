@@ -36,7 +36,7 @@ export const EditName = memo(({ exerciseId }: Props) => {
     <View style={tw`border-b border-mb-line pb-2`}>
       <TextInput
         style={[
-          tw`font-display text-mb-fg uppercase py-2`,
+          tw`font-display text-mb-fg py-2`,
           { fontSize: 40, letterSpacing: -1.5, lineHeight: 44 },
         ]}
         value={name}

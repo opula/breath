@@ -445,9 +445,8 @@ export const AdjustStep = ({ route }: Props) => {
                       >
                         <Text
                           style={[
-                            tw`font-display uppercase text-[16px]`,
-                            active ? tw`text-mb-accent` : tw`text-mb-fg`,
-                            { letterSpacing: -0.4 },
+                            tw`font-item text-[16px]`,
+                            active ? tw`text-mb-accent` : tw`text-mb-ink`,
                           ]}
                         >
                           {p}s
@@ -527,7 +526,7 @@ const AdjustTextStep = ({
           <DialGroup label="Text">
             <View style={tw`flex-row items-center border-b border-mb-line`}>
               <TextInput
-                style={tw`flex-1 font-inter text-mb-fg py-2 text-base`}
+                style={tw`flex-1 font-inter text-mb-ink py-2 text-base`}
                 value={text}
                 onChangeText={(val) => {
                   setText(val);
