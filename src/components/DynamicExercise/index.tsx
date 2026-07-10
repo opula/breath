@@ -32,7 +32,7 @@ export const DynamicExercise = memo(
       isText,
       isHIE,
       exerciseName,
-      repeatRound,
+      repeatProgress,
       iBreath,
       handleTap,
       handlePauseResume,
@@ -145,9 +145,9 @@ export const DynamicExercise = memo(
           </View>
 
           <AnimatePresence>
-            {repeatRound !== "" && (
+            {repeatProgress && (
               <MotiView
-                key={repeatRound}
+                key={`${repeatProgress.round}/${repeatProgress.total}`}
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -162,7 +162,7 @@ export const DynamicExercise = memo(
                 <Text
                   style={tw`text-base font-inter font-light text-neutral-100 uppercase`}
                 >
-                  {repeatRound}
+                  Round {repeatProgress.round} of {repeatProgress.total}
                 </Text>
               </MotiView>
             )}

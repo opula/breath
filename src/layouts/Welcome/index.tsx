@@ -79,7 +79,9 @@ export const Welcome = ({ navigation }: Props) => {
       <View style={tw`absolute inset-0`}>
         <WelcomeBackground />
       </View>
-      <View style={tw`absolute inset-0 bg-mb-bg opacity-80`} />
+      {/* Light scrim: Passage is glow-from-dark, so it only needs a gentle
+          knock-back for copy legibility. */}
+      <View style={tw`absolute inset-0 bg-mb-bg opacity-40`} />
 
       {Platform.OS !== "web" ? (
         <OrientationLocker orientation={PORTRAIT} />

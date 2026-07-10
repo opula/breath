@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import tw from "../../utils/tw";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
+import { NavHeader } from "../../components/NavHeader";
 
 const GESTURES = [
   { label: "Single tap", hint: "advance when no timer is shown" },
@@ -83,30 +84,7 @@ export const Help = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              ← back
-            </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            manual
-          </Text>
-          <View style={tw`w-10`} />
-        </View>
+        <NavHeader title="manual" onClose={() => navigation.goBack()} />
 
         <ScrollView
           contentContainerStyle={tw`px-6 pb-10`}
@@ -122,22 +100,22 @@ export const Help = () => {
             How you breathe changes how you feel. Slow it down to
             settle. Speed it up to rise. Hold it to step outside the
             ordinary. Mid Breath is an instrument for running those
-            patterns — pick one from the library, or build your own.
+            patterns: pick one from the library, or build your own.
           </Text>
 
           <Section
             label="Patterns"
-            body="Long exhales quiet the nervous system and slow the heart. Long inhales wake it up. Equal phases — the box — steady the mind. Cycles of fast breaths followed by holds reach for altered states. The library covers a spread: box, tummo, holotropic, retention, and more. Each is a fixed sequence of phases, in rounds you can set."
+            body="Long exhales quiet the nervous system and slow the heart. Long inhales wake it up. Equal phases, the box, steady the mind. Cycles of fast breaths followed by holds reach for altered states. The library covers a spread: box, tummo, holotropic, retention, and more. Each is a fixed sequence of phases, in rounds you can set."
           />
 
           <Section
             label="Build"
-            body="Compose your own. A phase is a single instruction — inhale four, hold seven, exhale eight — and an exercise is any sequence of them, with text cues, pauses, or repeats where you want them. Leave a phase open-ended to move past it on your own tap. Saved exercises join the library."
+            body="Compose your own. A phase is a single instruction: inhale four, hold seven, exhale eight. An exercise is any sequence of them, with text cues, pauses, or repeats where you want them. Leave a phase open-ended to move past it on your own tap. Saved exercises join the library."
           />
 
           <Section
             label="Immersion"
-            body="A session is designed to keep your eyes off the clock. The ring in the middle grows on inhale and shrinks on exhale — follow it and you can stop counting. Scenes put a moving backdrop behind the ring, or nothing. Bring your own music from another device on the same Wi-Fi (Music › Add music). Phase cues and haptics are toggles in Settings."
+            body="A session is designed to keep your eyes off the clock. The ring in the middle grows on inhale and shrinks on exhale. Follow it and you can stop counting. Scenes put a moving backdrop behind the ring, or nothing. Bring your own music from another device on the same WiFi (Music › Add music). Phase cues and haptics are toggles in Settings."
           />
 
           <View style={tw`mt-10`}>

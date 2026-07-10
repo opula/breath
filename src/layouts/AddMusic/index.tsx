@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TrayScreen } from "../../components/TrayScreen";
+import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
 import tw from "../../utils/tw";
 import { Overline } from "../../components/Overline";
@@ -16,48 +15,52 @@ type Option = {
 
 export const AddMusic = () => {
   const navigation = useNavigation();
-  const { bottom } = useSafeAreaInsets();
   const { pickLocalFile, pasteUrl, isDownloading } = useAudioPlayer();
+  const sheetRef = useRef<AppSheetHandle>(null);
+  const pendingAction = useRef<(() => void) | null>(null);
+
+  // Close the sheet first; the action runs after it settles and the route pops.
+  const pick = (action: () => void) => {
+    pendingAction.current = action;
+    sheetRef.current?.dismiss();
+  };
 
   const options: Option[] = [
     {
       key: "wifi",
       label: "WiFi transfer",
       hint: "upload from any device on your network",
-      onPick: () => {
-        navigation.goBack();
-        navigation.navigate("FileTransfer" as never);
-      },
+      onPick: () => pick(() => navigation.navigate("FileTransfer" as never)),
     },
     {
       key: "url",
       label: "Download from URL",
       hint: "paste a link from your clipboard",
-      onPick: () => {
-        navigation.goBack();
-        pasteUrl();
-      },
+      onPick: () => pick(pasteUrl),
     },
     {
       key: "file",
       label: "Browse on device",
       hint: "pick an audio file from this phone",
-      onPick: () => {
-        navigation.goBack();
-        pickLocalFile();
-      },
+      onPick: () => pick(pickLocalFile),
     },
   ];
 
   return (
-    <TrayScreen trayHeight={400 + bottom}>
+    <AppSheet
+      ref={sheetRef}
+      onDismissed={() => {
+        pendingAction.current?.();
+        pendingAction.current = null;
+      }}
+    >
       <View style={tw`pt-2 pb-2 px-2`}>
         <Overline accent right={`${options.length} paths`}>
           Add music
         </Overline>
       </View>
 
-      <View style={tw`flex-1 px-2`}>
+      <View style={tw`px-2 pb-4`}>
         {options.map((opt, i) => {
           const showLoader = opt.key === "url" && isDownloading;
           return (
@@ -105,6 +108,6 @@ export const AddMusic = () => {
           );
         })}
       </View>
-    </TrayScreen>
+    </AppSheet>
   );
 };

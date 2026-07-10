@@ -17,7 +17,7 @@ import { MusicTrackItem } from "./MusicTrackItem";
 import { MusicFile } from "../../types/music";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
-import { Icon } from "../../components/Icon";
+import { NavHeader } from "../../components/NavHeader";
 
 export const MusicControls = () => {
   const navigation = useNavigation();
@@ -108,38 +108,7 @@ export const MusicControls = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center px-6 py-3`}>
-          <View style={tw`flex-1`}></View>
-          <View style={tw`flex-1 items-center`}>
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              Music
-            </Text>
-          </View>
-          <View style={tw`flex-1 items-end`}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              hitSlop={12}
-              style={tw`flex-row items-center py-2 active:opacity-60`}
-            >
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute uppercase text-[10px]`,
-                  { letterSpacing: 3 },
-                ]}
-              >
-                close
-              </Text>
-              <View style={tw`ml-1.5`}>
-                <Icon name="close" size={12} color="#6E6E74" />
-              </View>
-            </Pressable>
-          </View>
-        </View>
+        <NavHeader title="music" onClose={() => navigation.goBack()} />
 
         {/* Hero + volume */}
         <View style={tw`px-6 pt-2 pb-5`}>
@@ -202,7 +171,7 @@ export const MusicControls = () => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  no tracks yet — add one above
+                  no tracks yet · add one below
                 </Text>
               </View>
             }

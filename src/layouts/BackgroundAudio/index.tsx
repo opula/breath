@@ -13,6 +13,7 @@ import {
 import { convertSecondsToHHMM } from "../../utils/pretty";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
+import { NavHeader } from "../../components/NavHeader";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
 
@@ -116,34 +117,16 @@ export const BackgroundAudio = ({ navigation, route }: Props) => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              ← back
-            </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-            numberOfLines={1}
-          >
-            background audio
-          </Text>
-          <View style={tw`w-10`} />
-        </View>
+        <NavHeader
+          title="background audio"
+          onClose={() => navigation.goBack()}
+        />
 
         <View style={tw`flex-1 px-6`}>
-          <Overline accent right={`${exercise.seq.length} phases`}>
+          <Overline
+            accent
+            right={`${exercise.seq.length} phase${exercise.seq.length === 1 ? "" : "s"}`}
+          >
             Render
           </Overline>
           <View style={tw`mt-5`}>

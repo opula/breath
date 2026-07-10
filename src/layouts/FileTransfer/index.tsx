@@ -20,6 +20,7 @@ import {
   stopFileTransferServer,
 } from "../../services/FileTransferServer";
 import tw from "../../utils/tw";
+import { NavHeader } from "../../components/NavHeader";
 import { MusicFile } from "../../types/music";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
@@ -77,7 +78,7 @@ export const FileTransfer = () => {
         setStatus("running");
       } catch (err: any) {
         if (!stopped) {
-          setErrorMsg(err?.message || "Failed to start server");
+          setErrorMsg(err?.message || "Couldn't start the transfer");
           setStatus("error");
         }
       }
@@ -98,36 +99,22 @@ export const FileTransfer = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              ← back
-            </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            wifi transfer
-          </Text>
-          <View style={tw`w-10`} />
-        </View>
+        <NavHeader title="wifi transfer" onClose={() => navigation.goBack()} />
 
         <ScrollView
           contentContainerStyle={tw`px-6 pb-10`}
           showsVerticalScrollIndicator={false}
         >
-          <Overline accent right={status === "running" ? "live" : status}>
+          <Overline
+            accent
+            right={
+              status === "running"
+                ? "live"
+                : status === "no-wifi"
+                  ? "no wifi"
+                  : status
+            }
+          >
             Transfer
           </Overline>
           <View style={tw`mt-5 mb-6`}>
@@ -143,7 +130,7 @@ export const FileTransfer = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                starting server
+                starting
               </Text>
             </View>
           )}
@@ -177,7 +164,7 @@ export const FileTransfer = () => {
                   { letterSpacing: -0.4 },
                 ]}
               >
-                Server error
+                Transfer error
               </Text>
               <Text
                 style={tw`font-inter text-sm text-mb-mute text-center mt-3`}
@@ -195,7 +182,7 @@ export const FileTransfer = () => {
                   { letterSpacing: 2 },
                 ]}
               >
-                scan from any device on the same wifi
+                scan from any device on the same WiFi
               </Text>
 
               <View style={tw`items-center`}>

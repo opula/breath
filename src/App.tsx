@@ -24,7 +24,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
 import { AudioPlayerProvider } from "./context/AudioPlayerContext";
-import { delay } from "lodash";
+import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
 
 const SPLASH_BACKGROUND = "#101010";
 
@@ -63,20 +63,13 @@ const Main = () => {
     "JetBrainsMono-Medium": require("../assets/fonts/JetBrainsMono-Medium.ttf"),
   });
 
+  // Hold the splash for 1s past font readiness so the first shader frame
+  // has warmed up before anything renders.
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Pre-load fonts, make API calls, etc.
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        setIsReady(true);
-      }
-    }
-
-    delay(prepare, 2000);
-  }, []);
+    if (!fontsLoaded) return;
+    const timer = setTimeout(() => setIsReady(true), 1000);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded]);
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -95,7 +88,11 @@ const Main = () => {
         style={[tw`flex-1`, { backgroundColor: SPLASH_BACKGROUND }]}
         onLayout={onLayoutRootView}
       >
-        <MainStack />
+        {/* Inside NavigationContainer so portal-hosted sheet content keeps
+            navigation context. */}
+        <BottomSheetProvider>
+          <MainStack />
+        </BottomSheetProvider>
       </View>
     </NavigationContainer>
   );

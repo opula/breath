@@ -1,18 +1,11 @@
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useRef } from "react";
+import { View, Text, Pressable } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import tw from "../../utils/tw";
 import { Overline } from "../../components/Overline";
+import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
 import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
   exerciseByIdSelector,
@@ -27,8 +20,6 @@ import { LAST_EXERCISE, storage } from "../../utils/storage";
 import { MainStackParams } from "../../navigation";
 
 type Nav = StackNavigationProp<MainStackParams, "ExerciseActions">;
-
-const TRAY_HEIGHT = 540;
 
 type Tone = "accent" | "danger" | undefined;
 
@@ -46,44 +37,30 @@ export const ExerciseActions = () => {
   const route = useRoute<RouteProp<MainStackParams, "ExerciseActions">>();
   const { exerciseId } = route.params;
   const dispatch = useAppDispatch();
-  const insets = useSafeAreaInsets();
 
   const exercises = useAppSelector(exercisesSelector);
-  const exercise = useAppSelector((s) => exerciseByIdSelector(s, exerciseId));
+  const exerciseLive = useAppSelector((s) =>
+    exerciseByIdSelector(s, exerciseId),
+  );
+  // Keep the last non-null exercise so the sheet can animate closed after
+  // Delete removes it from the store.
+  const exerciseRef = useRef(exerciseLive);
+  if (exerciseLive) exerciseRef.current = exerciseLive;
+  const exercise = exerciseLive ?? exerciseRef.current;
+
   const isFavorite = useAppSelector(isFavoriteSelector(exerciseId));
   const isBgEligible = exercise
     ? isExerciseEligibleForBackground(exercise)
     : false;
 
-  const translateY = useSharedValue(0);
-  const startY = useSharedValue(0);
+  const sheetRef = useRef<AppSheetHandle>(null);
+  const pendingAction = useRef<(() => void) | null>(null);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  const dismiss = () => {
-    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
-    setTimeout(() => navigation.goBack(), 200);
+  // Close the sheet first; the action runs after it settles and the route pops.
+  const pick = (action: () => void) => {
+    pendingAction.current = action;
+    sheetRef.current?.dismiss();
   };
-
-  const panGesture = Gesture.Pan()
-    .onStart(() => {
-      startY.value = translateY.value;
-    })
-    .onUpdate((e) => {
-      translateY.value = Math.max(
-        0,
-        Math.min(startY.value + e.translationY, TRAY_HEIGHT),
-      );
-    })
-    .onEnd(() => {
-      const shouldDismiss = translateY.value > 80;
-      translateY.value = withTiming(shouldDismiss ? TRAY_HEIGHT : 0, {
-        duration: 200,
-      });
-      if (shouldDismiss) runOnJS(navigation.goBack)();
-    });
 
   const handlePlay = () => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
@@ -91,56 +68,16 @@ export const ExerciseActions = () => {
       storage.set(LAST_EXERCISE, index);
       dispatch(setLastPlayed(exerciseId));
     }
-    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
-    setTimeout(() => {
-      navigation.goBack();
-      setTimeout(
-        () => navigation.navigate("Main", { autoplay: true }),
-        50,
-      );
-    }, 200);
-  };
-
-  const handleTimer = () => {
-    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
-    setTimeout(() => {
-      navigation.goBack();
-      setTimeout(
-        () => navigation.navigate("ExerciseTimer", { exerciseId }),
-        50,
-      );
-    }, 200);
+    pick(() => navigation.navigate("Main", { autoplay: true }));
   };
 
   const handleFavorite = () => {
     dispatch(toggleFavorite(exerciseId));
   };
 
-  const handleEdit = () => {
-    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
-    setTimeout(() => {
-      navigation.goBack();
-      setTimeout(
-        () => navigation.navigate("Exercise", { id: exerciseId }),
-        50,
-      );
-    }, 200);
-  };
-
-  const handleBgAudio = () => {
-    translateY.value = withTiming(TRAY_HEIGHT, { duration: 200 });
-    setTimeout(() => {
-      navigation.goBack();
-      setTimeout(
-        () => navigation.navigate("BackgroundAudio", { id: exerciseId }),
-        50,
-      );
-    }, 200);
-  };
-
   const handleDelete = () => {
     dispatch(removeExercise({ exerciseId }));
-    dismiss();
+    sheetRef.current?.dismiss();
   };
 
   if (!exercise) return null;
@@ -150,8 +87,8 @@ export const ExerciseActions = () => {
       key: "play",
       label: "Play now",
       hint: "start the session",
-      tone: "accent",
       right: "▶",
+      tone: "accent" as const,
       onPick: handlePlay,
     },
     {
@@ -159,13 +96,14 @@ export const ExerciseActions = () => {
       label: "Timer",
       hint: "choose a target duration",
       right: "→",
-      onPick: handleTimer,
+      onPick: () =>
+        pick(() => navigation.navigate("ExerciseTimer", { exerciseId })),
     },
     {
       key: "fav",
       label: isFavorite ? "Unfavorite" : "Favorite",
       hint: isFavorite
-        ? "remove from top of library"
+        ? "remove from the top of the library"
         : "pin to the top of the library",
       right: isFavorite ? "★" : "☆",
       onPick: handleFavorite,
@@ -175,16 +113,19 @@ export const ExerciseActions = () => {
       label: "Edit phases",
       hint: "change durations or steps",
       right: "→",
-      onPick: handleEdit,
+      onPick: () => pick(() => navigation.navigate("Exercise", { id: exerciseId })),
     },
     ...(isBgEligible
       ? [
           {
             key: "audio",
             label: "Background audio",
-            hint: "ambient bed during practice",
+            hint: "ambient bed during sessions",
             right: "→",
-            onPick: handleBgAudio,
+            onPick: () =>
+              pick(() =>
+                navigation.navigate("BackgroundAudio", { id: exerciseId }),
+              ),
           } as Action,
         ]
       : []),
@@ -205,88 +146,78 @@ export const ExerciseActions = () => {
   };
 
   return (
-    <View style={tw`flex-1 justify-end`}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} />
+    <AppSheet
+      ref={sheetRef}
+      onDismissed={() => {
+        pendingAction.current?.();
+        pendingAction.current = null;
+      }}
+    >
+      {/* Header */}
+      <View style={tw`px-2 pb-5 border-b border-mb-line`}>
+        <Overline
+          accent
+          right={`${exercise.seq.length} phase${exercise.seq.length === 1 ? "" : "s"}`}
+        >
+          Actions
+        </Overline>
+        <View style={tw`mt-3`}>
+          <Text
+            style={[
+              tw`font-display uppercase text-mb-fg text-[28px]`,
+              { letterSpacing: -1 },
+            ]}
+            numberOfLines={1}
+          >
+            {exercise.name}
+          </Text>
+        </View>
+      </View>
 
-      <Animated.View
-        style={[
-          animatedStyle,
-          tw`bg-mb-bg border-t border-mb-line`,
-          { paddingBottom: insets.bottom + 16 },
-        ]}
-      >
-        {/* Drag handle */}
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={tw`justify-center items-center h-10 w-full`}>
-            <View style={tw`h-1 w-10 bg-mb-dim rounded-full mt-3`} />
-          </Animated.View>
-        </GestureDetector>
-
-        {/* Header */}
-        <View style={tw`px-6 pb-5 border-b border-mb-line`}>
-          <Overline accent right={`${exercise.seq.length} phases`}>
-            Actions
-          </Overline>
-          <View style={tw`mt-3`}>
+      {/* Actions */}
+      <View style={tw`px-2 pb-2`}>
+        {actions.map((action, i) => (
+          <Pressable
+            key={action.key}
+            onPress={action.onPick}
+            style={({ pressed }) => [
+              tw`flex-row items-center py-4 border-b border-mb-line`,
+              pressed && tw`opacity-70`,
+            ]}
+          >
             <Text
               style={[
-                tw`font-display uppercase text-mb-fg text-[28px]`,
-                { letterSpacing: -1 },
+                tw`font-mono text-[10px] text-mb-mute w-8`,
+                { letterSpacing: 1.5 },
               ]}
-              numberOfLines={1}
             >
-              {exercise.name}
+              {String(i + 1).padStart(2, "0")}
             </Text>
-          </View>
-        </View>
-
-        {/* Actions */}
-        <View style={tw`px-6`}>
-          {actions.map((action, i) => (
-            <Pressable
-              key={action.key}
-              onPress={action.onPick}
-              style={({ pressed }) => [
-                tw`flex-row items-center py-4 border-b border-mb-line`,
-                pressed && tw`opacity-70`,
-              ]}
-            >
+            <View style={tw`flex-1`}>
               <Text
                 style={[
-                  tw`font-mono text-[10px] text-mb-mute w-8`,
-                  { letterSpacing: 1.5 },
+                  tw`font-display uppercase text-[20px]`,
+                  toneStyle(action.tone),
+                  { letterSpacing: -0.5 },
                 ]}
               >
-                {String(i + 1).padStart(2, "0")}
+                {action.label}
               </Text>
-              <View style={tw`flex-1`}>
-                <Text
-                  style={[
-                    tw`font-display uppercase text-[20px]`,
-                    toneStyle(action.tone),
-                    { letterSpacing: -0.5 },
-                  ]}
-                >
-                  {action.label}
-                </Text>
-                <Text
-                  style={[
-                    tw`font-mono text-[9px] text-mb-mute uppercase mt-1`,
-                    { letterSpacing: 1.8 },
-                  ]}
-                >
-                  {action.hint}
-                </Text>
-              </View>
               <Text
-                style={[tw`font-mono text-[14px]`, toneStyle(action.tone)]}
+                style={[
+                  tw`font-mono text-[9px] text-mb-mute uppercase mt-1`,
+                  { letterSpacing: 1.8 },
+                ]}
               >
-                {action.right}
+                {action.hint}
               </Text>
-            </Pressable>
-          ))}
-        </View>
-      </Animated.View>
-    </View>
+            </View>
+            <Text style={[tw`font-mono text-[14px]`, toneStyle(action.tone)]}>
+              {action.right}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    </AppSheet>
   );
 };

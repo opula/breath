@@ -391,6 +391,7 @@ export const FreestyleSession = () => {
           >
             <Pressable
               onPress={handleExit}
+              hitSlop={12}
               style={[tw`py-2 active:opacity-50`, { flex: 1, minWidth: 0 }]}
             >
               <Text

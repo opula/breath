@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { TrayScreen } from "../../components/TrayScreen";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppSheet } from "../../components/AppSheet";
 import {
   View,
   Text,
@@ -79,7 +78,6 @@ const displayKind = (type: string) => {
 
 export const AdjustStep = ({ route }: Props) => {
   const { exerciseId, stepId } = route.params;
-  const { bottom } = useSafeAreaInsets();
   const exercise = useAppSelector((s) =>
     exerciseByIdSelector(s, exerciseId),
   );
@@ -105,10 +103,13 @@ export const AdjustStep = ({ route }: Props) => {
 
   if (isBreath) {
     return (
-      <TrayScreen trayHeight={640 + bottom}>
+      <AppSheet>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={tw`pt-2 pb-6 px-2`}>
-            <Overline accent right={`kind · ${type}`}>
+            <Overline
+              accent
+              right={`kind · ${displayKind(type ?? "").toLowerCase()}`}
+            >
               Adjusting phase
             </Overline>
             <BigTitleLabel>Breath cycle</BigTitleLabel>
@@ -206,7 +207,7 @@ export const AdjustStep = ({ route }: Props) => {
             </View>
           </View>
         </ScrollView>
-      </TrayScreen>
+      </AppSheet>
     );
   }
 
@@ -216,9 +217,12 @@ export const AdjustStep = ({ route }: Props) => {
     const totalSec = doubleVal.reduce((a, v) => a + v, 0);
 
     return (
-      <TrayScreen trayHeight={460 + bottom}>
+      <AppSheet>
         <View style={tw`pt-2 pb-6 px-2`}>
-          <Overline accent right={`kind · ${type}`}>
+          <Overline
+            accent
+            right={`kind · ${displayKind(type ?? "").toLowerCase()}`}
+          >
             Adjusting phase
           </Overline>
           <BigTitleLabel>Double inhale</BigTitleLabel>
@@ -259,7 +263,7 @@ export const AdjustStep = ({ route }: Props) => {
             </Text>
           </View>
         </View>
-      </TrayScreen>
+      </AppSheet>
     );
   }
 
@@ -267,9 +271,12 @@ export const AdjustStep = ({ route }: Props) => {
     const lookback = (value as number[] | undefined)?.[0] ?? 1;
 
     return (
-      <TrayScreen trayHeight={440 + bottom}>
+      <AppSheet>
         <View style={tw`pt-2 pb-6 px-2`}>
-          <Overline accent right={`kind · ${type}`}>
+          <Overline
+            accent
+            right={`kind · ${displayKind(type ?? "").toLowerCase()}`}
+          >
             Adjusting phase
           </Overline>
           <BigTitleLabel>Repeat</BigTitleLabel>
@@ -279,7 +286,7 @@ export const AdjustStep = ({ route }: Props) => {
               min={1}
               max={20}
               step={1}
-              suffix=" steps"
+              suffix=" phases"
               defaultValue={lookback}
               onChange={(v) =>
                 dispatch(
@@ -331,27 +338,25 @@ export const AdjustStep = ({ route }: Props) => {
             />
           </DialGroup>
         </View>
-      </TrayScreen>
+      </AppSheet>
     );
   }
 
   if (isText) {
     return (
-      <AdjustTextStep
-        step={step!}
-        exerciseId={exerciseId}
-        stepId={stepId}
-        bottom={bottom}
-      />
+      <AdjustTextStep step={step!} exerciseId={exerciseId} stepId={stepId} />
     );
   }
 
   // Single (inhale / exhale / hold)
   return (
-    <TrayScreen trayHeight={430 + bottom}>
+    <AppSheet>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={tw`pt-2 pb-6 px-2`}>
-          <Overline accent right={`kind · ${type}`}>
+          <Overline
+            accent
+            right={`kind · ${displayKind(type ?? "").toLowerCase()}`}
+          >
             Adjusting phase
           </Overline>
           <BigTitleLabel>{displayKind(type ?? "")}</BigTitleLabel>
@@ -475,7 +480,7 @@ export const AdjustStep = ({ route }: Props) => {
           ) : null}
         </View>
       </ScrollView>
-    </TrayScreen>
+    </AppSheet>
   );
 };
 
@@ -483,12 +488,10 @@ const AdjustTextStep = ({
   step,
   exerciseId,
   stepId,
-  bottom,
 }: {
   step: Exercise["seq"][number];
   exerciseId: string;
   stepId: string;
-  bottom: number;
 }) => {
   const dispatch = useAppDispatch();
   const [text, setText] = useState(step.text ?? "");
@@ -509,14 +512,14 @@ const AdjustTextStep = ({
   );
 
   return (
-    <TrayScreen trayHeight={560 + bottom}>
+    <AppSheet>
       <ScrollView
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         scrollEnabled={false}
       >
         <View style={tw`pt-2 pb-6 px-2`}>
-          <Overline accent right={`kind · text`}>
+          <Overline accent right={`kind · message`}>
             Adjusting phase
           </Overline>
           <BigTitleLabel>Message</BigTitleLabel>
@@ -591,6 +594,6 @@ const AdjustTextStep = ({
           </DialGroup>
         </View>
       </ScrollView>
-    </TrayScreen>
+    </AppSheet>
   );
 };

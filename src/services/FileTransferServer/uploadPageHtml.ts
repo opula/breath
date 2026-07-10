@@ -26,7 +26,7 @@ export function getUploadPageHtml(cloud?: CloudProviderConfig): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MDNT BRWK — Upload Music</title>
+<title>Mid Breath · Upload Music</title>
 <link href="https://releases.transloadit.com/uppy/v5.2.1/uppy.min.css" rel="stylesheet">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
@@ -310,7 +310,7 @@ export function getUploadPageHtml(cloud?: CloudProviderConfig): string {
 <body>
 
   <div class="header">
-    <div class="brand">MDNT BRWK</div>
+    <div class="brand">Mid Breath</div>
     <h1 class="title">Upload Music</h1>
     <p class="subtitle">
       Drag &amp; drop audio files or browse to add tracks to your library
@@ -331,7 +331,7 @@ export function getUploadPageHtml(cloud?: CloudProviderConfig): string {
 
   <div class="footer">
     <span class="lock">&#x1f512;</span>
-    Files transfer directly over your local network &mdash; nothing leaves your WiFi.
+    Files transfer directly over your local network. Nothing leaves your WiFi.
   </div>
 
 <script type="module">

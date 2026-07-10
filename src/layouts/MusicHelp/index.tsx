@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
 import { musicFilesSelector } from "../../state/musicLibrary.selectors";
 import tw from "../../utils/tw";
+import { NavHeader } from "../../components/NavHeader";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
 
@@ -28,13 +29,13 @@ const SAMPLE_TRACKS = [
 
 const ADDING = [
   { label: "WiFi transfer", hint: "upload via browser on a nearby device" },
-  { label: "Paste URL", hint: "download an audio link from your clipboard" },
-  { label: "Pick file", hint: "choose an audio file from this phone" },
+  { label: "Download from URL", hint: "download an audio link from your clipboard" },
+  { label: "Browse on device", hint: "choose an audio file from this phone" },
 ];
 
 const PLAYBACK = [
   { label: "Tap a track", hint: "starts playback in the background" },
-  { label: "Volume dial", hint: "set the level on the Sound screen" },
+  { label: "Volume dial", hint: "set the level on the Music screen" },
   { label: "Swipe left", hint: "reveal delete on a track" },
 ];
 
@@ -84,30 +85,7 @@ export const MusicHelp = () => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              ← back
-            </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            music manual
-          </Text>
-          <View style={tw`w-10`} />
-        </View>
+        <NavHeader title="music manual" onClose={() => navigation.goBack()} />
 
         <ScrollView
           contentContainerStyle={tw`px-6 pb-10`}

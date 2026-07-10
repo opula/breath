@@ -26,6 +26,7 @@
     "@reduxjs/toolkit": "^2.6.1",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.2.12",
+    "@swmansion/react-native-bottom-sheet": "0.16.1",
     "@typegpu/three": "^0.11.0",
     "decimal.js": "^10.5.0",
     "eventemitter3": "^5.0.1",
@@ -56,7 +57,6 @@
     "react-native-re-slider": "^4.0.0",
     "react-native-reanimated": "^4.2.2",
     "react-native-reanimated-carousel": "^4.0.3",
-    "react-native-redash": "^18.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-swipeable-item": "^2.0.9",
@@ -70,7 +70,6 @@
     "three": "0.184.0",
     "twrnc": "^3.6.7",
     "typegpu": "^0.11.9",
-    "use-debounce": "^10.0.0",
     "wgpu-matrix": "^3.4.2"
   },
   "devDependencies": {

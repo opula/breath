@@ -79,6 +79,19 @@ const defaultScreenOptions: StackNavigationOptions = {
   detachPreviousScreen: Platform.OS === "android" ? false : true,
 };
 
+// Routes whose content lives in a native bottom sheet (AppSheet). The card is
+// a transparent, non-animated shell; the sheet animates itself and pops the
+// route when it settles closed.
+const sheetScreenOptions: StackNavigationOptions = {
+  headerShown: false,
+  presentation: "transparentModal",
+  detachPreviousScreen: false,
+  cardStyle: { backgroundColor: "transparent" },
+  cardOverlayEnabled: false,
+  animation: "none",
+  gestureEnabled: false,
+};
+
 // Modal transition options
 const modalScreenOptions: StackNavigationOptions = {
   ...defaultScreenOptions,
@@ -146,10 +159,14 @@ export const MainStack = () => {
         <Stack.Screen name="MusicControls" component={MusicControls} />
         <Stack.Screen name="MusicHelp" component={MusicHelp} />
         <Stack.Screen name="FileTransfer" component={FileTransfer} />
-        <Stack.Screen name="AddMusic" component={AddMusic} />
         <Stack.Screen name="Scenes" component={Scenes} />
         <Stack.Screen name="Help" component={Help} />
         <Stack.Screen name="Settings" component={Settings} />
+      </Stack.Group>
+
+      {/* Native bottom-sheet trays */}
+      <Stack.Group screenOptions={sheetScreenOptions}>
+        <Stack.Screen name="AddMusic" component={AddMusic} />
         <Stack.Screen name="AdjustStep" component={AdjustStep} />
         <Stack.Screen name="NewStepMenu" component={NewStepMenu} />
         <Stack.Screen name="ExerciseActions" component={ExerciseActions} />

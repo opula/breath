@@ -4,8 +4,13 @@ import {
   RouteProp,
 } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { useAppDispatch } from "../../hooks/store";
-import { exerciseByIdSelector } from "../../state/exercises.selectors";
+import { useAppDispatch, useAppSelector } from "../../hooks/store";
+import {
+  exerciseByIdSelector,
+  exercisesSelector,
+} from "../../state/exercises.selectors";
+import { setLastPlayed } from "../../state/lastPlayed.reducer";
+import { NavHeader } from "../../components/NavHeader";
 import { LayoutAnimation, View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { StepCard } from "./StepCard";
@@ -43,6 +48,7 @@ interface Props {
 export const Exercise = ({ navigation, route }: Props) => {
   const { id } = route.params;
   const exercise = useParametrizedAppSelector(exerciseByIdSelector, id);
+  const exercises = useAppSelector(exercisesSelector);
   const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
 
@@ -61,13 +67,13 @@ export const Exercise = ({ navigation, route }: Props) => {
   const itemRefs = useRef(new Map());
 
   const handleRun = useCallback(() => {
-    // Find this exercise in the list to set its engine index.
-    const state = exercise;
-    // exercises order isn't trivially exposed here; engine will use its own
-    // last-remembered index. Callers expecting this behaviour should navigate
-    // from Home/tray instead. We still close back and hop to Main with autoplay.
+    const index = exercises.findIndex((e) => e.id === id);
+    if (index >= 0) {
+      storage.set(LAST_EXERCISE, index);
+      dispatch(setLastPlayed(id));
+    }
     navigation.navigate("Main", { autoplay: true });
-  }, [navigation, exercise]);
+  }, [exercises, id, dispatch, navigation]);
 
   const renderItem = useCallback(
     (params: RenderItemParams<ExerciseItem["seq"][number]>) => {
@@ -136,42 +142,11 @@ export const Exercise = ({ navigation, route }: Props) => {
     <View style={tw`flex-1 bg-mb-bg`}>
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center justify-between px-6 py-3`}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              ← back
-            </Text>
-          </Pressable>
-          <Text
-            style={[
-              tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-              { letterSpacing: 3 },
-            ]}
-          >
-            edit exercise
-          </Text>
-          <Pressable
-            onPress={handleRun}
-            style={tw`py-2 active:opacity-60`}
-          >
-            <Text
-              style={[
-                tw`font-mono text-mb-accent uppercase text-[10px]`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              run →
-            </Text>
-          </Pressable>
-        </View>
+        <NavHeader
+          title="edit exercise"
+          onClose={() => navigation.goBack()}
+          leftAction={{ label: "run →", onPress: handleRun, accent: true }}
+        />
 
         <View style={tw`flex-1 px-6`}>
           <DraggableFlatList
@@ -194,7 +169,7 @@ export const Exercise = ({ navigation, route }: Props) => {
               <View style={tw`pb-4`}>
                 <Overline
                   accent
-                  right={`${exercise.seq.length} phases`}
+                  right={`${exercise.seq.length} phase${exercise.seq.length === 1 ? "" : "s"}`}
                 >
                   Definition
                 </Overline>
@@ -215,7 +190,7 @@ export const Exercise = ({ navigation, route }: Props) => {
                     { letterSpacing: 2 },
                   ]}
                 >
-                  no phases yet — add your first below
+                  no phases yet · add your first below
                 </Text>
               </View>
             )}

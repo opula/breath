@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, Vibration } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
-import { useDebouncedCallback } from 'use-debounce';
 
 import { ExerciseEngine } from '../services/ExerciseEngine';
 import type {
@@ -31,15 +30,15 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   const [canAdvance, setCanAdvance] = useState(false);
   const [isStarted, setStarted] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
-  const [repeatRound, setRepeatRound] = useState('');
+  // Persistent while a repeat block is active; null otherwise.
+  const [repeatProgress, setRepeatProgress] = useState<{
+    round: number;
+    total: number;
+  } | null>(null);
 
   const iBreath = useSharedValue(0);
   const onPauseRef = useRef(onPause);
   onPauseRef.current = onPause;
-
-  const debouncedClearRepeat = useDebouncedCallback(() => {
-    setRepeatRound('');
-  }, 2000);
 
   const showName = useCallback((name: string) => {
     setExerciseName(name);
@@ -74,13 +73,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
         onPauseRef.current?.(isPaused);
       },
       onRepeatChange(info) {
-        if (info) {
-          setRepeatRound(`Round ${info.round} of ${info.total}`);
-          debouncedClearRepeat();
-        } else {
-          debouncedClearRepeat.cancel();
-          setRepeatRound('');
-        }
+        setRepeatProgress(info);
       },
     };
 
@@ -186,7 +179,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     canAdvance,
     isStarted,
     exerciseName,
-    repeatRound,
+    repeatProgress,
     iBreath,
     handleStart,
     handleTap,

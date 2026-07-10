@@ -8,7 +8,13 @@ import React, {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
-import { runOnJS } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  runOnJS,
+  withTiming,
+  type LayoutAnimationFunction,
+} from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -44,6 +50,24 @@ const TIMER_PROGRESS_TICK_MS = 250;
 const TIMER_PROGRESS_PULSE_MS = 5000;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
 
+// Layout transition for the center cluster: tween ONLY vertical position, so
+// the cluster glides when a line mounts/unmounts (2 -> 3 lines) but plain text
+// swaps (inhale -> exhale change the frame width) snap with no animation.
+const centerShift: LayoutAnimationFunction = (values) => {
+  "worklet";
+  return {
+    initialValues: {
+      originX: values.targetOriginX,
+      originY: values.currentOriginY,
+      width: values.targetWidth,
+      height: values.targetHeight,
+    },
+    animations: {
+      originY: withTiming(values.targetOriginY, { duration: 400 }),
+    },
+  };
+};
+
 export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
   const route = useRoute<RouteProp<MainStackParams, "Main">>();
@@ -76,7 +100,7 @@ export const Main = () => {
     canAdvance,
     isStarted,
     exerciseName,
-    repeatRound,
+    repeatProgress,
     iBreath,
     handleStart,
     handleTap,
@@ -318,6 +342,23 @@ export const Main = () => {
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   };
+  // Persistent round progress while inside a repeat block (e.g. "round 3 / 30").
+  // Status, not chrome: it stays through the chrome fade, like the ring itself.
+  // Fades in/out; the cluster container tweens its re-centering (centerShift).
+  const renderRepeatProgress = (topMargin: number) =>
+    repeatProgress ? (
+      <Animated.Text
+        entering={FadeIn.duration(400)}
+        exiting={FadeOut.duration(400)}
+        style={[
+          tw`font-mono text-mb-mute uppercase text-[9px] text-center`,
+          { letterSpacing: 1.8, marginTop: topMargin },
+        ]}
+      >
+        round {repeatProgress.round} / {repeatProgress.total}
+      </Animated.Text>
+    ) : null;
+
   const renderCenterHints = () => (
     <AnimatePresence>
       {showCenterHints ? (
@@ -375,7 +416,7 @@ export const Main = () => {
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center`}>
           {isText ? (
-            <View style={tw`px-8 items-center`}>
+            <Animated.View layout={centerShift} style={tw`px-8 items-center`}>
               <Text
                 style={[
                   tw`font-display text-mb-fg uppercase text-center`,
@@ -384,13 +425,15 @@ export const Main = () => {
               >
                 {label}
               </Text>
-            </View>
+              {renderRepeatProgress(12)}
+            </Animated.View>
           ) : label ? (
             <View style={tw`items-center justify-center`}>
               {isAppActive && isBreathing ? (
                 <BreathRing breath={iBreath} />
               ) : null}
-              <View
+              <Animated.View
+                layout={centerShift}
                 style={tw`absolute items-center justify-center`}
                 pointerEvents="none"
               >
@@ -402,17 +445,21 @@ export const Main = () => {
                 >
                   {label}
                 </Text>
-                {sublabel ? (
+                {/* During a repeat block the time slot is always reserved, so
+                    the round line keeps a stable third position instead of
+                    jumping up on phases without a countdown. */}
+                {sublabel || repeatProgress ? (
                   <Text
                     style={[
                       tw`font-mono text-mb-mute uppercase text-[10px] mt-2`,
                       { letterSpacing: 2 },
                     ]}
                   >
-                    {sublabel}
+                    {sublabel || " "}
                   </Text>
                 ) : null}
-              </View>
+                {renderRepeatProgress(8)}
+              </Animated.View>
             </View>
           ) : null}
           {renderCenterHints()}
@@ -436,6 +483,7 @@ export const Main = () => {
           >
             <Pressable
               onPress={handleExit}
+              hitSlop={12}
               style={[tw`py-2 active:opacity-50`, { flex: 1, minWidth: 0 }]}
             >
               <Text
@@ -478,16 +526,7 @@ export const Main = () => {
               { bottom: insets.bottom + 12 },
             ]}
           >
-            <View style={tw`flex-1`}>
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute uppercase text-[10px]`,
-                  { letterSpacing: 2 },
-                ]}
-              >
-                {repeatRound || ""}
-              </Text>
-            </View>
+            <View style={tw`flex-1`} />
             <View style={tw`flex-1 items-center`}>
               {isStarted && isPaused ? (
                 <Text

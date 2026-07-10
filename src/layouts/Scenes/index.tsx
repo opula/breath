@@ -14,7 +14,7 @@ import {
 import { updateSource } from "../../state/configuration.reducer";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
-import { Icon } from "../../components/Icon";
+import { NavHeader } from "../../components/NavHeader";
 import type {
   BackgroundSourceId,
   SceneSourceId,
@@ -204,38 +204,7 @@ export const Scenes = () => {
 
       <View style={[tw`flex-1`, { paddingTop: insets.top }]}>
         {/* Top nav */}
-        <View style={tw`flex-row items-center px-6 py-3`}>
-          <View style={tw`flex-1`} />
-          <View style={tw`flex-1 items-center`}>
-            <Text
-              style={[
-                tw`font-mono text-mb-mute uppercase text-[10px] py-2`,
-                { letterSpacing: 3 },
-              ]}
-            >
-              scenes
-            </Text>
-          </View>
-          <View style={tw`flex-1 items-end`}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              hitSlop={12}
-              style={tw`flex-row items-center py-2 active:opacity-60`}
-            >
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute uppercase text-[10px]`,
-                  { letterSpacing: 3 },
-                ]}
-              >
-                close
-              </Text>
-              <View style={tw`ml-1.5`}>
-                <Icon name="close" size={12} color="#6E6E74" />
-              </View>
-            </Pressable>
-          </View>
-        </View>
+        <NavHeader title="scenes" onClose={() => navigation.goBack()} />
 
         {/* Hero */}
         <View style={tw`px-6 pt-2 pb-5`}>

@@ -21,7 +21,7 @@ export type SceneSourceId = BackgroundSourceId | typeof NO_BACKGROUND_SOURCE_ID;
 
 // Stale persisted ids (including every archived scene) fall back here via
 // the isSceneSourceId guard + BackgroundSurface fallback.
-export const DEFAULT_BACKGROUND_SOURCE_ID: BackgroundSourceId = "longwater";
+export const DEFAULT_BACKGROUND_SOURCE_ID: BackgroundSourceId = "passage";
 
 const backgroundSourceIds = new Set<string>(
   BACKGROUND_SOURCE_DEFINITIONS.map((source) => source.id),

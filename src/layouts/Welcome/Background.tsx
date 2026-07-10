@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-// Welcome still renders the archived Harmonic Tide shader; swapping the
-// splash to one of the new scenes is a separate product decision.
-import { SinPulse } from "../../backgrounds/archive/SinPulse";
+// Welcome shows the default scene (Passage) so the first thing a new user
+// sees matches the library. No breath is wired here; Passage falls back to
+// its ambient pseudo-breath.
+import { Passage } from "../../backgrounds/Passage";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 
 const DELAY_MS = 1500;
@@ -17,5 +18,5 @@ export const WelcomeBackground = () => {
 
   if (!ready || !isAppActive) return null;
 
-  return <SinPulse grayscale />;
+  return <Passage />;
 };

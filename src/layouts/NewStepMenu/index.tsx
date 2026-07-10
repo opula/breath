@@ -1,15 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { TrayScreen } from "../../components/TrayScreen";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
 import { Exercise } from "../../types/exercise";
 import uuid from "react-native-uuid";
 import { useAppDispatch } from "../../hooks/store";
 import { addExerciseStep } from "../../state/exercises.reducer";
-import { defer } from "lodash";
 import { Overline } from "../../components/Overline";
 
 interface Props {
@@ -36,7 +34,8 @@ const OPTIONS: {
 export const NewStepMenu = ({ navigation, route }: Props) => {
   const { exerciseId } = route.params;
   const dispatch = useAppDispatch();
-  const { bottom } = useSafeAreaInsets();
+  const sheetRef = useRef<AppSheetHandle>(null);
+  const pendingStepId = useRef<string | null>(null);
 
   const createStep = (type: StepKind) => {
     const stepId = uuid.v4() as string;
@@ -51,22 +50,26 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
     } as Exercise["seq"][number];
 
     dispatch(addExerciseStep({ exerciseId, step }));
-    navigation.goBack();
-
-    defer(() => {
-      navigation.navigate("AdjustStep", { exerciseId, stepId });
-    });
+    pendingStepId.current = stepId;
+    sheetRef.current?.dismiss();
   };
 
   return (
-    <TrayScreen trayHeight={600 + bottom}>
+    <AppSheet
+      ref={sheetRef}
+      onDismissed={() => {
+        const stepId = pendingStepId.current;
+        pendingStepId.current = null;
+        if (stepId) navigation.navigate("AdjustStep", { exerciseId, stepId });
+      }}
+    >
       <View style={tw`pt-2 pb-2 px-2`}>
         <Overline accent right={`${OPTIONS.length} kinds`}>
           Add phase
         </Overline>
       </View>
 
-      <View style={tw`flex-1 px-2`}>
+      <View style={tw`px-2 pb-4`}>
         {OPTIONS.map((opt, i) => (
           <Pressable
             key={opt.type}
@@ -112,6 +115,6 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
           </Pressable>
         ))}
       </View>
-    </TrayScreen>
+    </AppSheet>
   );
 };
