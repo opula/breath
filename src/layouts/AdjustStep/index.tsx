@@ -11,15 +11,15 @@ import {
 import tw from "../../utils/tw";
 import { RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import { exerciseByIdSelector } from "../../state/exercises.selectors";
 import { Exercise } from "../../types/exercise";
 import {
+  exerciseById,
   updateExerciseStepCount,
   updateExerciseStepRamp,
   updateExerciseStepText,
   updateExerciseStepValue,
-} from "../../state/exercises.reducer";
+} from "../../state/exercises.atom";
+import { use$ } from "concordia/react";
 import Decimal from "decimal.js";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import { convertSecondsToHHMM } from "../../utils/pretty";
@@ -78,10 +78,7 @@ const displayKind = (type: string) => {
 
 export const AdjustStep = ({ route }: Props) => {
   const { exerciseId, stepId } = route.params;
-  const exercise = useAppSelector((s) =>
-    exerciseByIdSelector(s, exerciseId),
-  );
-  const dispatch = useAppDispatch();
+  const exercise = use$(exerciseById(exerciseId));
 
   const step = useMemo(
     () => exercise.seq.find((s) => s.id === stepId),
@@ -123,17 +120,11 @@ export const AdjustStep = ({ route }: Props) => {
                   suffix="s"
                   defaultValue={(value as number[])?.[index] ?? 0}
                   onChange={(newValue: number) => {
-                    dispatch(
-                      updateExerciseStepValue({
-                        exerciseId,
-                        stepId,
-                        value: (value as number[]).map((v, i) =>
+                    updateExerciseStepValue(exerciseId, stepId, (value as number[]).map((v, i) =>
                           i === index
                             ? new Decimal(newValue).toDecimalPlaces(1).toNumber()
                             : v,
-                        ),
-                      }),
-                    );
+                        ));
                   }}
                 />
               </DialGroup>
@@ -148,13 +139,7 @@ export const AdjustStep = ({ route }: Props) => {
                 zeroLabel="∞"
                 defaultValue={count ?? 0}
                 onChange={(v) =>
-                  dispatch(
-                    updateExerciseStepCount({
-                      exerciseId,
-                      stepId,
-                      count: Math.round(v),
-                    }),
-                  )
+                  updateExerciseStepCount(exerciseId, stepId, Math.round(v))
                 }
               />
             </DialGroup>
@@ -167,13 +152,7 @@ export const AdjustStep = ({ route }: Props) => {
                 suffix="×"
                 defaultValue={step?.ramp ?? 1}
                 onChange={(v) =>
-                  dispatch(
-                    updateExerciseStepRamp({
-                      exerciseId,
-                      stepId,
-                      ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
-                    }),
-                  )
+                  updateExerciseStepRamp(exerciseId, stepId, new Decimal(v).toDecimalPlaces(1).toNumber())
                 }
               />
             </DialGroup>
@@ -236,17 +215,11 @@ export const AdjustStep = ({ route }: Props) => {
                 suffix="s"
                 defaultValue={doubleVal[index] ?? 0}
                 onChange={(v) =>
-                  dispatch(
-                    updateExerciseStepValue({
-                      exerciseId,
-                      stepId,
-                      value: doubleVal.map((x, i) =>
+                  updateExerciseStepValue(exerciseId, stepId, doubleVal.map((x, i) =>
                         i === index
                           ? new Decimal(v).toDecimalPlaces(1).toNumber()
                           : x,
-                      ),
-                    }),
-                  )
+                      ))
                 }
               />
             </DialGroup>
@@ -289,13 +262,7 @@ export const AdjustStep = ({ route }: Props) => {
               suffix=" phases"
               defaultValue={lookback}
               onChange={(v) =>
-                dispatch(
-                  updateExerciseStepValue({
-                    exerciseId,
-                    stepId,
-                    value: [Math.round(v)],
-                  }),
-                )
+                updateExerciseStepValue(exerciseId, stepId, [Math.round(v)])
               }
             />
           </DialGroup>
@@ -308,13 +275,7 @@ export const AdjustStep = ({ route }: Props) => {
               suffix="×"
               defaultValue={count ?? 1}
               onChange={(v) =>
-                dispatch(
-                  updateExerciseStepCount({
-                    exerciseId,
-                    stepId,
-                    count: Math.round(v),
-                  }),
-                )
+                updateExerciseStepCount(exerciseId, stepId, Math.round(v))
               }
             />
           </DialGroup>
@@ -327,13 +288,7 @@ export const AdjustStep = ({ route }: Props) => {
               suffix="×"
               defaultValue={step?.ramp ?? 1}
               onChange={(v) =>
-                dispatch(
-                  updateExerciseStepRamp({
-                    exerciseId,
-                    stepId,
-                    ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
-                  }),
-                )
+                updateExerciseStepRamp(exerciseId, stepId, new Decimal(v).toDecimalPlaces(1).toNumber())
               }
             />
           </DialGroup>
@@ -399,13 +354,7 @@ export const AdjustStep = ({ route }: Props) => {
                   zeroLabel="∞"
                   defaultValue={count ?? 0}
                   onChange={(v) =>
-                    dispatch(
-                      updateExerciseStepCount({
-                        exerciseId,
-                        stepId,
-                        count: Math.round(v),
-                      }),
-                    )
+                    updateExerciseStepCount(exerciseId, stepId, Math.round(v))
                   }
                 />
               </DialGroup>
@@ -427,13 +376,7 @@ export const AdjustStep = ({ route }: Props) => {
                       <Pressable
                         key={p}
                         onPress={() =>
-                          dispatch(
-                            updateExerciseStepCount({
-                              exerciseId,
-                              stepId,
-                              count: p,
-                            }),
-                          )
+                          updateExerciseStepCount(exerciseId, stepId, p)
                         }
                         style={({ pressed }) => [
                           tw.style(
@@ -465,13 +408,7 @@ export const AdjustStep = ({ route }: Props) => {
                   suffix="×"
                   defaultValue={step?.ramp ?? 1}
                   onChange={(v) =>
-                    dispatch(
-                      updateExerciseStepRamp({
-                        exerciseId,
-                        stepId,
-                        ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
-                      }),
-                    )
+                    updateExerciseStepRamp(exerciseId, stepId, new Decimal(v).toDecimalPlaces(1).toNumber())
                   }
                 />
               </DialGroup>
@@ -492,20 +429,13 @@ const AdjustTextStep = ({
   exerciseId: string;
   stepId: string;
 }) => {
-  const dispatch = useAppDispatch();
   const [text, setText] = useState(step.text ?? "");
   const [isFocused, setIsFocused] = useState(false);
   const textRef = useRef(text);
 
   useEffect(
     () => () => {
-      dispatch(
-        updateExerciseStepText({
-          exerciseId,
-          stepId,
-          text: textRef.current,
-        }),
-      );
+      updateExerciseStepText(exerciseId, stepId, textRef.current);
     },
     [],
   );
@@ -562,13 +492,7 @@ const AdjustTextStep = ({
               zeroLabel="∞"
               defaultValue={step.count ?? 0}
               onChange={(v) =>
-                dispatch(
-                  updateExerciseStepCount({
-                    exerciseId,
-                    stepId,
-                    count: Math.round(v),
-                  }),
-                )
+                updateExerciseStepCount(exerciseId, stepId, Math.round(v))
               }
             />
           </DialGroup>
@@ -581,13 +505,7 @@ const AdjustTextStep = ({
               suffix="×"
               defaultValue={step.ramp ?? 1}
               onChange={(v) =>
-                dispatch(
-                  updateExerciseStepRamp({
-                    exerciseId,
-                    stepId,
-                    ramp: new Decimal(v).toDecimalPlaces(1).toNumber(),
-                  }),
-                )
+                updateExerciseStepRamp(exerciseId, stepId, new Decimal(v).toDecimalPlaces(1).toNumber())
               }
             />
           </DialGroup>

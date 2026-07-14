@@ -29,12 +29,12 @@ import { Background } from "../Main/Background";
 import { BreathRing } from "../../components/DynamicExercise/BreathRing";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { usePausableClock } from "../../hooks/usePausableClock";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
-  isPausedSelector,
-  timerProgressModeSelector,
-} from "../../state/configuration.selectors";
-import { setPause as setPauseAction } from "../../state/configuration.reducer";
+  configuration$,
+  playback$,
+  setPause as setPauseUpdate,
+} from "../../state/configuration.atom";
+import { use$ } from "concordia/react";
 import { MainStackParams, type FreestyleRatio } from "../../navigation";
 
 type FreestylePhase = "idle" | "inhale" | "exhale";
@@ -66,17 +66,16 @@ export const FreestyleSession = () => {
     return timerMinutes * 60;
   }, [timerMinutes]);
 
-  const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
   const isAppActive = useAppIsActive();
-  const isPaused = useAppSelector(isPausedSelector);
-  const timerProgressMode = useAppSelector(timerProgressModeSelector);
+  const isPaused = use$(playback$.isPaused);
+  const timerProgressMode = use$(configuration$.timerProgressMode);
 
   const setPause = useCallback(
     (status: boolean) => {
-      dispatch(setPauseAction(status));
+      setPauseUpdate(status);
     },
-    [dispatch],
+    [],
   );
 
   const [hasStarted, setHasStarted] = useState(false);

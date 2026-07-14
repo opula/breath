@@ -15,7 +15,6 @@ import {AppState} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Clipboard from 'expo-clipboard';
 import uuid from 'react-native-uuid';
-import {useSelector, useDispatch} from 'react-redux';
 import {
   storage,
   MUSIC_BG_VOLUME,
@@ -26,23 +25,20 @@ import {
   addFile,
   removeFile,
   setActiveFile,
-} from '../state/musicLibrary.reducer';
-import {
-  activeFileSelector,
-  activeFileIdSelector,
-} from '../state/musicLibrary.selectors';
+  activeFile$,
+  musicLibrary$,
+} from '../state/musicLibrary.atom';
+import {use$} from 'concordia/react';
 import {
   copyToMusicDir,
   downloadToMusicDir,
   deleteFromMusicDir,
   getMusicFileUri,
 } from '../utils/musicFiles';
-import {store} from '../store';
 import {MusicFile} from '../types/music';
 
 function getInitialSource(): {uri: string} | undefined {
-  const state = store.getState();
-  const active = activeFileSelector(state);
+  const active = activeFile$.peek();
   if (active) {
     return {uri: getMusicFileUri(active.fileName)};
   }
@@ -87,9 +83,8 @@ export const AudioPlayerProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const dispatch = useDispatch();
-  const activeFile = useSelector(activeFileSelector);
-  const activeFileId = useSelector(activeFileIdSelector);
+  const activeFile = use$(activeFile$);
+  const activeFileId = use$(musicLibrary$.activeFileId);
   const initialSourceRef = useRef(getInitialSource());
   const savedVolumeRef = useRef(storage.getNumber(MUSIC_BG_VOLUME) ?? 1);
   const migrated = useRef(false);
@@ -150,8 +145,8 @@ export const AudioPlayerProvider = ({
       const fileName = `${id}.${ext}`;
       copyToMusicDir(legacyUri, fileName);
       const file: MusicFile = {id, name: legacyName, fileName};
-      dispatch(addFile(file));
-      dispatch(setActiveFile(id));
+      addFile(file);
+      setActiveFile(id);
       player.replace({uri: getMusicFileUri(fileName)});
       setIsLoaded(true);
     } catch {
@@ -227,11 +222,11 @@ export const AudioPlayerProvider = ({
     const fileName = `${id}.${ext}`;
     copyToMusicDir(asset.uri, fileName);
     const file: MusicFile = {id, name: asset.name, fileName};
-    dispatch(addFile(file));
-    dispatch(setActiveFile(id));
+    addFile(file);
+    setActiveFile(id);
     player.replace({uri: getMusicFileUri(fileName)});
     setIsLoaded(true);
-  }, [dispatch, player]);
+  }, [player]);
 
   const pasteUrl = useCallback(async () => {
     const text = await Clipboard.getStringAsync();
@@ -268,8 +263,8 @@ export const AudioPlayerProvider = ({
       }
 
       const file: MusicFile = {id, name: displayName, fileName};
-      dispatch(addFile(file));
-      dispatch(setActiveFile(id));
+      addFile(file);
+      setActiveFile(id);
       player.replace({uri: getMusicFileUri(fileName)});
       setIsLoaded(true);
     } catch {
@@ -277,7 +272,7 @@ export const AudioPlayerProvider = ({
     } finally {
       setIsDownloading(false);
     }
-  }, [dispatch, player]);
+  }, [player]);
 
   const downloadUrl = useCallback(
     async (url: string) => {
@@ -305,8 +300,8 @@ export const AudioPlayerProvider = ({
         }
 
         const file: MusicFile = {id, name: displayName, fileName};
-        dispatch(addFile(file));
-        dispatch(setActiveFile(id));
+        addFile(file);
+        setActiveFile(id);
         player.replace({uri: getMusicFileUri(fileName)});
         setIsLoaded(true);
       } catch {
@@ -315,7 +310,7 @@ export const AudioPlayerProvider = ({
         setIsDownloading(false);
       }
     },
-    [dispatch, player],
+    [player],
   );
 
   const playFile = useCallback(
@@ -333,15 +328,14 @@ export const AudioPlayerProvider = ({
         }
         return;
       }
-      dispatch(setActiveFile(id));
+      setActiveFile(id);
     },
-    [activeFileId, dispatch, player],
+    [activeFileId, player],
   );
 
   const deleteFile = useCallback(
     (id: string) => {
-      const state = store.getState();
-      const file = state.musicLibrary.files.find(
+      const file = musicLibrary$.files.peek().find(
         (f: MusicFile) => f.id === id,
       );
       if (!file) return;
@@ -353,9 +347,9 @@ export const AudioPlayerProvider = ({
       }
 
       deleteFromMusicDir(file.fileName);
-      dispatch(removeFile(id));
+      removeFile(id);
     },
-    [activeFileId, dispatch, player],
+    [activeFileId, player],
   );
 
   const value = useMemo(

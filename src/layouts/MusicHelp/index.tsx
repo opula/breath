@@ -8,9 +8,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { useSelector } from "react-redux";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
-import { musicFilesSelector } from "../../state/musicLibrary.selectors";
+import { musicLibrary$ } from "../../state/musicLibrary.atom";
+import { use$ } from "concordia/react";
 import tw from "../../utils/tw";
 import { NavHeader } from "../../components/NavHeader";
 import { Overline } from "../../components/Overline";
@@ -73,7 +73,7 @@ export const MusicHelp = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { downloadUrl, isDownloading } = useAudioPlayer();
-  const files = useSelector(musicFilesSelector);
+  const files = use$(musicLibrary$.files);
 
   const hasTrack = useCallback(
     (name: string) => files.some((f) => f.name === `${name}.mp3`),

@@ -13,8 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import NetInfo from "@react-native-community/netinfo";
 import QRCode from "react-native-qrcode-skia";
 import { ConfigServer } from "react-native-nitro-http-server";
-import { useDispatch } from "react-redux";
-import { addFile } from "../../state/musicLibrary.reducer";
+import { addFile } from "../../state/musicLibrary.atom";
 import {
   startFileTransferServer,
   stopFileTransferServer,
@@ -29,7 +28,6 @@ type Status = "starting" | "running" | "no-wifi" | "error";
 
 export const FileTransfer = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
   const serverRef = useRef<ConfigServer | null>(null);
   const [status, setStatus] = useState<Status>("starting");
@@ -40,10 +38,10 @@ export const FileTransfer = () => {
 
   const onFileReceived = useCallback(
     (file: MusicFile) => {
-      dispatch(addFile(file));
+      addFile(file);
       setReceived((prev) => [file, ...prev]);
     },
-    [dispatch],
+    [],
   );
 
   useEffect(() => {

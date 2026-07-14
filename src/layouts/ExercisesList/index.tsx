@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { NavigationProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import { exercisesSelector } from "../../state/exercises.selectors";
+import { use$ } from "concordia/react";
 import {
   Alert,
   LayoutAnimation,
@@ -16,10 +15,11 @@ import * as Clipboard from "expo-clipboard";
 import uuid from "react-native-uuid";
 import { Exercise } from "../../types/exercise";
 import {
+  exercises$,
   updateExercises,
   resetExercises,
   removeExercise,
-} from "../../state/exercises.reducer";
+} from "../../state/exercises.atom";
 import DraggableFlatList, {
   DragEndParams,
   OpacityDecorator,
@@ -68,8 +68,7 @@ const assignIds = (exercises: Exercise[]): Exercise[] =>
   }));
 
 export const ExercisesList = ({ navigation }: Props) => {
-  const exercises = useAppSelector(exercisesSelector);
-  const dispatch = useAppDispatch();
+  const exercises = use$(exercises$.userExercises);
   const itemRefs = useRef(new Map<string, SwipeableItemImperativeRef>());
 
   useEffect(() => {
@@ -83,9 +82,9 @@ export const ExercisesList = ({ navigation }: Props) => {
 
   const onDragEnd = useCallback(
     (data: DragEndParams<Exercise>) => {
-      dispatch(updateExercises({ exercises: data.data }));
+      updateExercises(data.data);
     },
-    [dispatch],
+    [],
   );
 
   const handleExport = useCallback(async () => {
@@ -125,11 +124,11 @@ export const ExercisesList = ({ navigation }: Props) => {
         { text: "Cancel", style: "cancel" },
         {
           text: "Import",
-          onPress: () => dispatch(updateExercises({ exercises: withIds })),
+          onPress: () => updateExercises(withIds),
         },
       ],
     );
-  }, [dispatch]);
+  }, []);
 
   const renderItem = useCallback(
     (params: RenderItemParams<Exercise>) => {
@@ -139,7 +138,7 @@ export const ExercisesList = ({ navigation }: Props) => {
 
       const onPressDelete = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        dispatch(removeExercise({ exerciseId: item.id }));
+        removeExercise(item.id);
       };
 
       const onPressBackground = isEligible
@@ -198,7 +197,7 @@ export const ExercisesList = ({ navigation }: Props) => {
         </ShadowDecorator>
       );
     },
-    [dispatch, navigation],
+    [navigation],
   );
 
   const keyExtractor = useCallback((item: Exercise) => item.id, []);
@@ -230,7 +229,7 @@ export const ExercisesList = ({ navigation }: Props) => {
           </Pressable>
           <Pressable
             style={tw`active:opacity-80`}
-            onPress={() => dispatch(resetExercises())}
+            onPress={() => resetExercises()}
           >
             <Text style={tw`text-sm font-inter text-neutral-400`}>
               Reset
@@ -239,7 +238,7 @@ export const ExercisesList = ({ navigation }: Props) => {
         </View>
       </View>
     ),
-    [dispatch, handleExport, handleImport],
+    [handleExport, handleImport],
   );
 
   return (

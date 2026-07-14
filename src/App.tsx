@@ -19,9 +19,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MainStack } from "./navigation";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import tw from "./utils/tw";
-import { persistor, store } from "./store";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
 import * as SplashScreen from "expo-splash-screen";
 import { AudioPlayerProvider } from "./context/AudioPlayerContext";
 import { BottomSheetProvider } from "@swmansion/react-native-bottom-sheet";
@@ -105,20 +102,16 @@ const App = () => {
     <GestureHandlerRootView
       style={[tw`flex-1`, { backgroundColor: SPLASH_BACKGROUND }]}
     >
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <SafeAreaProvider style={{ backgroundColor: SPLASH_BACKGROUND }}>
-            <StatusBar
-              hidden
-              backgroundColor={SPLASH_BACKGROUND}
-              barStyle="light-content"
-            />
-            <AudioPlayerProvider>
-              <Main />
-            </AudioPlayerProvider>
-          </SafeAreaProvider>
-        </PersistGate>
-      </Provider>
+      <SafeAreaProvider style={{ backgroundColor: SPLASH_BACKGROUND }}>
+        <StatusBar
+          hidden
+          backgroundColor={SPLASH_BACKGROUND}
+          barStyle="light-content"
+        />
+        <AudioPlayerProvider>
+          <Main />
+        </AudioPlayerProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 };

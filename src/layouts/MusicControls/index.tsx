@@ -3,12 +3,8 @@ import { View, Text, Pressable, FlatList } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useAudioPlayer } from "../../context/AudioPlayerContext";
-import { useSelector } from "react-redux";
-import {
-  musicFilesSelector,
-  activeFileIdSelector,
-  sortedMusicFilesSelector,
-} from "../../state/musicLibrary.selectors";
+import { musicLibrary$, sortedMusicFiles$ } from "../../state/musicLibrary.atom";
+import { use$ } from "concordia/react";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import tw from "../../utils/tw";
 import SwipeableItem from "react-native-swipeable-item";
@@ -25,8 +21,8 @@ export const MusicControls = () => {
   const { isPlaying, volume, setVolume, playFile, deleteFile } =
     useAudioPlayer();
 
-  const files = useSelector(sortedMusicFilesSelector);
-  const activeFileId = useSelector(activeFileIdSelector);
+  const files = use$(sortedMusicFiles$);
+  const activeFileId = use$(musicLibrary$.activeFileId);
 
   const listRef = useRef<FlatList<MusicFile>>(null);
   const filesRef = useRef(files);

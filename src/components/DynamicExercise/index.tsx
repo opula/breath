@@ -14,14 +14,14 @@ import {
   GestureDetector,
 } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppSelector } from "../../hooks/store";
-import { exercisesSelector } from "../../state/exercises.selectors";
+import { exercises$ } from "../../state/exercises.atom";
+import { use$ } from "concordia/react";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 
 export const DynamicExercise = memo(
   ({ onPause }: { onPause?: (value: boolean) => void }) => {
-    const exercises = useAppSelector(exercisesSelector);
+    const exercises = use$(exercises$.userExercises);
     const { bottom } = useSafeAreaInsets();
     const isAppActive = useAppIsActive();
 

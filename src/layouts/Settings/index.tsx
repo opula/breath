@@ -3,25 +3,18 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import tw from "../../utils/tw";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
 import {
-  isGrayscaleSelector,
-  soundsEnabledSelector,
-  hapticsEnabledSelector,
-  hideCenterHintsSelector,
-  timerProgressModeSelector,
-} from "../../state/configuration.selectors";
-import {
+  configuration$,
   toggleGrayscale,
   toggleSounds,
   toggleHaptics,
   toggleHideCenterHints,
   setTimerProgressMode,
   type TimerProgressMode,
-} from "../../state/configuration.reducer";
+} from "../../state/configuration.atom";
+import { use$ } from "concordia/react";
 // Accent picker is parked — see note below the Display group.
-// import { accentColorSelector } from "../../state/accent.selectors";
-// import { setAccentColor } from "../../state/accent.reducer";
+// import { accent$, setAccentColor } from "../../state/accent.atom";
 import { MainStackParams } from "../../navigation";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
@@ -185,15 +178,14 @@ const OptionRow = ({
 
 export const Settings = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams>>();
-  const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
 
-  const isGrayscale = useAppSelector(isGrayscaleSelector);
-  const soundsEnabled = useAppSelector(soundsEnabledSelector);
-  const hapticsEnabled = useAppSelector(hapticsEnabledSelector);
-  const hideCenterHints = useAppSelector(hideCenterHintsSelector);
-  const timerProgressMode = useAppSelector(timerProgressModeSelector);
-  // const accentColor = useAppSelector(accentColorSelector);
+  const isGrayscale = use$(configuration$.isGrayscale);
+  const soundsEnabled = use$(configuration$.soundsEnabled);
+  const hapticsEnabled = use$(configuration$.hapticsEnabled);
+  const hideCenterHints = use$(configuration$.hideCenterHints);
+  const timerProgressMode = use$(configuration$.timerProgressMode);
+  // const accentColor = use$(accent$.color);
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
@@ -219,13 +211,13 @@ export const Settings = () => {
             label="Sounds"
             hint="phase transition audio cues"
             enabled={soundsEnabled}
-            onPress={() => dispatch(toggleSounds())}
+            onPress={() => toggleSounds()}
           />
           <ToggleRow
             label="Haptics"
             hint="a small tap on every phase change"
             enabled={hapticsEnabled}
-            onPress={() => dispatch(toggleHaptics())}
+            onPress={() => toggleHaptics()}
           />
 
           {/* Display group */}
@@ -236,13 +228,13 @@ export const Settings = () => {
             label="Grayscale"
             hint="desaturate the ambient scene"
             enabled={isGrayscale}
-            onPress={() => dispatch(toggleGrayscale())}
+            onPress={() => toggleGrayscale()}
           />
           <ToggleRow
             label="Hide hints"
             hint="skip the center tap / hold prompts"
             enabled={hideCenterHints}
-            onPress={() => dispatch(toggleHideCenterHints())}
+            onPress={() => toggleHideCenterHints()}
           />
 
           <View style={tw`mt-8`}>
@@ -254,7 +246,7 @@ export const Settings = () => {
               label={option.label}
               hint={option.hint}
               selected={timerProgressMode === option.mode}
-              onPress={() => dispatch(setTimerProgressMode(option.mode))}
+              onPress={() => setTimerProgressMode(option.mode)}
             />
           ))}
 
@@ -272,7 +264,7 @@ export const Settings = () => {
               return (
                 <Pressable
                   key={a.id}
-                  onPress={() => dispatch(setAccentColor(a.hex))}
+                  onPress={() => setAccentColor(a.hex)}
                   style={({ pressed }) => [
                     tw`mr-4 items-center`,
                     pressed && tw`opacity-70`,

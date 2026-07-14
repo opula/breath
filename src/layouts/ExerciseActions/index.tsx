@@ -6,15 +6,10 @@ import type { StackNavigationProp } from "@react-navigation/stack";
 import tw from "../../utils/tw";
 import { Overline } from "../../components/Overline";
 import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import {
-  exerciseByIdSelector,
-  exercisesSelector,
-} from "../../state/exercises.selectors";
-import { isFavoriteSelector } from "../../state/favorites.selectors";
-import { toggleFavorite } from "../../state/favorites.reducer";
-import { removeExercise } from "../../state/exercises.reducer";
-import { setLastPlayed } from "../../state/lastPlayed.reducer";
+import { exerciseById, exercises$, removeExercise } from "../../state/exercises.atom";
+import { isFavorite as isFavoriteFam, toggleFavorite } from "../../state/favorites.atom";
+import { setLastPlayed } from "../../state/lastPlayed.atom";
+import { use$ } from "concordia/react";
 import { isExerciseEligibleForBackground } from "../../services/BackgroundAudio/exerciseEligibility";
 import { LAST_EXERCISE, storage } from "../../utils/storage";
 import { MainStackParams } from "../../navigation";
@@ -36,19 +31,16 @@ export const ExerciseActions = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<MainStackParams, "ExerciseActions">>();
   const { exerciseId } = route.params;
-  const dispatch = useAppDispatch();
 
-  const exercises = useAppSelector(exercisesSelector);
-  const exerciseLive = useAppSelector((s) =>
-    exerciseByIdSelector(s, exerciseId),
-  );
+  const exercises = use$(exercises$.userExercises);
+  const exerciseLive = use$(exerciseById(exerciseId));
   // Keep the last non-null exercise so the sheet can animate closed after
   // Delete removes it from the store.
   const exerciseRef = useRef(exerciseLive);
   if (exerciseLive) exerciseRef.current = exerciseLive;
   const exercise = exerciseLive ?? exerciseRef.current;
 
-  const isFavorite = useAppSelector(isFavoriteSelector(exerciseId));
+  const isFavorite = use$(isFavoriteFam(exerciseId));
   const isBgEligible = exercise
     ? isExerciseEligibleForBackground(exercise)
     : false;
@@ -66,17 +58,17 @@ export const ExerciseActions = () => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
     if (index >= 0) {
       storage.set(LAST_EXERCISE, index);
-      dispatch(setLastPlayed(exerciseId));
+      setLastPlayed(exerciseId);
     }
     pick(() => navigation.navigate("Main", { autoplay: true }));
   };
 
   const handleFavorite = () => {
-    dispatch(toggleFavorite(exerciseId));
+    toggleFavorite(exerciseId);
   };
 
   const handleDelete = () => {
-    dispatch(removeExercise({ exerciseId }));
+    removeExercise(exerciseId);
     sheetRef.current?.dismiss();
   };
 

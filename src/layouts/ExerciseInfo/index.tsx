@@ -5,8 +5,8 @@ import {
 } from "@react-navigation/native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { MainStackParams } from "../../navigation";
-import { useParametrizedAppSelector } from "../../utils/selectors";
-import { exerciseByIdSelector } from "../../state/exercises.selectors";
+import { exerciseById } from "../../state/exercises.atom";
+import { use$ } from "concordia/react";
 import { View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
 import {
@@ -39,10 +39,7 @@ interface Props {
 }
 
 export const ExerciseInfo = ({ navigation, route }: Props) => {
-  const exercise = useParametrizedAppSelector(
-    exerciseByIdSelector,
-    route.params.id,
-  );
+  const exercise = use$(exerciseById(route.params.id));
 
   const hasDescription = !!exercise.description;
   const totalSteps = (hasDescription ? 1 : 0) + exercise.seq.length;

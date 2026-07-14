@@ -13,15 +13,10 @@ import tw from "../../utils/tw";
 import { BigTitle } from "../../components/BigTitle";
 import { Overline } from "../../components/Overline";
 import { ExerciseRow } from "../../components/ExerciseRow";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import { exercisesSelector } from "../../state/exercises.selectors";
-import { favoritesSelector } from "../../state/favorites.selectors";
-import {
-  lastPlayedAtSelector,
-  lastPlayedExerciseIdSelector,
-} from "../../state/lastPlayed.selectors";
-import { setLastPlayed } from "../../state/lastPlayed.reducer";
-import { addExercise } from "../../state/exercises.reducer";
+import { addExercise, exercises$ } from "../../state/exercises.atom";
+import { favorites$ } from "../../state/favorites.atom";
+import { lastPlayed$, setLastPlayed } from "../../state/lastPlayed.atom";
+import { use$ } from "concordia/react";
 import { MainStackParams } from "../../navigation";
 import { LAST_EXERCISE, storage } from "../../utils/storage";
 import { formatRelativeTime } from "../../utils/pretty";
@@ -31,11 +26,10 @@ interface Props {
 }
 
 export const Home = ({ navigation }: Props) => {
-  const dispatch = useAppDispatch();
-  const exercises = useAppSelector(exercisesSelector);
-  const favorites = useAppSelector(favoritesSelector);
-  const lastPlayed = useAppSelector(lastPlayedExerciseIdSelector);
-  const lastPlayedAt = useAppSelector(lastPlayedAtSelector);
+  const exercises = use$(exercises$.userExercises);
+  const favorites = use$(favorites$.ids);
+  const lastPlayed = use$(lastPlayed$.exerciseId);
+  const lastPlayedAt = use$(lastPlayed$.lastPlayedAt);
   const insets = useSafeAreaInsets();
 
   const sorted = useMemo(() => {
@@ -71,7 +65,7 @@ export const Home = ({ navigation }: Props) => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
     if (index >= 0) {
       storage.set(LAST_EXERCISE, index);
-      dispatch(setLastPlayed(exerciseId));
+      setLastPlayed(exerciseId);
     }
     navigation.navigate("Main", { autoplay: true });
   };
@@ -86,7 +80,7 @@ export const Home = ({ navigation }: Props) => {
 
   const handleNewExercise = () => {
     const id = uuid.v4() as string;
-    dispatch(addExercise({ exerciseId: id }));
+    addExercise(id);
     navigation.navigate("Exercise", { id });
   };
 

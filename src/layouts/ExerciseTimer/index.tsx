@@ -8,12 +8,9 @@ import tw from "../../utils/tw";
 import { HorizontalDial } from "../../components/HorizontalDial";
 import { Overline } from "../../components/Overline";
 import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import {
-  exerciseByIdSelector,
-  exercisesSelector,
-} from "../../state/exercises.selectors";
-import { setLastPlayed } from "../../state/lastPlayed.reducer";
+import { exerciseById, exercises$ } from "../../state/exercises.atom";
+import { setLastPlayed } from "../../state/lastPlayed.atom";
+import { use$ } from "concordia/react";
 import { MainStackParams } from "../../navigation";
 import { LAST_EXERCISE, storage } from "../../utils/storage";
 
@@ -25,10 +22,9 @@ export const ExerciseTimer = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<MainStackParams, "ExerciseTimer">>();
   const { exerciseId } = route.params;
-  const dispatch = useAppDispatch();
 
-  const exercises = useAppSelector(exercisesSelector);
-  const exercise = useAppSelector((s) => exerciseByIdSelector(s, exerciseId));
+  const exercises = use$(exercises$.userExercises);
+  const exercise = use$(exerciseById(exerciseId));
   const [selectedMinutes, setSelectedMinutes] = useState(DEFAULT_TIMER_MINUTES);
 
   const sheetRef = useRef<AppSheetHandle>(null);
@@ -43,7 +39,7 @@ export const ExerciseTimer = () => {
     const index = exercises.findIndex((e) => e.id === exerciseId);
     if (index >= 0) {
       storage.set(LAST_EXERCISE, index);
-      dispatch(setLastPlayed(exerciseId));
+      setLastPlayed(exerciseId);
     }
     pendingAction.current = () =>
       navigation.navigate("Main", {

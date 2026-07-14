@@ -2,11 +2,8 @@ import React, { memo, useCallback, useState } from "react";
 import { MotiView } from "moti";
 import type { SharedValue } from "react-native-reanimated";
 import tw from "../../utils/tw";
-import { useAppSelector } from "../../hooks/store";
-import {
-  isGrayscaleSelector,
-  sourceIdSelector,
-} from "../../state/configuration.selectors";
+import { configuration$ } from "../../state/configuration.atom";
+import { use$ } from "concordia/react";
 import {
   backgroundSourceById,
   DEFAULT_BACKGROUND_SOURCE_ID,
@@ -53,8 +50,8 @@ export const BackgroundSurface = ({
 
 export const Background = memo(
   ({ breath }: { breath?: SharedValue<number> }) => {
-    const isGrayscale = useAppSelector(isGrayscaleSelector);
-    const sourceId = useAppSelector(sourceIdSelector);
+    const isGrayscale = use$(configuration$.isGrayscale);
+    const sourceId = use$(configuration$.bgSourceId);
 
     if (sourceId === NO_BACKGROUND_SOURCE_ID) {
       return null;

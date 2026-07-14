@@ -6,8 +6,7 @@ import { MainStackParams } from "../../navigation";
 import { AppSheet, AppSheetHandle } from "../../components/AppSheet";
 import { Exercise } from "../../types/exercise";
 import uuid from "react-native-uuid";
-import { useAppDispatch } from "../../hooks/store";
-import { addExerciseStep } from "../../state/exercises.reducer";
+import { addExerciseStep } from "../../state/exercises.atom";
 import { Overline } from "../../components/Overline";
 
 interface Props {
@@ -33,7 +32,6 @@ const OPTIONS: {
 
 export const NewStepMenu = ({ navigation, route }: Props) => {
   const { exerciseId } = route.params;
-  const dispatch = useAppDispatch();
   const sheetRef = useRef<AppSheetHandle>(null);
   const pendingStepId = useRef<string | null>(null);
 
@@ -49,7 +47,7 @@ export const NewStepMenu = ({ navigation, route }: Props) => {
       ...(type === "repeat" ? { value: [1], count: 1 } : {}),
     } as Exercise["seq"][number];
 
-    dispatch(addExerciseStep({ exerciseId, step }));
+    addExerciseStep(exerciseId, step);
     pendingStepId.current = stepId;
     sheetRef.current?.dismiss();
   };

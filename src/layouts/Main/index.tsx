@@ -31,14 +31,13 @@ import { BreathRing } from "../../components/DynamicExercise/BreathRing";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { usePausableClock } from "../../hooks/usePausableClock";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import { exercisesSelector } from "../../state/exercises.selectors";
+import { exercises$ } from "../../state/exercises.atom";
 import {
-  isPausedSelector,
-  hideCenterHintsSelector,
-  timerProgressModeSelector,
-} from "../../state/configuration.selectors";
-import { setPause as setPauseAction } from "../../state/configuration.reducer";
+  configuration$,
+  playback$,
+  setPause as setPauseUpdate,
+} from "../../state/configuration.atom";
+import { use$ } from "concordia/react";
 import { MainStackParams } from "../../navigation";
 import { HAS_SEEN_MAIN_CONTROLS, storage } from "../../utils/storage";
 import { FrameStatsOverlay } from "../../lib/FrameStatsOverlay";
@@ -77,19 +76,18 @@ export const Main = () => {
     if (!timerMinutes || timerMinutes <= 0) return null;
     return timerMinutes * 60;
   }, [timerMinutes]);
-  const exercises = useAppSelector(exercisesSelector);
-  const dispatch = useAppDispatch();
+  const exercises = use$(exercises$.userExercises);
   const isAppActive = useAppIsActive();
   const insets = useSafeAreaInsets();
-  const isPaused = useAppSelector(isPausedSelector);
-  const hideCenterHints = useAppSelector(hideCenterHintsSelector);
-  const timerProgressMode = useAppSelector(timerProgressModeSelector);
+  const isPaused = use$(playback$.isPaused);
+  const hideCenterHints = use$(configuration$.hideCenterHints);
+  const timerProgressMode = use$(configuration$.timerProgressMode);
 
   const setPause = useCallback(
     (status: boolean) => {
-      dispatch(setPauseAction(status));
+      setPauseUpdate(status);
     },
-    [dispatch],
+    [],
   );
 
   const {

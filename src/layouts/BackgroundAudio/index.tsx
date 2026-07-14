@@ -3,8 +3,8 @@ import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { exerciseByIdSelector } from "../../state/exercises.selectors";
-import { useParametrizedAppSelector } from "../../utils/selectors";
+import { exerciseById } from "../../state/exercises.atom";
+import { use$ } from "concordia/react";
 import { useBackgroundAudio } from "../../hooks/useBackgroundAudio";
 import {
   calculateExerciseDuration,
@@ -51,10 +51,7 @@ interface Props {
 
 export const BackgroundAudio = ({ navigation, route }: Props) => {
   const insets = useSafeAreaInsets();
-  const exercise = useParametrizedAppSelector(
-    exerciseByIdSelector,
-    route.params.id,
-  );
+  const exercise = use$(exerciseById(route.params.id));
 
   const [loops, setLoops] = useState(3);
   const [delay, setDelay] = useState(0);

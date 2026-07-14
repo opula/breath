@@ -1,33 +1,22 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { View, TextInput } from "react-native";
 import tw from "../../utils/tw";
-import { useAppDispatch } from "../../hooks/store";
-import { editExerciseDescription } from "../../state/exercises.reducer";
-import { useParametrizedAppSelector } from "../../utils/selectors";
-import { exerciseDescriptionByIdSelector } from "../../state/exercises.selectors";
+import { editExerciseDescription, exerciseDescriptionById } from "../../state/exercises.atom";
+import { use$ } from "concordia/react";
 
 interface Props {
   exerciseId: string;
 }
 
 export const EditDescription = memo(({ exerciseId }: Props) => {
-  const dispatch = useAppDispatch();
-  const exerciseDescription = useParametrizedAppSelector(
-    exerciseDescriptionByIdSelector,
-    exerciseId,
-  );
+  const exerciseDescription = use$(exerciseDescriptionById(exerciseId));
 
   const [description, setDescription] = useState(exerciseDescription);
   const descriptionRef = useRef(exerciseDescription);
 
   useEffect(
     () => () => {
-      dispatch(
-        editExerciseDescription({
-          exerciseId,
-          description: descriptionRef.current,
-        }),
-      );
+      editExerciseDescription(exerciseId, descriptionRef.current);
     },
     [],
   );

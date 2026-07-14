@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { NavigationProp, RouteProp } from "@react-navigation/native";
 import { MainStackParams } from "../../navigation";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import {
-  exerciseByIdSelector,
-  exercisesSelector,
-} from "../../state/exercises.selectors";
-import { setLastPlayed } from "../../state/lastPlayed.reducer";
+import { exerciseById, exercises$ } from "../../state/exercises.atom";
+import { setLastPlayed } from "../../state/lastPlayed.atom";
+import { use$ } from "concordia/react";
 import { NavHeader } from "../../components/NavHeader";
 import { LayoutAnimation, View, Text, Pressable } from "react-native";
 import tw from "../../utils/tw";
@@ -19,12 +16,11 @@ import DraggableFlatList, {
   ShadowDecorator,
 } from "react-native-draggable-flatlist";
 import SwipeableItem, { OpenDirection } from "react-native-swipeable-item";
-import { removeExercise, updateExercise } from "../../state/exercises.reducer";
+import { removeExercise, updateExercise } from "../../state/exercises.atom";
 import { type Exercise as ExerciseItem } from "../../types/exercise";
 import { SwipeRightRemove } from "../../components/UnderlyingSwipe";
 import { EditName } from "./EditName";
 import { EditDescription } from "./EditDescription";
-import { useParametrizedAppSelector } from "../../utils/selectors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Overline } from "../../components/Overline";
 import { LAST_EXERCISE, storage } from "../../utils/storage";
@@ -39,9 +35,8 @@ interface Props {
 
 export const Exercise = ({ navigation, route }: Props) => {
   const { id } = route.params;
-  const exercise = useParametrizedAppSelector(exerciseByIdSelector, id);
-  const exercises = useAppSelector(exercisesSelector);
-  const dispatch = useAppDispatch();
+  const exercise = use$(exerciseById(id));
+  const exercises = use$(exercises$.userExercises);
   const insets = useSafeAreaInsets();
 
   const seqRef = useRef(exercise.seq);
@@ -51,7 +46,7 @@ export const Exercise = ({ navigation, route }: Props) => {
   useEffect(() => {
     return () => {
       if (seqRef.current.length === 0) {
-        dispatch(removeExercise({ exerciseId: id }));
+        removeExercise(id);
       }
     };
   }, []);
@@ -62,10 +57,10 @@ export const Exercise = ({ navigation, route }: Props) => {
     const index = exercises.findIndex((e) => e.id === id);
     if (index >= 0) {
       storage.set(LAST_EXERCISE, index);
-      dispatch(setLastPlayed(id));
+      setLastPlayed(id);
     }
     navigation.navigate("Main", { autoplay: true });
-  }, [exercises, id, dispatch, navigation]);
+  }, [exercises, id, navigation]);
 
   const renderItem = useCallback(
     (params: RenderItemParams<ExerciseItem["seq"][number]>) => {
@@ -78,7 +73,7 @@ export const Exercise = ({ navigation, route }: Props) => {
           ...exercise,
           seq: exercise.seq.filter((s) => s !== item),
         };
-        dispatch(updateExercise({ exercise: updatedExercise }));
+        updateExercise(updatedExercise);
       };
 
       return (
@@ -120,15 +115,15 @@ export const Exercise = ({ navigation, route }: Props) => {
         </ShadowDecorator>
       );
     },
-    [exercise, dispatch, id],
+    [exercise, id],
   );
 
   const handleDelete = useCallback(() => {
-    dispatch(removeExercise({ exerciseId: id }));
+    removeExercise(id);
     // Clear the LAST_EXERCISE pointer if it happens to match, otherwise engine
     // will still function against the remaining list.
     navigation.goBack();
-  }, [dispatch, id, navigation]);
+  }, [id, navigation]);
 
   return (
     <View style={tw`flex-1 bg-mb-bg`}>
@@ -148,14 +143,10 @@ export const Exercise = ({ navigation, route }: Props) => {
             activationDistance={20}
             showsVerticalScrollIndicator={false}
             onDragEnd={(data) =>
-              dispatch(
-                updateExercise({
-                  exercise: {
-                    ...exercise,
-                    seq: data.data,
-                  },
-                }),
-              )
+              updateExercise({
+                ...exercise,
+                seq: data.data,
+              })
             }
             ListHeaderComponent={
               <View style={tw`pb-4`}>

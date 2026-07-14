@@ -6,12 +6,8 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import tw from "../../utils/tw";
 import { backgroundSources, NO_BACKGROUND_SOURCE_ID } from "../Main/sources";
 import { BackgroundSurface } from "../Main/Background";
-import { useAppDispatch, useAppSelector } from "../../hooks/store";
-import {
-  isGrayscaleSelector,
-  sourceIdSelector,
-} from "../../state/configuration.selectors";
-import { updateSource } from "../../state/configuration.reducer";
+import { configuration$, updateSource } from "../../state/configuration.atom";
+import { use$ } from "concordia/react";
 import { Overline } from "../../components/Overline";
 import { BigTitle } from "../../components/BigTitle";
 import { NavHeader } from "../../components/NavHeader";
@@ -38,9 +34,8 @@ const sortedBackgrounds: SortedScene[] = [
 export const Scenes = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const dispatch = useAppDispatch();
-  const activeSourceId = useAppSelector(sourceIdSelector);
-  const isGrayscale = useAppSelector(isGrayscaleSelector);
+  const activeSourceId = use$(configuration$.bgSourceId);
+  const isGrayscale = use$(configuration$.isGrayscale);
 
   const [previewSourceId, setPreviewSourceId] =
     useState<BackgroundSourceId | null>(null);
@@ -109,7 +104,7 @@ export const Scenes = () => {
 
   const handleSelect = useCallback(
     (id: SceneSourceId) => {
-      dispatch(updateSource(id));
+      updateSource(id);
       if (id === NO_BACKGROUND_SOURCE_ID) {
         setPreviewSourceId(null);
         setIsPreviewReady(false);
@@ -118,7 +113,7 @@ export const Scenes = () => {
       setPreviewSourceId(id);
       setIsPreviewReady(false);
     },
-    [dispatch],
+    [],
   );
 
   const handlePreviewReady = useCallback(() => {
