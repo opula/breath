@@ -8,13 +8,7 @@ import React, {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  runOnJS,
-  withTiming,
-  type LayoutAnimationFunction,
-} from "react-native-reanimated";
+import { runOnJS } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -27,11 +21,14 @@ import {
 
 import tw from "../../utils/tw";
 import { Background } from "./Background";
-import { BreathRing } from "../../components/DynamicExercise/BreathRing";
+import { ExerciseCenter } from "./ExerciseCenter";
+import { SessionClockText } from "../../components/SessionChrome/SessionClockText";
+import { TimerProgressBar } from "../../components/SessionChrome/TimerProgressBar";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { usePausableClock } from "../../hooks/usePausableClock";
 import { exercises$ } from "../../state/exercises.atom";
+import { session$ } from "../../state/session.atom";
 import {
   configuration$,
   playback$,
@@ -45,27 +42,7 @@ import { FrameStatsOverlay } from "../../lib/FrameStatsOverlay";
 const CHROME_TIMEOUT_MS = 6000;
 const FIRST_SESSION_CHROME_TIMEOUT_MS = 12000;
 const HINT_TIMEOUT_MS = 4000;
-const TIMER_PROGRESS_TICK_MS = 250;
-const TIMER_PROGRESS_PULSE_MS = 5000;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000; // 2 hours
-
-// Layout transition for the center cluster: tween ONLY vertical position, so
-// the cluster glides when a line mounts/unmounts (2 -> 3 lines) but plain text
-// swaps (inhale -> exhale change the frame width) snap with no animation.
-const centerShift: LayoutAnimationFunction = (values) => {
-  "worklet";
-  return {
-    initialValues: {
-      originX: values.targetOriginX,
-      originY: values.currentOriginY,
-      width: values.targetWidth,
-      height: values.targetHeight,
-    },
-    animations: {
-      originY: withTiming(values.targetOriginY, { duration: 400 }),
-    },
-  };
-};
 
 export const Main = () => {
   const navigation = useNavigation<NavigationProp<MainStackParams, "Main">>();
@@ -81,7 +58,11 @@ export const Main = () => {
   const insets = useSafeAreaInsets();
   const isPaused = use$(playback$.isPaused);
   const hideCenterHints = use$(configuration$.hideCenterHints);
-  const timerProgressMode = use$(configuration$.timerProgressMode);
+  // Phase-frequency flags only — the per-second label/sublabel/clock values
+  // are subscribed by leaf components (ExerciseCenter, SessionClockText,
+  // TimerProgressBar) so their ticks never re-render this screen.
+  const isText = use$(session$.isText);
+  const canAdvance = use$(session$.canAdvance);
 
   const setPause = useCallback(
     (status: boolean) => {
@@ -91,14 +72,8 @@ export const Main = () => {
   );
 
   const {
-    label,
-    sublabel,
-    isBreathing,
-    isText,
-    canAdvance,
     isStarted,
     exerciseName,
-    repeatProgress,
     iBreath,
     handleStart,
     handleTap,
@@ -132,51 +107,26 @@ export const Main = () => {
   // Play action), kick off the engine after a short delay so the user sees
   // the screen land before it starts animating. Skip if the engine has
   // already produced a step (e.g. user tapped during the delay).
-  const labelRef = useRef(label);
-  labelRef.current = label;
   useEffect(() => {
     if (!autoplay) return;
     const timer = setTimeout(() => {
-      if (!labelRef.current) handleStart();
+      if (!session$.label.peek()) handleStart();
     }, 500);
     return () => clearTimeout(timer);
   }, [autoplay, handleStart]);
 
+  // The reset key also remounts TimerProgressBar, clearing its pulse state.
   const [sessionClockResetKey, setSessionClockResetKey] = useState(0);
-  const sessionElapsed = usePausableClock({
+  usePausableClock({
     running: isStarted && !isPaused,
     resetKey: sessionClockResetKey,
-    tickMs: TIMER_PROGRESS_TICK_MS,
   });
-  const [showTimerProgressPulse, setShowTimerProgressPulse] = useState(false);
-  const lastTimerPulseMinuteRef = useRef(0);
-  const hasShownTimerEndPulseRef = useRef(false);
-  const timerProgressPulseTimeoutRef =
-    useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const triggerTimerProgressPulse = useCallback(() => {
-    setShowTimerProgressPulse(true);
-    if (timerProgressPulseTimeoutRef.current) {
-      clearTimeout(timerProgressPulseTimeoutRef.current);
-    }
-    timerProgressPulseTimeoutRef.current = setTimeout(() => {
-      setShowTimerProgressPulse(false);
-      timerProgressPulseTimeoutRef.current = null;
-    }, TIMER_PROGRESS_PULSE_MS);
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
       setSessionClockResetKey((key) => key + 1);
-      lastTimerPulseMinuteRef.current = 0;
-      hasShownTimerEndPulseRef.current = false;
-      setShowTimerProgressPulse(false);
 
       return () => {
-        if (timerProgressPulseTimeoutRef.current) {
-          clearTimeout(timerProgressPulseTimeoutRef.current);
-          timerProgressPulseTimeoutRef.current = null;
-        }
         handleStop();
       };
     }, [handleStop]),
@@ -184,9 +134,6 @@ export const Main = () => {
 
   useEffect(() => {
     setSessionClockResetKey((key) => key + 1);
-    lastTimerPulseMinuteRef.current = 0;
-    hasShownTimerEndPulseRef.current = false;
-    setShowTimerProgressPulse(false);
   }, [timerTargetSeconds]);
 
   // Auto-fading chrome: show on mount and any gesture; hide after timeout.
@@ -221,40 +168,6 @@ export const Main = () => {
     setShowChrome(true);
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
   }, [isPaused, isStarted]);
-
-  useEffect(() => {
-    if (!timerTargetSeconds || timerProgressMode !== "minuteFade") return;
-
-    const completedMinutes = Math.floor(sessionElapsed / 60);
-    if (
-      completedMinutes <= 0 ||
-      completedMinutes === lastTimerPulseMinuteRef.current
-    ) {
-      return;
-    }
-
-    lastTimerPulseMinuteRef.current = completedMinutes;
-    triggerTimerProgressPulse();
-  }, [
-    sessionElapsed,
-    timerProgressMode,
-    timerTargetSeconds,
-    triggerTimerProgressPulse,
-  ]);
-
-  useEffect(() => {
-    if (!timerTargetSeconds || timerProgressMode !== "endFade") return;
-    if (sessionElapsed < timerTargetSeconds) return;
-    if (hasShownTimerEndPulseRef.current) return;
-
-    hasShownTimerEndPulseRef.current = true;
-    triggerTimerProgressPulse();
-  }, [
-    sessionElapsed,
-    timerProgressMode,
-    timerTargetSeconds,
-    triggerTimerProgressPulse,
-  ]);
 
   // Center hints auto-fade after 4s. Re-reveal on gesture / relevant state.
   const [showHints, setShowHints] = useState(false);
@@ -315,21 +228,6 @@ export const Main = () => {
 
   const gesture = Gesture.Exclusive(doubleTap, longPress, singleTap);
 
-  const mm = String(Math.floor(sessionElapsed / 60)).padStart(2, "0");
-  const ss = String(Math.floor(sessionElapsed % 60)).padStart(2, "0");
-  const timerProgress = timerTargetSeconds
-    ? Math.min(sessionElapsed / timerTargetSeconds, 1)
-    : 0;
-  const timerTargetComplete = timerTargetSeconds
-    ? sessionElapsed >= timerTargetSeconds
-    : false;
-  const showTimerProgress =
-    !!timerTargetSeconds &&
-    (timerProgressMode === "always" ||
-      (timerProgressMode === "endOn" && timerTargetComplete) ||
-      ((timerProgressMode === "minuteFade" ||
-        timerProgressMode === "endFade") &&
-        showTimerProgressPulse));
   const showIndefiniteHint = isStarted && canAdvance && !isPaused;
   const showCenterHints = isStarted && showHints && !hideCenterHints;
   const primaryHint = showIndefiniteHint
@@ -340,23 +238,6 @@ export const Main = () => {
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   };
-  // Persistent round progress while inside a repeat block (e.g. "round 3 / 30").
-  // Status, not chrome: it stays through the chrome fade, like the ring itself.
-  // Fades in/out; the cluster container tweens its re-centering (centerShift).
-  const renderRepeatProgress = (topMargin: number) =>
-    repeatProgress ? (
-      <Animated.Text
-        entering={FadeIn.duration(400)}
-        exiting={FadeOut.duration(400)}
-        style={[
-          tw`font-mono text-mb-mute uppercase text-[9px] text-center`,
-          { letterSpacing: 1.8, marginTop: topMargin },
-        ]}
-      >
-        round {repeatProgress.round} / {repeatProgress.total}
-      </Animated.Text>
-    ) : null;
-
   const renderCenterHints = () => (
     <AnimatePresence>
       {showCenterHints ? (
@@ -413,53 +294,7 @@ export const Main = () => {
 
       <GestureDetector gesture={gesture}>
         <View style={tw`absolute inset-0 items-center justify-center`}>
-          {isText ? (
-            <Animated.View layout={centerShift} style={tw`px-8 items-center`}>
-              <Text
-                style={[
-                  tw`font-display text-mb-fg uppercase text-center`,
-                  { fontSize: 32, letterSpacing: -0.5, lineHeight: 38 },
-                ]}
-              >
-                {label}
-              </Text>
-              {renderRepeatProgress(12)}
-            </Animated.View>
-          ) : label ? (
-            <View style={tw`items-center justify-center`}>
-              {isAppActive && isBreathing ? (
-                <BreathRing breath={iBreath} />
-              ) : null}
-              <Animated.View
-                layout={centerShift}
-                style={tw`absolute items-center justify-center`}
-                pointerEvents="none"
-              >
-                <Text
-                  style={[
-                    tw`font-display text-mb-fg uppercase text-center`,
-                    { fontSize: 16, letterSpacing: -0.3 },
-                  ]}
-                >
-                  {label}
-                </Text>
-                {/* During a repeat block the time slot is always reserved, so
-                    the round line keeps a stable third position instead of
-                    jumping up on phases without a countdown. */}
-                {sublabel || repeatProgress ? (
-                  <Text
-                    style={[
-                      tw`font-mono text-mb-mute uppercase text-[10px] mt-2`,
-                      { letterSpacing: 2 },
-                    ]}
-                  >
-                    {sublabel || " "}
-                  </Text>
-                ) : null}
-                {renderRepeatProgress(8)}
-              </Animated.View>
-            </View>
-          ) : null}
+          <ExerciseCenter breath={iBreath} isAppActive={isAppActive} />
           {renderCenterHints()}
         </View>
       </GestureDetector>
@@ -538,42 +373,18 @@ export const Main = () => {
               ) : null}
             </View>
             <View style={tw`flex-1 items-end`}>
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute text-[10px]`,
-                  { letterSpacing: 2 },
-                ]}
-              >
-                {mm}:{ss}
-              </Text>
+              <SessionClockText />
             </View>
           </MotiView>
         ) : null}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showTimerProgress ? (
-          <MotiView
-            key="timer-progress"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 900 } }}
-            pointerEvents="none"
-            style={[
-              tw`absolute left-0 right-0 bg-mb-line`,
-              { bottom: insets.bottom, height: 2 },
-            ]}
-          >
-            <View
-              style={[
-                tw`h-full bg-mb-accent`,
-                { opacity: 0.62, width: `${timerProgress * 100}%` },
-              ]}
-            />
-          </MotiView>
-        ) : null}
-      </AnimatePresence>
+      {timerTargetSeconds ? (
+        <TimerProgressBar
+          key={`timer-progress-${sessionClockResetKey}`}
+          targetSeconds={timerTargetSeconds}
+        />
+      ) : null}
     </View>
   );
 };

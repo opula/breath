@@ -1,5 +1,5 @@
-import {pick, sortBy, takeWhile} from 'lodash';
-import {BehaviorSubject, filter, interval} from 'rxjs';
+import {pick, takeWhile} from 'lodash';
+import {BehaviorSubject, interval, type Subscription} from 'rxjs';
 
 const INTERVAL_TIME = 100;
 
@@ -16,16 +16,10 @@ class ExerciseScheduler {
   private isActive = false;
   private jobQueue: JobQueueItem[] = [];
   private timerSubject = new BehaviorSubject<number>(0);
+  private tickSub: Subscription | null = null;
 
   constructor() {
     this.internalTimer = 0;
-
-    interval(INTERVAL_TIME)
-      .pipe(filter(() => this.isActive))
-      .subscribe(() => {
-        this.internalTimer += 100;
-        this.timerSubject.next(this.internalTimer);
-      });
 
     this.timerSubject.subscribe(timer => {
       const scheduledJobs = takeWhile(
@@ -35,10 +29,6 @@ class ExerciseScheduler {
       this.jobQueue = this.jobQueue.slice(scheduledJobs.length);
 
       scheduledJobs.forEach(job => {
-        // if (job.label) {
-        //   console.log('Calling', job.label);
-        // }
-
         job.cb();
 
         if (job.repeat) {
@@ -52,16 +42,34 @@ class ExerciseScheduler {
     });
   }
 
+  // The 100ms tick only runs while a session is active — an idle app keeps no
+  // permanent timer waking the JS thread.
+  private startTicking() {
+    if (this.tickSub) return;
+    this.tickSub = interval(INTERVAL_TIME).subscribe(() => {
+      this.internalTimer += 100;
+      this.timerSubject.next(this.internalTimer);
+    });
+  }
+
+  private stopTicking() {
+    this.tickSub?.unsubscribe();
+    this.tickSub = null;
+  }
+
   public start() {
     this.isActive = true;
+    this.startTicking();
   }
 
   public stop() {
     this.isActive = false;
+    this.stopTicking();
   }
 
   public toggle() {
-    this.isActive = !this.isActive;
+    if (this.isActive) this.stop();
+    else this.start();
   }
 
   public active() {
@@ -71,6 +79,7 @@ class ExerciseScheduler {
   public reset() {
     this.clearJobs();
     this.isActive = false;
+    this.stopTicking();
     this.internalTimer = 0;
   }
 
@@ -86,15 +95,34 @@ class ExerciseScheduler {
     if (!this.isActive) return;
 
     const {priority = 0, repeat = 0, label = ''} = options;
-    this.jobQueue.push({
+    this.insertJob({
       executionTs: this.internalTimer + time,
       cb: callback,
       priority,
       repeat,
       label,
     });
+  }
 
-    this.jobQueue = sortBy(this.jobQueue, ['executionTs', 'priority']);
+  // Ordered insert by (executionTs, priority), after equal keys — matching the
+  // stable sortBy this replaces without re-sorting the queue on every add.
+  private insertJob(job: JobQueueItem) {
+    let lo = 0;
+    let hi = this.jobQueue.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      const other = this.jobQueue[mid];
+      if (
+        other.executionTs < job.executionTs ||
+        (other.executionTs === job.executionTs &&
+          (other.priority ?? 0) <= (job.priority ?? 0))
+      ) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    this.jobQueue.splice(lo, 0, job);
   }
 
   public clearJobs() {

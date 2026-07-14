@@ -15,6 +15,7 @@ import {
 } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { exercises$ } from "../../state/exercises.atom";
+import { session$ } from "../../state/session.atom";
 import { use$ } from "concordia/react";
 import { useExerciseEngine } from "../../hooks/useExerciseEngine";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
@@ -25,14 +26,15 @@ export const DynamicExercise = memo(
     const { bottom } = useSafeAreaInsets();
     const isAppActive = useAppIsActive();
 
+    const label = use$(session$.label);
+    const sublabel = use$(session$.sublabel);
+    const isBreathing = use$(session$.isBreathing);
+    const isText = use$(session$.isText);
+    const isHIE = use$(session$.isHIE);
+    const repeatProgress = use$(session$.repeatProgress);
+
     const {
-      label,
-      sublabel,
-      isBreathing,
-      isText,
-      isHIE,
       exerciseName,
-      repeatProgress,
       iBreath,
       handleTap,
       handlePauseResume,

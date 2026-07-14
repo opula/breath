@@ -2,19 +2,17 @@
   "expo": {
     "name": "Mid Breath",
     "slug": "midnight-breath",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#101010",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "newArchEnabled": true,
       "bundleIdentifier": "com.mdnt.brwk",
-      "buildNumber": "20",
+      "buildNumber": "22",
       "appleTeamId": "QTZ99Y3958",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,

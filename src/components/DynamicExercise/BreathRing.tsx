@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { CanvasRef } from "react-native-webgpu";
 import { Canvas } from "react-native-webgpu";
 import { View } from "react-native";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { MeshBasicNodeMaterial } from "three/webgpu";
 import {
   Fn,
@@ -43,7 +43,7 @@ const BACKDROP_OPACITY = 0.7;
 
 // --- Component ---
 
-export const BreathRing = ({ breath }: { breath: SharedValue<number> }) => {
+export const BreathRing = memo(({ breath }: { breath: SharedValue<number> }) => {
   const ref = useRef<CanvasRef>(null);
 
   useEffect(() => {
@@ -149,4 +149,4 @@ export const BreathRing = ({ breath }: { breath: SharedValue<number> }) => {
       <Canvas ref={ref} style={{ flex: 1 }} />
     </View>
   );
-};
+});

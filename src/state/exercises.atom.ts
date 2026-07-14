@@ -23,10 +23,12 @@ const initialState: ExercisesState = {
   userExercises: defaultExercises,
 };
 
+// throttleMs: the whole library serializes on every write; dial commits in
+// AdjustStep can burst, so bound it to one write per window (leading+trailing).
 export const exercises$ = atom(
   'exercises',
   {...initialState, ...legacySlice<ExercisesState>('exercises')},
-  {persist: {storage: mmkvStorage(storage)}},
+  {persist: {storage: mmkvStorage(storage), throttleMs: 500}},
 );
 
 export const resetExercises = update('exercises/reset', {e: exercises$}, d => {

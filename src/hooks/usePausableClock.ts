@@ -1,47 +1,59 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { interval } from "rxjs";
+import { setSessionElapsedSeconds } from "../state/session.atom";
 
 interface UsePausableClockOptions {
   running: boolean;
   resetKey: number;
-  tickMs: number;
 }
 
+// Publish cadence only bounds how late a second boundary lands in the atom;
+// precision comes from Date.now() in getElapsed, not from tick counting.
+const PUBLISH_TICK_MS = 250;
+
+/**
+ * Pausable session clock, off the React render path. Whole seconds are
+ * published to session$.elapsedSeconds (so clock subscribers re-render at
+ * most once per second, in leaf components); callers that need sub-second
+ * precision read it imperatively via the returned getElapsed.
+ */
 export const usePausableClock = ({
   running,
   resetKey,
-  tickMs,
 }: UsePausableClockOptions) => {
-  const [elapsed, setElapsed] = useState(0);
-  const elapsedRef = useRef(0);
-  const lastTickRef = useRef<number | null>(null);
+  const accumulatedRef = useRef(0);
+  const runStartedAtRef = useRef<number | null>(null);
+
+  const getElapsed = useCallback(() => {
+    const runningFor =
+      runStartedAtRef.current !== null
+        ? (Date.now() - runStartedAtRef.current) / 1000
+        : 0;
+    return accumulatedRef.current + runningFor;
+  }, []);
 
   useEffect(() => {
-    elapsedRef.current = 0;
-    lastTickRef.current = null;
-    setElapsed(0);
+    accumulatedRef.current = 0;
+    if (runStartedAtRef.current !== null) {
+      runStartedAtRef.current = Date.now();
+    }
+    setSessionElapsedSeconds(0);
   }, [resetKey]);
 
   useEffect(() => {
-    if (!running) {
-      lastTickRef.current = null;
-      return;
-    }
+    if (!running) return;
 
-    lastTickRef.current = Date.now();
-    const sub = interval(tickMs).subscribe(() => {
-      const now = Date.now();
-      const previous = lastTickRef.current ?? now;
-      lastTickRef.current = now;
-      const nextElapsed = elapsedRef.current + (now - previous) / 1000;
-      elapsedRef.current = nextElapsed;
-      setElapsed(nextElapsed);
-    });
+    runStartedAtRef.current = Date.now();
+    const publish = () => setSessionElapsedSeconds(Math.floor(getElapsed()));
+    publish();
+    const sub = interval(PUBLISH_TICK_MS).subscribe(publish);
 
     return () => {
       sub.unsubscribe();
+      accumulatedRef.current = getElapsed();
+      runStartedAtRef.current = null;
     };
-  }, [running, tickMs]);
+  }, [running, getElapsed]);
 
-  return elapsed;
+  return { getElapsed };
 };

@@ -3,14 +3,16 @@ import { AppState, Vibration } from 'react-native';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { ExerciseEngine } from '../services/ExerciseEngine';
-import type {
-  EngineState,
-  ExerciseEngineCallbacks,
-} from '../services/ExerciseEngine/types';
+import type { ExerciseEngineCallbacks } from '../services/ExerciseEngine/types';
 import { exerciseEmitter, Ops } from '../components/DynamicExercise/emitter';
 import { exerciseScheduler } from '../services/ExerciseScheduler';
 import { playExerciseSound } from '../services/ExerciseSounds';
 import { configuration$ } from '../state/configuration.atom';
+import {
+  clearEngineDisplay,
+  setEngineDisplay,
+  setRepeatProgress,
+} from '../state/session.atom';
 import { triggerHaptics } from '../utils/haptics';
 import { LAST_EXERCISE, storage } from '../utils/storage';
 import type { Exercise } from '../types/exercise';
@@ -21,19 +23,8 @@ interface UseExerciseEngineOptions {
 }
 
 export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptions) {
-  const [label, setLabel] = useState('');
-  const [sublabel, setSublabel] = useState('');
-  const [isBreathing, setBreathing] = useState(false);
-  const [isText, setText] = useState(false);
-  const [isHIE, setHIE] = useState(false);
-  const [canAdvance, setCanAdvance] = useState(false);
   const [isStarted, setStarted] = useState(false);
   const [exerciseName, setExerciseName] = useState('');
-  // Persistent while a repeat block is active; null otherwise.
-  const [repeatProgress, setRepeatProgress] = useState<{
-    round: number;
-    total: number;
-  } | null>(null);
 
   const iBreath = useSharedValue(0);
   const onPauseRef = useRef(onPause);
@@ -48,13 +39,11 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   // Build engine once
   if (!engineRef.current) {
     const callbacks: ExerciseEngineCallbacks = {
-      onStateChange(state: EngineState) {
-        setLabel(state.label);
-        setSublabel(state.sublabel);
-        setBreathing(state.isBreathing);
-        setText(state.isText);
-        setHIE(state.isHIE);
-        setCanAdvance(state.canAdvance);
+      // Display state goes to the session atom, not React state: per-second
+      // countdown ticks then re-render only the leaves that subscribe to the
+      // changed path, never the hosting screen.
+      onStateChange(state) {
+        setEngineDisplay(state);
       },
       onPlaySound(type) {
         playExerciseSound(type);
@@ -120,6 +109,7 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
     return () => {
       exerciseEmitter.off(Ops.GOTO_SEQUENCE, handleGoto);
       engine.destroy();
+      clearEngineDisplay();
       onPauseRef.current?.(true);
     };
   }, [engine, showName]);
@@ -170,15 +160,8 @@ export function useExerciseEngine({ exercises, onPause }: UseExerciseEngineOptio
   );
 
   return {
-    label,
-    sublabel,
-    isBreathing,
-    isText,
-    isHIE,
-    canAdvance,
     isStarted,
     exerciseName,
-    repeatProgress,
     iBreath,
     handleStart,
     handleTap,

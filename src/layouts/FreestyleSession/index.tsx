@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AnimatePresence, MotiView } from "moti";
+import { interval } from "rxjs";
 import {
   cancelAnimation,
   runOnJS,
@@ -27,21 +28,19 @@ import {
 import tw from "../../utils/tw";
 import { Background } from "../Main/Background";
 import { BreathRing } from "../../components/DynamicExercise/BreathRing";
+import { PhaseTimeReadout } from "./PhaseTimeReadout";
+import { SessionClockText } from "../../components/SessionChrome/SessionClockText";
+import { TimerProgressBar } from "../../components/SessionChrome/TimerProgressBar";
 import { useAppIsActive } from "../../hooks/useAppIsActive";
 import { usePausableClock } from "../../hooks/usePausableClock";
-import {
-  configuration$,
-  playback$,
-  setPause as setPauseUpdate,
-} from "../../state/configuration.atom";
+import { playback$, setPause as setPauseUpdate } from "../../state/configuration.atom";
 import { use$ } from "concordia/react";
 import { MainStackParams, type FreestyleRatio } from "../../navigation";
 
 type FreestylePhase = "idle" | "inhale" | "exhale";
 
 const CHROME_TIMEOUT_MS = 6000;
-const SESSION_CLOCK_TICK_MS = 100;
-const TIMER_PROGRESS_PULSE_MS = 5000;
+const EXHALE_END_CHECK_MS = 100;
 const KEEP_AWAKE_TIMEOUT_MS = 120 * 60 * 1000;
 const MIN_INHALE_SECONDS = 0.1;
 const ASSUMED_INHALE_SECONDS = 5;
@@ -52,9 +51,6 @@ const FREESTYLE_EXHALE_MULTIPLIER: Record<FreestyleRatio, number> = {
   "1:2": 2,
   "1:3": 3,
 };
-
-const formatPhaseSeconds = (seconds: number) =>
-  `${Math.max(0, seconds).toFixed(1)}s`;
 
 export const FreestyleSession = () => {
   const navigation =
@@ -69,7 +65,6 @@ export const FreestyleSession = () => {
   const insets = useSafeAreaInsets();
   const isAppActive = useAppIsActive();
   const isPaused = use$(playback$.isPaused);
-  const timerProgressMode = use$(configuration$.timerProgressMode);
 
   const setPause = useCallback(
     (status: boolean) => {
@@ -83,14 +78,12 @@ export const FreestyleSession = () => {
   const phaseRef = useRef<FreestylePhase>("idle");
   const phaseStartedAtRef = useRef(0);
   const exhaleEndsAtRef = useRef<number | null>(null);
+  // The reset key also remounts TimerProgressBar, clearing its pulse state.
   const [clockResetKey, setClockResetKey] = useState(0);
-  const sessionElapsed = usePausableClock({
+  const { getElapsed } = usePausableClock({
     running: hasStarted && !isPaused,
     resetKey: clockResetKey,
-    tickMs: SESSION_CLOCK_TICK_MS,
   });
-  const sessionElapsedRef = useRef(sessionElapsed);
-  sessionElapsedRef.current = sessionElapsed;
   const breath = useSharedValue(0);
 
   const [showChrome, setShowChrome] = useState(true);
@@ -102,24 +95,6 @@ export const FreestyleSession = () => {
       () => setShowChrome(false),
       CHROME_TIMEOUT_MS,
     );
-  }, []);
-
-  const [showTimerProgressPulse, setShowTimerProgressPulse] = useState(false);
-  const lastTimerPulseMinuteRef = useRef(0);
-  const hasShownTimerEndPulseRef = useRef(false);
-  const timerProgressPulseTimeoutRef = useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
-
-  const triggerTimerProgressPulse = useCallback(() => {
-    setShowTimerProgressPulse(true);
-    if (timerProgressPulseTimeoutRef.current) {
-      clearTimeout(timerProgressPulseTimeoutRef.current);
-    }
-    timerProgressPulseTimeoutRef.current = setTimeout(() => {
-      setShowTimerProgressPulse(false);
-      timerProgressPulseTimeoutRef.current = null;
-    }, TIMER_PROGRESS_PULSE_MS);
   }, []);
 
   useEffect(() => {
@@ -145,18 +120,11 @@ export const FreestyleSession = () => {
       phaseStartedAtRef.current = 0;
       exhaleEndsAtRef.current = null;
       setClockResetKey((key) => key + 1);
-      lastTimerPulseMinuteRef.current = 0;
-      hasShownTimerEndPulseRef.current = false;
-      setShowTimerProgressPulse(false);
       revealChrome();
 
       return () => {
         setPause(true);
         if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
-        if (timerProgressPulseTimeoutRef.current) {
-          clearTimeout(timerProgressPulseTimeoutRef.current);
-          timerProgressPulseTimeoutRef.current = null;
-        }
       };
     }, [breath, revealChrome, setPause]),
   );
@@ -164,7 +132,7 @@ export const FreestyleSession = () => {
   const handleHoldStart = useCallback(() => {
     if ((hasStarted && isPaused) || phaseRef.current !== "idle") return;
 
-    const now = sessionElapsedRef.current;
+    const now = getElapsed();
     if (!hasStarted) {
       setHasStarted(true);
       setPause(false);
@@ -177,12 +145,12 @@ export const FreestyleSession = () => {
     });
     phaseRef.current = "inhale";
     setPhase("inhale");
-  }, [breath, hasStarted, isPaused, setPause]);
+  }, [breath, getElapsed, hasStarted, isPaused, setPause]);
 
   const handleHoldEnd = useCallback(() => {
     if (isPaused || phaseRef.current !== "inhale") return;
 
-    const now = sessionElapsedRef.current;
+    const now = getElapsed();
     const inhaleDuration = Math.max(
       MIN_INHALE_SECONDS,
       now - phaseStartedAtRef.current,
@@ -193,7 +161,7 @@ export const FreestyleSession = () => {
     breath.value = withTiming(0, { duration: exhaleDuration * 1000 });
     phaseRef.current = "exhale";
     setPhase("exhale");
-  }, [breath, isPaused, ratio]);
+  }, [breath, getElapsed, isPaused, ratio]);
 
   const handlePauseResume = useCallback(() => {
     if (!hasStarted) return;
@@ -206,65 +174,36 @@ export const FreestyleSession = () => {
     if (phase === "inhale") {
       const remainingSeconds = Math.max(
         MIN_INHALE_SECONDS,
-        ASSUMED_INHALE_SECONDS -
-          (sessionElapsedRef.current - phaseStartedAtRef.current),
+        ASSUMED_INHALE_SECONDS - (getElapsed() - phaseStartedAtRef.current),
       );
       breath.value = withTiming(1, { duration: remainingSeconds * 1000 });
     } else if (phase === "exhale" && exhaleEndsAtRef.current !== null) {
       const remainingSeconds = Math.max(
         MIN_INHALE_SECONDS,
-        exhaleEndsAtRef.current - sessionElapsedRef.current,
+        exhaleEndsAtRef.current - getElapsed(),
       );
       breath.value = withTiming(0, { duration: remainingSeconds * 1000 });
     }
 
     setPause(!isPaused);
-  }, [breath, hasStarted, isPaused, phase, setPause]);
+  }, [breath, getElapsed, hasStarted, isPaused, phase, setPause]);
 
+  // End-of-exhale watcher: a 10 Hz check against the imperative clock, so the
+  // only render it ever causes is the single phase transition back to idle.
+  // While paused the clock is frozen, so the check can never fire early.
   useEffect(() => {
     if (phase !== "exhale") return;
-    const exhaleEndsAt = exhaleEndsAtRef.current;
-    if (exhaleEndsAt === null || sessionElapsed < exhaleEndsAt) return;
-    breath.value = 0;
-    phaseRef.current = "idle";
-    setPhase("idle");
-    phaseStartedAtRef.current = sessionElapsed;
-    exhaleEndsAtRef.current = null;
-  }, [breath, phase, sessionElapsed]);
-
-  useEffect(() => {
-    if (!timerTargetSeconds || timerProgressMode !== "minuteFade") return;
-
-    const completedMinutes = Math.floor(sessionElapsed / 60);
-    if (
-      completedMinutes <= 0 ||
-      completedMinutes === lastTimerPulseMinuteRef.current
-    ) {
-      return;
-    }
-
-    lastTimerPulseMinuteRef.current = completedMinutes;
-    triggerTimerProgressPulse();
-  }, [
-    sessionElapsed,
-    timerProgressMode,
-    timerTargetSeconds,
-    triggerTimerProgressPulse,
-  ]);
-
-  useEffect(() => {
-    if (!timerTargetSeconds || timerProgressMode !== "endFade") return;
-    if (sessionElapsed < timerTargetSeconds) return;
-    if (hasShownTimerEndPulseRef.current) return;
-
-    hasShownTimerEndPulseRef.current = true;
-    triggerTimerProgressPulse();
-  }, [
-    sessionElapsed,
-    timerProgressMode,
-    timerTargetSeconds,
-    triggerTimerProgressPulse,
-  ]);
+    const sub = interval(EXHALE_END_CHECK_MS).subscribe(() => {
+      const exhaleEndsAt = exhaleEndsAtRef.current;
+      if (exhaleEndsAt === null || getElapsed() < exhaleEndsAt) return;
+      breath.value = 0;
+      phaseRef.current = "idle";
+      setPhase("idle");
+      phaseStartedAtRef.current = getElapsed();
+      exhaleEndsAtRef.current = null;
+    });
+    return () => sub.unsubscribe();
+  }, [breath, getElapsed, phase]);
 
   const doubleTap = useMemo(
     () =>
@@ -295,17 +234,6 @@ export const FreestyleSession = () => {
 
   const gesture = Gesture.Exclusive(doubleTap, holdGesture);
 
-  const exhaleRemaining =
-    phase === "exhale" && exhaleEndsAtRef.current !== null
-      ? Math.max(0, exhaleEndsAtRef.current - sessionElapsed)
-      : 0;
-  const phaseElapsed = Math.max(0, sessionElapsed - phaseStartedAtRef.current);
-  const phaseTime =
-    phase === "inhale"
-      ? formatPhaseSeconds(phaseElapsed)
-      : phase === "exhale"
-        ? formatPhaseSeconds(exhaleRemaining)
-        : "";
   const phaseMessage =
     phase === "inhale" ? "release" : phase === "exhale" ? "exhale" : "";
   const idleMessage = "hold to inhale";
@@ -315,22 +243,6 @@ export const FreestyleSession = () => {
       : phase === "idle"
         ? idleMessage
         : phaseMessage;
-
-  const mm = String(Math.floor(sessionElapsed / 60)).padStart(2, "0");
-  const ss = String(Math.floor(sessionElapsed % 60)).padStart(2, "0");
-  const timerProgress = timerTargetSeconds
-    ? Math.min(sessionElapsed / timerTargetSeconds, 1)
-    : 0;
-  const timerTargetComplete = timerTargetSeconds
-    ? sessionElapsed >= timerTargetSeconds
-    : false;
-  const showTimerProgress =
-    !!timerTargetSeconds &&
-    (timerProgressMode === "always" ||
-      (timerProgressMode === "endOn" && timerTargetComplete) ||
-      ((timerProgressMode === "minuteFade" ||
-        timerProgressMode === "endFade") &&
-        showTimerProgressPulse));
 
   const handleExit = useCallback(() => {
     setPause(true);
@@ -358,14 +270,12 @@ export const FreestyleSession = () => {
                     style={tw`absolute items-center justify-center`}
                     pointerEvents="none"
                   >
-                    <Text
-                      style={[
-                        tw`font-mono text-mb-mute text-[12px]`,
-                        { letterSpacing: 2 },
-                      ]}
-                    >
-                      {phaseTime}
-                    </Text>
+                    <PhaseTimeReadout
+                      phase={phase}
+                      getElapsed={getElapsed}
+                      phaseStartedAtRef={phaseStartedAtRef}
+                      exhaleEndsAtRef={exhaleEndsAtRef}
+                    />
                   </View>
                 </View>
               </MotiView>
@@ -450,42 +360,18 @@ export const FreestyleSession = () => {
               ) : null}
             </View>
             <View style={tw`flex-1 items-end`}>
-              <Text
-                style={[
-                  tw`font-mono text-mb-mute text-[10px]`,
-                  { letterSpacing: 2 },
-                ]}
-              >
-                {mm}:{ss}
-              </Text>
+              <SessionClockText />
             </View>
           </MotiView>
         ) : null}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showTimerProgress ? (
-          <MotiView
-            key="freestyle-timer-progress"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { type: "timing", duration: 900 } }}
-            pointerEvents="none"
-            style={[
-              tw`absolute left-0 right-0 bg-mb-line`,
-              { bottom: insets.bottom, height: 2 },
-            ]}
-          >
-            <View
-              style={[
-                tw`h-full bg-mb-accent`,
-                { opacity: 0.62, width: `${timerProgress * 100}%` },
-              ]}
-            />
-          </MotiView>
-        ) : null}
-      </AnimatePresence>
+      {timerTargetSeconds ? (
+        <TimerProgressBar
+          key={`freestyle-timer-progress-${clockResetKey}`}
+          targetSeconds={timerTargetSeconds}
+        />
+      ) : null}
     </View>
   );
 };
